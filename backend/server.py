@@ -858,22 +858,51 @@ async def get_analytics_overview():
                 "top_products": top_products_list
             }
 
-# QRIS endpoint (mock)
+# QRIS endpoint with QR Code
 @api_router.post("/qris/generate")
 async def generate_qris(request: dict):
+    import qrcode
+    import io
+    import base64
+    
     amount = request.get('amount', 0)
     product_name = request.get('product_name', 'Product')
+    merchant_id = request.get('merchant_id', 'ID1234567890')
     
-    # Mock QRIS data
-    qris_string = f"00020101021226660014ID.CO.QRIS.WWW0118MOCK{amount}000000000000000003MOCK520454995802ID5913Merchant Demo6007Jakarta61051234062070703A016304MOCK"
+    # Generate QRIS string (simplified format - dalam produksi gunakan QRIS standard)
+    # Format: 00020101021226660014ID.CO.QRIS.WWW0118[merchant_id]0215[merchant_name]520454995802ID5913[merchant_name]6007Jakarta610512340704[amount]6304[checksum]
+    qris_string = f"00020101021226660014ID.CO.QRIS.WWW0118{merchant_id}0215POSMERCHANT520454995802ID5913POS Merchant6007Jakarta610512340704{int(amount)}6304ABCD"
+    
+    # Generate QR Code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(qris_string)
+    qr.make(fit=True)
+    
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
     
     return {
         "success": True,
         "qris_string": qris_string,
+        "qr_code_image": f"data:image/png;base64,{qr_code_base64}",
         "amount": amount,
         "product_name": product_name,
-        "expired_at": (datetime.now(timezone.utc)).isoformat()
+        "merchant_id": merchant_id,
+        "expired_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
     }
+
+# Add timedelta import at top
+from datetime import timedelta
 
 @api_router.get("/")
 async def root():
