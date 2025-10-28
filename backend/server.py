@@ -366,6 +366,29 @@ async def login(request: LoginRequest):
             else:
                 return LoginResponse(success=False, message="Invalid credentials")
 
+@api_router.post("/auth/register-customer")
+async def register_customer(customer: Customer):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if email already exists
+            if customer.email:
+                await cursor.execute('SELECT COUNT(*) FROM customers WHERE email = %s', (customer.email,))
+                exists = (await cursor.fetchone())[0]
+                if exists > 0:
+                    raise HTTPException(status_code=400, detail="Email already registered")
+            
+            await cursor.execute(
+                'INSERT INTO customers (name, email, phone, address) VALUES (%s, %s, %s, %s)',
+                (customer.name, customer.email, customer.phone, customer.address)
+            )
+            customer_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM customers WHERE id = %s', (customer_id,))
+            result = await cursor.fetchone()
+            return {"success": True, "customer": row_to_dict(result, cursor)}
+
 # Product endpoints
 @api_router.get("/products")
 async def get_products(limit: int = 100, offset: int = 0):
