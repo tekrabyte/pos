@@ -1004,23 +1004,33 @@ func DeleteRole(c *fiber.Ctx) error {
 // ========== BANK ACCOUNTS CRUD ==========
 
 func GetBankAccounts(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, bank_name, account_number, account_name, is_active, created_at, updated_at FROM bank_accounts ORDER BY created_at DESC")
+        rows, err := DB.Query("SELECT id, bank_name, account_number, account_name, is_active, created_at FROM bank_accounts ORDER BY created_at DESC")
         if err != nil {
                 return ErrorResponse(c, "Failed to fetch bank accounts: "+err.Error(), fiber.StatusInternalServerError)
         }
         defer rows.Close()
 
-        var accounts []BankAccount
+        var accounts []map[string]interface{}
         for rows.Next() {
-                var account BankAccount
-                if err := rows.Scan(&account.ID, &account.BankName, &account.AccountNumber, &account.AccountName, &account.IsActive, &account.CreatedAt, &account.UpdatedAt); err != nil {
+                var id int
+                var bankName, accountNumber, accountName string
+                var isActive bool
+                var createdAt time.Time
+                if err := rows.Scan(&id, &bankName, &accountNumber, &accountName, &isActive, &createdAt); err != nil {
                         continue
                 }
-                accounts = append(accounts, account)
+                accounts = append(accounts, map[string]interface{}{
+                        "id":             id,
+                        "bank_name":      bankName,
+                        "account_number": accountNumber,
+                        "account_name":   accountName,
+                        "is_active":      isActive,
+                        "created_at":     createdAt,
+                })
         }
 
         if accounts == nil {
-                accounts = []BankAccount{}
+                accounts = []map[string]interface{}{}
         }
 
         return c.JSON(accounts)
@@ -1028,10 +1038,13 @@ func GetBankAccounts(c *fiber.Ctx) error {
 
 func GetBankAccount(c *fiber.Ctx) error {
         id := c.Params("id")
-        var account BankAccount
+        var accountID int
+        var bankName, accountNumber, accountName string
+        var isActive bool
+        var createdAt time.Time
 
-        err := DB.QueryRow("SELECT id, bank_name, account_number, account_name, is_active, created_at, updated_at FROM bank_accounts WHERE id = ?", id).
-                Scan(&account.ID, &account.BankName, &account.AccountNumber, &account.AccountName, &account.IsActive, &account.CreatedAt, &account.UpdatedAt)
+        err := DB.QueryRow("SELECT id, bank_name, account_number, account_name, is_active, created_at FROM bank_accounts WHERE id = ?", id).
+                Scan(&accountID, &bankName, &accountNumber, &accountName, &isActive, &createdAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Bank account not found", fiber.StatusNotFound)
@@ -1040,47 +1053,70 @@ func GetBankAccount(c *fiber.Ctx) error {
                 return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
         }
 
-        return c.JSON(account)
+        return c.JSON(map[string]interface{}{
+                "id":             accountID,
+                "bank_name":      bankName,
+                "account_number": accountNumber,
+                "account_name":   accountName,
+                "is_active":      isActive,
+                "created_at":     createdAt,
+        })
 }
 
 func CreateBankAccount(c *fiber.Ctx) error {
-        var account BankAccount
-        if err := c.BodyParser(&account); err != nil {
+        var input struct {
+                BankName      string `json:"bank_name"`
+                AccountNumber string `json:"account_number"`
+                AccountName   string `json:"account_name"`
+                IsActive      bool   `json:"is_active"`
+        }
+        
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         result, err := DB.Exec(`
-                INSERT INTO bank_accounts (bank_name, account_number, account_name, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
-        `, account.BankName, account.AccountNumber, account.AccountName, account.IsActive)
+                INSERT INTO bank_accounts (bank_name, account_number, account_name, is_active, created_at)
+                VALUES (?, ?, ?, ?, NOW())
+        `, input.BankName, input.AccountNumber, input.AccountName, input.IsActive)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to create bank account: "+err.Error(), fiber.StatusInternalServerError)
         }
 
         id, _ := result.LastInsertId()
-        account.ID = int(id)
 
         return c.Status(fiber.StatusCreated).JSON(fiber.Map{
                 "success": true,
                 "message": "Bank account created successfully",
-                "data":    account,
+                "data": map[string]interface{}{
+                        "id":             id,
+                        "bank_name":      input.BankName,
+                        "account_number": input.AccountNumber,
+                        "account_name":   input.AccountName,
+                        "is_active":      input.IsActive,
+                },
         })
 }
 
 func UpdateBankAccount(c *fiber.Ctx) error {
         id := c.Params("id")
-        var account BankAccount
+        var input struct {
+                BankName      string `json:"bank_name"`
+                AccountNumber string `json:"account_number"`
+                AccountName   string `json:"account_name"`
+                IsActive      bool   `json:"is_active"`
+        }
 
-        if err := c.BodyParser(&account); err != nil {
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         _, err := DB.Exec(`
                 UPDATE bank_accounts 
-                SET bank_name = ?, account_number = ?, account_name = ?, is_active = ?, updated_at = NOW()
+                SET bank_name = ?, account_number = ?, account_name = ?, is_active = ?
                 WHERE id = ?
-        `, account.BankName, account.AccountNumber, account.AccountName, account.IsActive, id)
+        `, input.BankName, input.AccountNumber, input.AccountName, input.IsActive, id)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to update bank account", fiber.StatusInternalServerError)
