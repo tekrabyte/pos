@@ -129,3 +129,50 @@ type PaymentMethod struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type Role struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	MaxDiscount float64   `json:"max_discount"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type BankAccount struct {
+	ID            int            `json:"id"`
+	BankName      string         `json:"bank_name"`
+	AccountNumber string         `json:"account_number"`
+	AccountName   string         `json:"account_name"`
+	IsActive      bool           `json:"is_active"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
+type StoreSetting struct {
+	ID        int            `json:"id"`
+	Key       string         `json:"key"`
+	Value     sql.NullString `json:"value"`
+	UpdatedAt time.Time      `json:"updated_at"`
+}
+
+type StoreBanner struct {
+	ID        int            `json:"id"`
+	Title     sql.NullString `json:"title"`
+	ImageURL  string         `json:"image_url"`
+	Link      sql.NullString `json:"link"`
+	IsActive  bool           `json:"is_active"`
+	Order     int            `json:"order"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+}
+
+type CustomerAuth struct {
+	ID        int            `json:"id"`
+	Name      string         `json:"name"`
+	Email     string         `json:"email"`
+	Phone     sql.NullString `json:"phone"`
+	Password  string         `json:"-"`
+	Points    int            `json:"points"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+}
