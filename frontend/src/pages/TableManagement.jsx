@@ -29,7 +29,7 @@ const TableManagement = () => {
   const fetchTables = async () => {
     try {
       const response = await axios.get(`${API_URL}/tables`);
-      setTables(response.data || []);
+      setTables(response.data.tables || response.data || []);
     } catch (error) {
       console.error('Error fetching tables:', error);
       toast.error('Gagal memuat data meja');
