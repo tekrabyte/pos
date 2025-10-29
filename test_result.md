@@ -46,11 +46,20 @@ The application was experiencing multiple React rendering errors and API endpoin
 **Problem**: The frontend had no `.env` file, causing `process.env.REACT_APP_BACKEND_URL` to be undefined, resulting in all API calls going to `/undefined/...`
 
 **Fix Applied**:
-- Created `/app/frontend/.env` file with proper backend URL
-- Set `REACT_APP_BACKEND_URL=/api`
+- Created `/app/frontend/.env` file with backend URL
+- Set `REACT_APP_BACKEND_URL=/api` (relative path to avoid CORS issues)
+- Using relative path ensures requests go through same domain and nginx proxy handles routing
 
 **Files Created**:
 - `/app/frontend/.env`
+
+### Issue 5: CORS Configuration
+**Problem**: External backend URL caused CORS errors when frontend tried to access it from different origin.
+
+**Fix Applied**:
+- Changed frontend to use relative path `/api` instead of external URL
+- Backend CORS middleware already configured to allow all origins (`Access-Control-Allow-Origin: *`)
+- Nginx/ingress routes `/api/*` requests to backend on port 8001
 
 ### Issue 5: Backend Server Not Running via Supervisor
 **Problem**: Supervisor was configured for Python/uvicorn but the actual backend is Go-based.
