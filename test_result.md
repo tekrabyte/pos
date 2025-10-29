@@ -308,15 +308,21 @@ backend:
 frontend:
   - task: "Staff Login Page"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/auth/StaffLogin.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Staff login page already exists from previous implementation"
+      - working: false
+        agent: "user"
+        comment: "User reported: Login berhasil tapi balik lagi ke login page (Login successful but redirects back to login page)"
+      - working: "NA"
+        agent: "main"
+        comment: "ISSUE IDENTIFIED: localStorage key mismatch. StaffLogin.jsx saves to 'staff_user' but Layout.jsx reads from 'user'. Also needs to check if similar issue exists for customer login. Will fix both authentication flows."
 
   - task: "Customer Login Page"
     implemented: true
