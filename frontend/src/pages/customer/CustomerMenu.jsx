@@ -25,32 +25,45 @@ const CustomerMenu = () => {
   const [isDineIn, setIsDineIn] = useState(false);
 
   useEffect(() => {
-    // Check if customer is logged in or if it's dine-in via QR
-    const customerData = localStorage.getItem('customer');
-    if (customerData) {
-      setCustomer(JSON.parse(customerData));
-    } else if (!tableToken) {
-      // No customer login and no table token, redirect to login
-      toast.error('Please login to order');
-      navigate('/customer/login');
-      return;
-    }
+    // Add a small delay to ensure localStorage is ready
+    const checkAuth = async () => {
+      // Check if customer is logged in or if it's dine-in via QR
+      const customerData = localStorage.getItem('customer');
+      if (customerData) {
+        try {
+          setCustomer(JSON.parse(customerData));
+        } catch (error) {
+          console.error('Error parsing customer data:', error);
+        }
+      } else if (!tableToken) {
+        // No customer login and no table token, redirect to login
+        toast.error('Silakan login untuk memesan');
+        navigate('/customer/login');
+        return;
+      }
 
-    // If table token exists, it's dine-in
-    if (tableToken) {
-      setIsDineIn(true);
-      fetchTableInfo();
-    }
+      // If table token exists, it's dine-in
+      if (tableToken) {
+        setIsDineIn(true);
+        fetchTableInfo();
+      }
 
-    // Load cart from localStorage
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
+      // Load cart from localStorage
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        try {
+          setCart(JSON.parse(savedCart));
+        } catch (error) {
+          console.error('Error parsing cart data:', error);
+        }
+      }
 
-    fetchCategories();
-    fetchProducts();
-  }, [tableToken, navigate]);
+      fetchCategories();
+      fetchProducts();
+    };
+    
+    checkAuth();
+  }, [tableToken]);
 
   const fetchTableInfo = async () => {
     try {
