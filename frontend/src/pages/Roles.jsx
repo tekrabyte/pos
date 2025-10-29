@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, UserCog, Percent } from 'lucide-react';
+import { Plus, UserCog, Percent, Edit, Trash2 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     max_discount: '',
@@ -44,13 +45,19 @@ const Roles = () => {
         name: formData.name,
         max_discount: parseFloat(formData.max_discount),
       };
-      await axios.post(`${API}/roles`, payload);
-      toast.success('Role berhasil ditambahkan');
+      if (editId) {
+        await axios.put(`${API}/roles/${editId}`, payload);
+        toast.success('Role berhasil diperbarui');
+      } else {
+        await axios.post(`${API}/roles`, payload);
+        toast.success('Role berhasil ditambahkan');
+      }
       setShowDialog(false);
       setFormData({
         name: '',
         max_discount: '',
       });
+      setEditId(null);
       fetchRoles();
     } catch (error) {
       console.error('Error saving role:', error);
@@ -58,12 +65,42 @@ const Roles = () => {
     }
   };
 
+  const handleEdit = (role) => {
+    setEditId(role.id);
+    setFormData({
+      name: role.name,
+      max_discount: role.max_discount.toString(),
+    });
+    setShowDialog(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus role ini?')) {
+      try {
+        await axios.delete(`${API}/roles/${id}`);
+        toast.success('Role berhasil dihapus');
+        fetchRoles();
+      } catch (error) {
+        console.error('Error deleting role:', error);
+        toast.error('Gagal menghapus role');
+      }
+    }
+  };
+
   const handleAddNew = () => {
+    setEditId(null);
     setFormData({
       name: '',
       max_discount: '',
     });
     setShowDialog(true);
+  };
+
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return '0';
+    }
+    return parseFloat(value).toLocaleString('id-ID');
   };
 
   if (loading) {
@@ -111,10 +148,31 @@ const Roles = () => {
                       <h3 className="font-semibold text-lg text-gray-800">{role.name}</h3>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-sm mb-4">
                     <Percent className="h-4 w-4 text-gray-500" />
                     <span className="text-gray-600">Max Diskon:</span>
-                    <span className="font-semibold text-blue-600">{parseFloat(role.max_discount)}%</span>
+                    <span className="font-semibold text-blue-600">{formatCurrency(role.max_discount)}%</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleEdit(role)}
+                      data-testid={`edit-role-${role.id}`}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDelete(role.id)}
+                      data-testid={`delete-role-${role.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -126,7 +184,7 @@ const Roles = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="role-dialog">
           <DialogHeader>
-            <DialogTitle>Tambah Role Baru</DialogTitle>
+            <DialogTitle>{editId ? 'Edit Role' : 'Tambah Role Baru'}</DialogTitle>
             <DialogDescription>Masukkan informasi role/hak akses</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
@@ -161,7 +219,7 @@ const Roles = () => {
                 Batal
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" data-testid="save-role-btn">
-                Simpan
+                {editId ? 'Update' : 'Simpan'}
               </Button>
             </DialogFooter>
           </form>
