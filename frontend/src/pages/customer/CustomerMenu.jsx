@@ -121,7 +121,7 @@ const CustomerMenu = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${API_URL}/products`);
-      setProducts(response.data);
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Gagal memuat produk');
