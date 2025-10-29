@@ -31,12 +31,10 @@ func main() {
 
 	// Middleware
 	app.Use(recover.New())
-	
-app.Use(cors.New(cors.Config{
+	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders: "*",
-		AllowCredentials: true,
 	}))
 	app.Use(logger.New())
 
