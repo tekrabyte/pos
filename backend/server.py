@@ -639,6 +639,176 @@ async def reset_password(request: ResetPasswordRequest):
             
             return {"success": True, "message": "Password berhasil direset"}
 
+# CUSTOMER PROFILE MANAGEMENT ENDPOINTS
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+class ChangePasswordRequest(BaseModel):
+    customer_id: int
+    old_password: str
+    new_password: str
+
+@api_router.get("/customer/profile/{customer_id}")
+async def get_customer_profile(customer_id: int):
+    """Get customer profile by ID"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'SELECT id, name, email, phone, address, email_verified, created_at FROM customers WHERE id = %s',
+                (customer_id,)
+            )
+            customer = await cursor.fetchone()
+            
+            if not customer:
+                raise HTTPException(status_code=404, detail="Customer tidak ditemukan")
+            
+            return row_to_dict(customer, cursor)
+
+@api_router.put("/customer/profile/{customer_id}")
+async def update_customer_profile(customer_id: int, request: UpdateProfileRequest):
+    """Update customer profile"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if customer exists
+            await cursor.execute('SELECT id FROM customers WHERE id = %s', (customer_id,))
+            if not await cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Customer tidak ditemukan")
+            
+            update_fields = []
+            values = []
+            
+            if request.name:
+                update_fields.append('name = %s')
+                values.append(request.name)
+            
+            if request.email:
+                # Check if email already used by another customer
+                await cursor.execute(
+                    'SELECT COUNT(*) FROM customers WHERE email = %s AND id != %s',
+                    (request.email, customer_id)
+                )
+                if (await cursor.fetchone())[0] > 0:
+                    raise HTTPException(status_code=400, detail="Email sudah digunakan")
+                update_fields.append('email = %s')
+                values.append(request.email)
+            
+            if request.phone:
+                # Validate and normalize phone
+                if not validate_phone(request.phone):
+                    raise HTTPException(status_code=400, detail="Format nomor telepon tidak valid")
+                normalized_phone = normalize_phone(request.phone)
+                
+                # Check if phone already used by another customer
+                await cursor.execute(
+                    'SELECT COUNT(*) FROM customers WHERE phone = %s AND id != %s',
+                    (normalized_phone, customer_id)
+                )
+                if (await cursor.fetchone())[0] > 0:
+                    raise HTTPException(status_code=400, detail="Nomor telepon sudah digunakan")
+                
+                update_fields.append('phone = %s')
+                values.append(normalized_phone)
+            
+            if request.address is not None:
+                update_fields.append('address = %s')
+                values.append(request.address)
+            
+            if not update_fields:
+                raise HTTPException(status_code=400, detail="Tidak ada data yang diupdate")
+            
+            # Add customer_id to values
+            values.append(customer_id)
+            
+            # Execute update
+            query = f"UPDATE customers SET {', '.join(update_fields)} WHERE id = %s"
+            await cursor.execute(query, values)
+            await conn.commit()
+            
+            # Get updated customer data
+            await cursor.execute(
+                'SELECT id, name, email, phone, address, email_verified FROM customers WHERE id = %s',
+                (customer_id,)
+            )
+            updated_customer = await cursor.fetchone()
+            
+            return {
+                "success": True,
+                "message": "Profile berhasil diupdate",
+                "customer": row_to_dict(updated_customer, cursor)
+            }
+
+@api_router.post("/customer/change-password")
+async def change_customer_password(request: ChangePasswordRequest):
+    """Change customer password (requires old password verification)"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Get customer with password
+            await cursor.execute(
+                'SELECT id, password FROM customers WHERE id = %s',
+                (request.customer_id,)
+            )
+            customer = await cursor.fetchone()
+            
+            if not customer:
+                raise HTTPException(status_code=404, detail="Customer tidak ditemukan")
+            
+            customer_dict = row_to_dict(customer, cursor)
+            
+            # Verify old password
+            if not verify_password(request.old_password, customer_dict['password']):
+                raise HTTPException(status_code=400, detail="Password lama tidak sesuai")
+            
+            # Validate new password
+            if len(request.new_password) < 6:
+                raise HTTPException(status_code=400, detail="Password minimal 6 karakter")
+            
+            # Hash and update new password
+            hashed_pwd = hash_password(request.new_password)
+            await cursor.execute(
+                'UPDATE customers SET password = %s WHERE id = %s',
+                (hashed_pwd, request.customer_id)
+            )
+            await conn.commit()
+            
+            return {
+                "success": True,
+                "message": "Password berhasil diubah"
+            }
+
+@api_router.delete("/customer/account/{customer_id}")
+async def delete_customer_account(customer_id: int):
+    """Delete customer account (soft delete - for customer initiated)"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if customer exists
+            await cursor.execute('SELECT id FROM customers WHERE id = %s', (customer_id,))
+            if not await cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Customer tidak ditemukan")
+            
+            # Soft delete: Update email to prevent re-registration
+            await cursor.execute(
+                '''UPDATE customers 
+                   SET email = CONCAT('deleted_', id, '_', email),
+                       phone = CONCAT('deleted_', id, '_', phone),
+                       password = 'DELETED'
+                   WHERE id = %s''',
+                (customer_id,)
+            )
+            await conn.commit()
+            
+            return {
+                "success": True,
+                "message": "Akun berhasil dihapus"
+            }
+
 # STORE SETTINGS ENDPOINTS
 
 @api_router.get("/store-settings")
