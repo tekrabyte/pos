@@ -133,7 +133,7 @@ backend:
 
   - task: "Customer Authentication (Register & Login)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -145,6 +145,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Customers table missing password column. Registration and login endpoints failing with HTTP 500 errors. Database schema does not match code requirements."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Removed is_active column check from customer login query. Customer registration and login now working correctly. POST /api/auth/customer/register creates customers successfully, POST /api/auth/customer/login returns 200 with valid token."
 
   - task: "Table Management CRUD"
     implemented: true
