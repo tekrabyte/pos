@@ -140,10 +140,12 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API_URL}/orders`);
-      setOrders(response.data);
+      // Handle both array and object responses
+      const ordersData = Array.isArray(response.data) ? response.data : (response.data.orders || []);
+      setOrders(ordersData);
       
       // Update pending count
-      const pending = response.data.filter(order => order.status === 'pending').length;
+      const pending = ordersData.filter(order => order.status === 'pending').length;
       setPendingCount(pending);
     } catch (error) {
       console.error('Error fetching orders:', error);
