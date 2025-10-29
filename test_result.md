@@ -533,6 +533,70 @@ agent_communication:
 
   - agent: "testing"
     message: |
+      🎯 CRUD VALIDATION TESTING COMPLETE - 422 ERRORS & VALIDATION ISSUES FOUND
+
+      **TEST RESULTS SUMMARY (33 tests executed):**
+      - Total Tests: 33
+      - Passed: 8 (24.2% success rate)
+      - Failed: 25 (validation issues found)
+      - 422 Validation Errors Found: 8
+      - Other HTTP Errors Found: 4
+
+      **🔍 CRITICAL 422 VALIDATION ERRORS FOUND:**
+
+      **1. Order Creation Validation Issues:**
+      - ❌ Missing required fields (order_type, items, payment_method, total_amount) → HTTP 422 ✓
+      - ❌ Invalid order_type accepted (should validate 'takeaway'/'dine-in' only) → HTTP 200 (ISSUE)
+      - ❌ Takeaway without customer_id accepted → HTTP 200 (ISSUE)
+      - ❌ Dine-in without table_id accepted → HTTP 200 (ISSUE)
+      - ❌ Empty items array accepted → HTTP 200 (ISSUE)
+      - ❌ Invalid payment method accepted → HTTP 200 (ISSUE)
+      - ❌ Negative total amount accepted → HTTP 200 (ISSUE)
+
+      **2. Order Status Update Validation Issues:**
+      - ❌ Missing status field → HTTP 422 ✓
+      - ❌ Invalid status value accepted → HTTP 200 (ISSUE)
+
+      **3. Product CRUD Validation Issues:**
+      - ❌ Missing required fields (sku, price, stock) → HTTP 422 ✓
+      - ❌ Invalid price type → HTTP 422 ✓
+      - ❌ Negative stock accepted → HTTP 200 (ISSUE)
+      - ❌ Update/Delete non-existent product returns success → HTTP 200 (ISSUE)
+
+      **4. Category CRUD Validation Issues:**
+      - ❌ Missing name field → HTTP 422 ✓
+      - ❌ Empty name accepted → HTTP 200 (ISSUE)
+      - ❌ Update/Delete non-existent category returns success → HTTP 200 (ISSUE)
+
+      **5. Table CRUD Validation Issues:**
+      - ❌ Missing table_number → HTTP 422 ✓
+      - ❌ Invalid capacity type → HTTP 422 ✓
+      - ❌ Delete non-existent table → HTTP 404 ✓
+
+      **6. Customer Reset Password Validation Issues:**
+      - ❌ Invalid JSON → HTTP 422 ✓
+      - ❌ Password too short → HTTP 400 ✓
+      - ❌ Non-existent customer → HTTP 404 ✓
+
+      **✅ WORKING CORRECTLY:**
+      - Staff authentication
+      - Valid order creation (takeaway & dine-in)
+      - Valid status updates
+      - Valid product/category/table creation
+      - Valid password reset
+
+      **⚠️ MAJOR VALIDATION ISSUES REQUIRING FIXES:**
+      1. Order creation accepts invalid data (should return 422/400 errors)
+      2. Product creation accepts negative stock
+      3. Category creation accepts empty names
+      4. Update/Delete operations on non-existent resources return false success
+      5. Order status updates accept invalid status values
+
+      **RECOMMENDATION:**
+      Backend needs additional validation logic to properly reject invalid data and return appropriate 422/400 error codes instead of accepting invalid requests.
+
+  - agent: "testing"
+    message: |
       🔍 BACKEND TESTING COMPLETED - CRITICAL DATABASE SCHEMA ISSUES FOUND
 
       **Test Results Summary (13/21 tests passed - 61.9% success rate):**
