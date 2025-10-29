@@ -939,4 +939,5 @@ class PosApiTester:
 
 if __name__ == "__main__":
     tester = PosApiTester()
-    tester.run_all_tests()
+    # Run priority tests first (from review request)
+    tester.run_priority_tests()
