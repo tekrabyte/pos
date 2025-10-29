@@ -1,18 +1,19 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search } from 'lucide-react';
-import axios from 'axios';
-import { toast } from 'sonner';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import { Search, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useFetch, useDebounce } from '@/hooks/useApi';
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const { data: products = [], loading, refetch } = useFetch('/products', {
+    initialData: [],
+    cacheKey: 'products-list',
+  });
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined || isNaN(value)) {
@@ -21,30 +22,15 @@ const Products = () => {
     return parseFloat(value).toLocaleString('id-ID');
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const filteredProducts = useMemo(() => {
-    if (!searchTerm) return products;
+    if (!debouncedSearch) return products;
+    const search = debouncedSearch.toLowerCase();
     return products.filter(
       (p) =>
-        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+        p.name?.toLowerCase().includes(search) ||
+        p.sku?.toLowerCase().includes(search)
     );
-  }, [searchTerm, products]);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API}/products`);
-      setProducts(response.data || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Gagal mengambil data produk');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [debouncedSearch, products]);
 
   if (loading) {
     return (
