@@ -301,11 +301,41 @@ func CreateProduct(c *fiber.Ctx) error {
         })
 }
 
-// Update Product - simplified
+// Update Product
 func UpdateProduct(c *fiber.Ctx) error {
+        id := c.Params("id")
+        
+        var req struct {
+                Name        string  `json:"name"`
+                SKU         string  `json:"sku"`
+                Price       float64 `json:"price"`
+                Stock       int     `json:"stock"`
+                CategoryID  *int    `json:"category_id"`
+                BrandID     *int    `json:"brand_id"`
+                Description string  `json:"description"`
+                ImageURL    string  `json:"image_url"`
+                Status      string  `json:"status"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE products 
+                SET name = ?, sku = ?, price = ?, stock = ?, category_id = ?, brand_id = ?, 
+                    description = ?, image_url = ?, status = ?, updated_at = NOW()
+                WHERE id = ?
+        `, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, 
+           req.Description, req.ImageURL, req.Status, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update product: %v", err), fiber.StatusInternalServerError)
+        }
+
         return c.JSON(fiber.Map{
                 "success": true,
-                "message": "Update product endpoint - to be implemented",
+                "message": "Product updated successfully",
         })
 }
 
