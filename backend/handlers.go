@@ -143,6 +143,8 @@ func AuthMiddleware(c *fiber.Ctx) error {
 
 // Staff Login
 func StaffLogin(c *fiber.Ctx) error {
+        startTime := time.Now()
+        
         var loginReq struct {
                 Username string `json:"username"`
                 Password string `json:"password"`
@@ -153,7 +155,8 @@ func StaffLogin(c *fiber.Ctx) error {
         }
 
         var user User
-        query := "SELECT id, full_name, username, email, password, role, role_id, outlet_id, is_active, created_at FROM users WHERE username = ? LIMIT 1"
+        // Optimized query - only fetch necessary fields for login
+        query := "SELECT id, full_name, username, email, password, role, role_id, outlet_id, is_active, created_at FROM users WHERE username = ? AND is_active = 1 LIMIT 1"
         err := DB.QueryRow(query, loginReq.Username).Scan(
                 &user.ID, &user.FullName, &user.Username, &user.Email, &user.Password,
                 &user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
@@ -177,9 +180,10 @@ func StaffLogin(c *fiber.Ctx) error {
                 return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
         }
 
-        roleStr := ""
-        if user.Role.Valid {
-                roleStr = user.Role.String
+        // Log performance for monitoring
+        duration := time.Since(startTime).Milliseconds()
+        if duration > 500 {
+                fmt.Printf("⚠️ Slow login: %dms for user %s\n", duration, loginReq.Username)
         }
 
         return c.JSON(fiber.Map{
@@ -190,7 +194,7 @@ func StaffLogin(c *fiber.Ctx) error {
                         "full_name": getNullString(user.FullName),
                         "username":  user.Username,
                         "email":     getNullString(user.Email),
-                        "role":      roleStr,
+                        "role":      getNullString(user.Role),
                         "role_id":   getNullInt(user.RoleID),
                         "outlet_id": getNullInt(user.OutletID),
                 },
