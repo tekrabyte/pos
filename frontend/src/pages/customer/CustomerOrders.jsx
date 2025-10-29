@@ -41,7 +41,8 @@ const CustomerOrders = () => {
       const response = await axios.get(`${API_URL}/orders`);
       // Filter orders for this customer
       const customerData = JSON.parse(localStorage.getItem('customer'));
-      const customerOrders = response.data.filter(
+      const ordersArray = response.data.orders || [];
+      const customerOrders = ordersArray.filter(
         order => order.customer_id === customerData.id
       );
       setOrders(customerOrders);
