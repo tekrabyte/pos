@@ -2,12 +2,137 @@
 
 ## 🚀 Quick Start
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### Prerequisites
+- PHP 8.2+
+- Composer
+- MySQL Database (already configured)
+
+### Installation
+```bash
+cd /app/laravel
+composer install
+```
+
+### Configuration
+Database sudah dikonfigurasi di `.env`:
+- Host: srv1412.hstgr.io
+- Database: u215947863_pos_dev
+- Using existing production database
+
+### Run Application
+```bash
+# Start Laravel server
+php artisan serve --host=0.0.0.0 --port=8002
+
+# Or use startup script
+./start.sh
+```
+
+### Test API
+```bash
+# Health check
+curl http://localhost:8002/api/health
+
+# Staff login (credentials: admin/admin123)
+curl -X POST http://localhost:8002/api/auth/staff/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+## 📋 Current Status
+
+### ✅ Completed (30%)
+- Laravel 11 setup
+- JWT authentication
+- 17 Eloquent Models
+- Staff & Customer auth
+- 3 CRUD controllers (Product, Category, Brand)
+
+### ⏳ In Progress (70% remaining)
+- 12 more API controllers
+- Blade frontend (all pages)
+- Services & utilities
+- Testing & deployment
+
+## 📚 Full Documentation
+See [LARAVEL_MIGRATION_REPORT.md](../LARAVEL_MIGRATION_REPORT.md) for complete migration details.
+
+## 🔑 Default Credentials
+
+### Staff Login
+- Username: `admin`
+- Password: `admin123`
+
+### Database
+- All existing data from FastAPI is accessible
+- No data migration needed
+
+## 🏗️ Architecture
+
+```
+FastAPI (Port 8001) ─────┐
+                         ├──→ MySQL Database
+Laravel (Port 8002) ─────┘
+
+React Frontend (Port 3000) → Can connect to either backend
+```
+
+## 📞 API Endpoints (Current)
+
+### Authentication
+- `POST /api/auth/staff/login` - Staff login
+- `POST /api/auth/customer/login` - Customer login
+- `POST /api/auth/customer/register` - Customer registration
+
+### Products
+- `GET /api/products` - List products
+- `POST /api/products` - Create product
+- `GET /api/products/{id}` - Get product
+- `PUT /api/products/{id}` - Update product
+- `DELETE /api/products/{id}` - Delete product
+
+### Categories
+- `GET /api/categories` - List categories
+- `POST /api/categories` - Create category
+- `PUT /api/categories/{id}` - Update category
+- `DELETE /api/categories/{id}` - Delete category
+
+### Brands
+- `GET /api/brands` - List brands
+- `POST /api/brands` - Create brand
+- `PUT /api/brands/{id}` - Update brand
+- `DELETE /api/brands/{id}` - Delete brand
+
+## 🔧 Development
+
+### Clear Cache
+```bash
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+```
+
+### Database Testing
+```bash
+php artisan tinker
+>>> App\Models\User::count()
+>>> App\Models\Product::with('category')->first()
+```
+
+## 📝 Notes
+
+- Laravel menggunakan database yang SAMA dengan FastAPI
+- Both systems can run bersamaan tanpa conflict
+- JWT tokens berbeda antara FastAPI dan Laravel
+- Migration in progress - see full report for details
+
+---
+
+**Last Updated:** 2025-01-29
+**Version:** 1.0 Alpha
+**Status:** Foundation Complete (30%)
+
+---
 
 ## About Laravel
 
