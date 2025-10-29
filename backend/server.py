@@ -73,10 +73,35 @@ class LoginResponse(BaseModel):
 
 class CustomerRegister(BaseModel):
     name: str
-    email: str
-    password: str
+    email: EmailStr
     phone: str
     address: Optional[str] = None
+    # Password will be auto-generated, no need to input
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class ApplyCouponRequest(BaseModel):
+    coupon_code: str
+
+class RatingRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    review: Optional[str] = None
+
+class StoreSettingsUpdate(BaseModel):
+    store_name: Optional[str] = None
+    store_description: Optional[str] = None
+    banner_url: Optional[str] = None
+    logo_url: Optional[str] = None
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    opening_hours: Optional[str] = None
+    is_open: Optional[bool] = None
 
 class Product(BaseModel):
     id: Optional[int] = None
