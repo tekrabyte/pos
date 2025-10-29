@@ -84,7 +84,6 @@ Route::apiResource('orders', OrderController::class);
 Route::put('orders/{id}/status', [OrderController::class, 'updateStatus']);
 
 Route::apiResource('tables', TableController::class);
-Route::get('tables/token/{token}', [TableController::class, 'getByToken']);
 Route::post('tables/{id}/regenerate-qr', [TableController::class, 'regenerateQr']);
 
 /*
