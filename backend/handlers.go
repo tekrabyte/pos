@@ -1563,7 +1563,7 @@ func DeleteOutlet(c *fiber.Ctx) error {
 }
 
 func GetPaymentMethods(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, name, type, is_active, created_at, updated_at FROM payment_methods ORDER BY created_at DESC")
+        rows, err := DB.Query("SELECT id, name, type, is_active, config, created_at FROM payment_methods ORDER BY created_at DESC")
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
         }
@@ -1572,7 +1572,7 @@ func GetPaymentMethods(c *fiber.Ctx) error {
         var methods []map[string]interface{}
         for rows.Next() {
                 var pm PaymentMethod
-                if err := rows.Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive, &pm.CreatedAt, &pm.UpdatedAt); err != nil {
+                if err := rows.Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive, &pm.Config, &pm.CreatedAt); err != nil {
                         continue
                 }
                 methods = append(methods, map[string]interface{}{
@@ -1580,8 +1580,8 @@ func GetPaymentMethods(c *fiber.Ctx) error {
                         "name":       pm.Name,
                         "type":       pm.Type,
                         "is_active":  pm.IsActive,
+                        "config":     getNullString(pm.Config),
                         "created_at": getNullTime(pm.CreatedAt),
-                        "updated_at": getNullTime(pm.UpdatedAt),
                 })
         }
 
