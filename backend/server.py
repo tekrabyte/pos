@@ -44,7 +44,7 @@ async def get_payment_methods():
         
         # First, let's check what columns exist
         cursor.execute("DESCRIBE payment_methods")
-        columns = [row[0] for row in cursor.fetchall()]
+        columns = [row["Field"] for row in cursor.fetchall()]
         print(f"Available columns: {columns}")
         
         # Build query based on available columns
