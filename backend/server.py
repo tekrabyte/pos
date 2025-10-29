@@ -969,9 +969,20 @@ async def delete_product(product_id: int):
     pool = await get_db()
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
-            await cursor.execute('DELETE FROM products WHERE id = %s', (product_id,))
-            await conn.commit()
-            return {"success": True, "message": "Product deleted"}
+            # Check if product is used in any orders
+            await cursor.execute('SELECT COUNT(*) FROM order_items WHERE product_id = %s', (product_id,))
+            order_count = (await cursor.fetchone())[0]
+            
+            if order_count > 0:
+                # Soft delete - just mark as inactive/deleted
+                await cursor.execute('UPDATE products SET status = %s WHERE id = %s', ('deleted', product_id))
+                await conn.commit()
+                return {"success": True, "message": "Product marked as deleted (used in existing orders)"}
+            else:
+                # Hard delete if not used
+                await cursor.execute('DELETE FROM products WHERE id = %s', (product_id,))
+                await conn.commit()
+                return {"success": True, "message": "Product deleted"}
 
 # CATEGORIES
 
