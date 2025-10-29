@@ -1744,7 +1744,7 @@ func GetDashboardStats(c *fiber.Ctx) error {
 
 // Get Analytics
 func GetAnalytics(c *fiber.Ctx) error {
-        var totalRevenue, avgOrderValue float64
+        var totalRevenue float64
         var totalOrders, totalProducts, totalCustomers int
 
         // Revenue and orders
@@ -1753,11 +1753,6 @@ func GetAnalytics(c *fiber.Ctx) error {
                 FROM orders
                 WHERE status = 'completed'
         `).Scan(&totalRevenue, &totalOrders)
-
-        // Average order value
-        if totalOrders > 0 {
-                avgOrderValue = totalRevenue / float64(totalOrders)
-        }
 
         // Total products
         DB.QueryRow("SELECT COUNT(*) FROM products").Scan(&totalProducts)
