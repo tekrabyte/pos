@@ -70,11 +70,17 @@ const OrderManagement = () => {
   }, [navigate]);
 
   const connectWebSocket = () => {
+    // Prevent multiple connections
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
+    }
+
     try {
       const ws = new WebSocket(`${WS_URL}/api/ws/orders`);
       
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
       };
 
       ws.onmessage = (event) => {
@@ -85,7 +91,7 @@ const OrderManagement = () => {
           audioRef.current?.play().catch(e => console.log('Audio play failed:', e));
           
           // Show toast notification
-          toast.success('New Order Received!', {
+          toast.success('Pesanan Baru Masuk!', {
             description: `Order #${data.order_number} - Rp ${data.total_amount.toLocaleString('id-ID')}`,
             duration: 5000,
           });
@@ -102,15 +108,31 @@ const OrderManagement = () => {
         console.error('WebSocket error:', error);
       };
 
-      ws.onclose = () => {
-        console.log('WebSocket disconnected, reconnecting...');
-        // Reconnect after 3 seconds
-        setTimeout(connectWebSocket, 3000);
+      ws.onclose = (event) => {
+        console.log('WebSocket disconnected');
+        wsRef.current = null;
+        
+        // Only reconnect if it wasn't a clean close and component is still mounted
+        if (!event.wasClean && reconnectTimeoutRef.current === null) {
+          console.log('Attempting to reconnect in 3 seconds...');
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectTimeoutRef.current = null;
+            connectWebSocket();
+          }, 3000);
+        }
       };
 
       wsRef.current = ws;
     } catch (error) {
       console.error('WebSocket connection error:', error);
+      
+      // Retry connection after 3 seconds
+      if (reconnectTimeoutRef.current === null) {
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connectWebSocket();
+        }, 3000);
+      }
     }
   };
 
