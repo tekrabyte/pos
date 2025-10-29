@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, ShoppingCart, Users, TrendingUp } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}`;
-
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState({
     total_revenue: 0,
     total_orders: 0,
@@ -20,12 +19,22 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      toast.error('Silakan login terlebih dahulu');
+      navigate('/staff/login');
+      return;
+    }
+    
     fetchAnalytics();
-  }, []);
+  }, [navigate]);
 
   const fetchAnalytics = async () => {
     try {
-      const response = await axios.get(`${API}/dashboard/stats`);
+      const response = await axiosInstance.get('/dashboard/stats');
       const data = response.data;
       
       // Transform data to match component structure
