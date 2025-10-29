@@ -548,23 +548,210 @@ func DeleteCustomer(c *fiber.Ctx) error {
 }
 
 func GetCoupons(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "coupons": []interface{}{}})
+        rows, err := DB.Query(`
+                SELECT id, code, discount_type, discount_value, min_purchase, max_discount,
+                       valid_from, valid_until, is_active, created_at, usage_limit, used_count
+                FROM coupons
+                ORDER BY created_at DESC
+        `)
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch coupons: "+err.Error(), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var coupons []map[string]interface{}
+        for rows.Next() {
+                var id int
+                var code, discountType string
+                var discountValue, minPurchase, maxDiscount float64
+                var validFrom, validUntil sql.NullTime
+                var isActive bool
+                var createdAt time.Time
+                var usageLimit, usedCount sql.NullInt64
+
+                if err := rows.Scan(&id, &code, &discountType, &discountValue, &minPurchase, &maxDiscount,
+                        &validFrom, &validUntil, &isActive, &createdAt, &usageLimit, &usedCount); err != nil {
+                        continue
+                }
+
+                coupon := map[string]interface{}{
+                        "id":             id,
+                        "code":           code,
+                        "discount_type":  discountType,
+                        "discount_value": discountValue,
+                        "min_purchase":   minPurchase,
+                        "max_discount":   maxDiscount,
+                        "is_active":      isActive,
+                        "created_at":     createdAt,
+                }
+
+                if validFrom.Valid {
+                        coupon["valid_from"] = validFrom.Time
+                }
+                if validUntil.Valid {
+                        coupon["valid_until"] = validUntil.Time
+                }
+                if usageLimit.Valid {
+                        coupon["usage_limit"] = usageLimit.Int64
+                }
+                if usedCount.Valid {
+                        coupon["used_count"] = usedCount.Int64
+                }
+
+                coupons = append(coupons, coupon)
+        }
+
+        if coupons == nil {
+                coupons = []map[string]interface{}{}
+        }
+
+        return c.JSON(coupons)
 }
 
 func GetCoupon(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get coupon - to be implemented"})
+        id := c.Params("id")
+        var couponID int
+        var code, discountType string
+        var discountValue, minPurchase, maxDiscount float64
+        var validFrom, validUntil sql.NullTime
+        var isActive bool
+        var createdAt time.Time
+        var usageLimit, usedCount sql.NullInt64
+
+        err := DB.QueryRow(`
+                SELECT id, code, discount_type, discount_value, min_purchase, max_discount,
+                       valid_from, valid_until, is_active, created_at, usage_limit, used_count
+                FROM coupons WHERE id = ?
+        `, id).Scan(&couponID, &code, &discountType, &discountValue, &minPurchase, &maxDiscount,
+                &validFrom, &validUntil, &isActive, &createdAt, &usageLimit, &usedCount)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Coupon not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
+
+        coupon := map[string]interface{}{
+                "id":             couponID,
+                "code":           code,
+                "discount_type":  discountType,
+                "discount_value": discountValue,
+                "min_purchase":   minPurchase,
+                "max_discount":   maxDiscount,
+                "is_active":      isActive,
+                "created_at":     createdAt,
+        }
+
+        if validFrom.Valid {
+                coupon["valid_from"] = validFrom.Time
+        }
+        if validUntil.Valid {
+                coupon["valid_until"] = validUntil.Time
+        }
+        if usageLimit.Valid {
+                coupon["usage_limit"] = usageLimit.Int64
+        }
+        if usedCount.Valid {
+                coupon["used_count"] = usedCount.Int64
+        }
+
+        return c.JSON(coupon)
 }
 
 func CreateCoupon(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create coupon - to be implemented"})
+        var input struct {
+                Code          string  `json:"code"`
+                DiscountType  string  `json:"discount_type"`
+                DiscountValue float64 `json:"discount_value"`
+                MinPurchase   float64 `json:"min_purchase"`
+                MaxDiscount   float64 `json:"max_discount"`
+                ValidFrom     *time.Time `json:"valid_from"`
+                ValidUntil    *time.Time `json:"valid_until"`
+                IsActive      bool    `json:"is_active"`
+                UsageLimit    *int    `json:"usage_limit"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO coupons (code, discount_type, discount_value, min_purchase, max_discount,
+                                    valid_from, valid_until, is_active, created_at, usage_limit, used_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, 0)
+        `, input.Code, input.DiscountType, input.DiscountValue, input.MinPurchase, input.MaxDiscount,
+                input.ValidFrom, input.ValidUntil, input.IsActive, input.UsageLimit)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create coupon: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Coupon created successfully",
+                "data": map[string]interface{}{
+                        "id":             id,
+                        "code":           input.Code,
+                        "discount_type":  input.DiscountType,
+                        "discount_value": input.DiscountValue,
+                        "min_purchase":   input.MinPurchase,
+                        "max_discount":   input.MaxDiscount,
+                        "is_active":      input.IsActive,
+                },
+        })
 }
 
 func UpdateCoupon(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update coupon - to be implemented"})
+        id := c.Params("id")
+        var input struct {
+                Code          string  `json:"code"`
+                DiscountType  string  `json:"discount_type"`
+                DiscountValue float64 `json:"discount_value"`
+                MinPurchase   float64 `json:"min_purchase"`
+                MaxDiscount   float64 `json:"max_discount"`
+                ValidFrom     *time.Time `json:"valid_from"`
+                ValidUntil    *time.Time `json:"valid_until"`
+                IsActive      bool    `json:"is_active"`
+                UsageLimit    *int    `json:"usage_limit"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE coupons 
+                SET code = ?, discount_type = ?, discount_value = ?, min_purchase = ?, max_discount = ?,
+                    valid_from = ?, valid_until = ?, is_active = ?, usage_limit = ?
+                WHERE id = ?
+        `, input.Code, input.DiscountType, input.DiscountValue, input.MinPurchase, input.MaxDiscount,
+                input.ValidFrom, input.ValidUntil, input.IsActive, input.UsageLimit, id)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to update coupon", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Coupon updated successfully",
+        })
 }
 
 func DeleteCoupon(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete coupon - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM coupons WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, "Failed to delete coupon", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Coupon deleted successfully",
+        })
 }
 
 func GetOutlets(c *fiber.Ctx) error {
