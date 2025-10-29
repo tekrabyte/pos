@@ -222,6 +222,16 @@ const Customers = () => {
                     <Button
                       variant="outline"
                       size="sm"
+                      className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      onClick={() => handleResetPassword(customer)}
+                      data-testid={`reset-password-${customer.id}`}
+                    >
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      Reset
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={() => handleDelete(customer.id)}
                       data-testid={`delete-customer-${customer.id}`}
