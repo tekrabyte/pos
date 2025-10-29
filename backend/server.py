@@ -27,6 +27,9 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 # MySQL connection pool
 db_pool = None
 
+# WebSocket connections for real-time notifications
+websocket_connections: Set[WebSocket] = set()
+
 # Create the main app
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
