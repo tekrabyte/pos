@@ -830,27 +830,141 @@ func GetTables(c *fiber.Ctx) error {
 }
 
 func GetTable(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get table - to be implemented"})
+        id := c.Params("id")
+        var table Table
+
+        query := "SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&table.ID, &table.Name, &table.Token, &table.QRCode,
+                &table.Status, &table.OutletID, &table.CreatedAt, &table.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Table not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "table": table})
 }
 
 func GetTableByToken(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get table by token - to be implemented"})
+        token := c.Params("token")
+        var table Table
+
+        query := "SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE token = ?"
+        err := DB.QueryRow(query, token).Scan(&table.ID, &table.Name, &table.Token, &table.QRCode,
+                &table.Status, &table.OutletID, &table.CreatedAt, &table.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Table not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "table": table})
 }
 
 func CreateTable(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create table - to be implemented"})
+        var req struct {
+                Name     string `json:"name"`
+                Status   string `json:"status"`
+                OutletID *int   `json:"outlet_id"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Table name is required", fiber.StatusBadRequest)
+        }
+
+        // Generate unique token
+        token := fmt.Sprintf("TBL-%d", time.Now().Unix())
+
+        result, err := DB.Exec(`
+                INSERT INTO tables (name, token, status, outlet_id, created_at, updated_at)
+                VALUES (?, ?, ?, ?, NOW(), NOW())
+        `, req.Name, token, req.Status, req.OutletID)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create table: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Table created successfully",
+                "table": fiber.Map{
+                        "id":     id,
+                        "name":   req.Name,
+                        "token":  token,
+                        "status": req.Status,
+                },
+        })
 }
 
 func UpdateTable(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update table - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Name     string `json:"name"`
+                Status   string `json:"status"`
+                OutletID *int   `json:"outlet_id"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE tables 
+                SET name = ?, status = ?, outlet_id = ?, updated_at = NOW()
+                WHERE id = ?
+        `, req.Name, req.Status, req.OutletID, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update table: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Table updated successfully",
+        })
 }
 
 func DeleteTable(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete table - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM tables WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete table: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Table deleted successfully",
+        })
 }
 
 func RegenerateTableQR(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Regenerate QR - to be implemented"})
+        id := c.Params("id")
+        
+        // Generate new token
+        newToken := fmt.Sprintf("TBL-%d", time.Now().Unix())
+
+        _, err := DB.Exec("UPDATE tables SET token = ?, updated_at = NOW() WHERE id = ?", newToken, id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to regenerate QR: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "QR code regenerated successfully",
+                "token":   newToken,
+        })
 }
 
 func GetCustomers(c *fiber.Ctx) error {
