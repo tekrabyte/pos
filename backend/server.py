@@ -470,26 +470,61 @@ async def staff_login(request: LoginRequest):
             else:
                 return LoginResponse(success=False, message="Invalid credentials")
 
-# Customer Register
+# Customer Register (Auto-generate password & send email)
 @api_router.post("/auth/customer/register")
 async def customer_register(customer: CustomerRegister):
     pool = await get_db()
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
+            # Validate email format
+            if not validate_email(customer.email):
+                raise HTTPException(status_code=400, detail="Format email tidak valid")
+            
+            # Validate phone format
+            if not validate_phone(customer.phone):
+                raise HTTPException(status_code=400, detail="Format nomor telepon tidak valid (gunakan format 08xx)")
+            
+            # Normalize phone number
+            normalized_phone = normalize_phone(customer.phone)
+            
             # Check if email exists
             await cursor.execute('SELECT COUNT(*) FROM customers WHERE email = %s', (customer.email,))
             exists = (await cursor.fetchone())[0]
             if exists > 0:
-                raise HTTPException(status_code=400, detail="Email already registered")
+                raise HTTPException(status_code=400, detail="Email sudah terdaftar")
             
+            # Check if phone exists
+            await cursor.execute('SELECT COUNT(*) FROM customers WHERE phone = %s', (normalized_phone,))
+            exists = (await cursor.fetchone())[0]
+            if exists > 0:
+                raise HTTPException(status_code=400, detail="Nomor telepon sudah terdaftar")
+            
+            # Auto-generate password
+            plain_password = generate_password()
+            hashed_pwd = hash_password(plain_password)
+            
+            # Insert customer
             await cursor.execute(
-                'INSERT INTO customers (name, email, password, phone, address) VALUES (%s, %s, %s, %s, %s)',
-                (customer.name, customer.email, customer.password, customer.phone, customer.address)
+                'INSERT INTO customers (name, email, password, phone, address, email_verified) VALUES (%s, %s, %s, %s, %s, %s)',
+                (customer.name, customer.email, hashed_pwd, normalized_phone, customer.address, False)
             )
             customer_id = cursor.lastrowid
             await conn.commit()
             
-            return {"success": True, "customer_id": customer_id, "message": "Registration successful"}
+            # Send welcome email with password
+            email_sent = email_service.send_welcome_email(
+                to_email=customer.email,
+                name=customer.name,
+                password=plain_password
+            )
+            
+            return {
+                "success": True,
+                "customer_id": customer_id,
+                "message": "Registrasi berhasil! Password telah dikirim ke email Anda.",
+                "email_sent": email_sent,
+                "temp_password": plain_password if not email_sent else None  # Show password if email failed
+            }
 
 # Customer Login
 @api_router.post("/auth/customer/login", response_model=LoginResponse)
