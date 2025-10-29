@@ -1161,6 +1161,18 @@ frontend:
         agent: "main"
         comment: "UPDATED: Converted to use useFetch hook with caching and debounced search. Need to test performance."
 
+  - task: "Payment Settings Page - Complete CRUD"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/PaymentSettings.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED: Added full CRUD functionality to Payment Settings page. Features: (1) Create payment methods with dialog (2) Edit payment methods with pre-filled form (3) Delete payment methods with confirmation (4) View all payment methods including inactive ones (5) Added Edit and Trash2 icons from lucide-react (6) Status badge shows Active/Nonaktif (7) Dialog title changes based on edit/create mode (8) Toast notifications for all actions. Frontend now complete for all admin CRUD operations."
+
   - agent: "testing"
     message: |
       🎉 PRIORITY BACKEND TESTING COMPLETE - ALL EMAIL & PASSWORD RESET FEATURES WORKING
