@@ -552,16 +552,197 @@ async def customer_login(request: LoginRequest):
                     )
             
             return LoginResponse(success=False, message="Email atau password salah")
+
+# Forgot Password - Request Reset
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if customer exists
+            await cursor.execute(
+                'SELECT id, name, email FROM customers WHERE email = %s',
+                (request.email,)
+            )
+            customer = await cursor.fetchone()
             
-            if customer:
-                customer_dict = row_to_dict(customer, cursor)
-                return LoginResponse(
-                    success=True,
-                    user=customer_dict,
-                    token=secrets.token_urlsafe(32)
-                )
-            else:
-                return LoginResponse(success=False, message="Invalid credentials")
+            if not customer:
+                # Don't reveal if email exists or not (security)
+                return {"success": True, "message": "Jika email terdaftar, link reset password telah dikirim"}
+            
+            customer_dict = row_to_dict(customer, cursor)
+            
+            # Generate reset token
+            reset_token = generate_reset_token()
+            expires_at = datetime.now() + timedelta(hours=1)
+            
+            # Save token to database
+            await cursor.execute(
+                'UPDATE customers SET password_reset_token = %s, password_reset_expires = %s WHERE id = %s',
+                (reset_token, expires_at, customer_dict['id'])
+            )
+            await conn.commit()
+            
+            # Send reset email
+            email_sent = email_service.send_password_reset_email(
+                to_email=customer_dict['email'],
+                name=customer_dict['name'],
+                reset_token=reset_token
+            )
+            
+            return {
+                "success": True,
+                "message": "Link reset password telah dikirim ke email Anda",
+                "email_sent": email_sent
+            }
+
+# Reset Password - With Token
+@api_router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Find customer with valid token
+            await cursor.execute(
+                '''SELECT id, name, email FROM customers 
+                   WHERE password_reset_token = %s 
+                   AND password_reset_expires > NOW()''',
+                (request.token,)
+            )
+            customer = await cursor.fetchone()
+            
+            if not customer:
+                raise HTTPException(status_code=400, detail="Token tidak valid atau sudah kadaluarsa")
+            
+            # Hash new password
+            hashed_pwd = hash_password(request.new_password)
+            
+            # Update password and clear reset token
+            await cursor.execute(
+                '''UPDATE customers 
+                   SET password = %s, password_reset_token = NULL, password_reset_expires = NULL
+                   WHERE id = %s''',
+                (hashed_pwd, customer[0])
+            )
+            await conn.commit()
+            
+            return {"success": True, "message": "Password berhasil direset"}
+
+# STORE SETTINGS ENDPOINTS
+
+@api_router.get("/store-settings")
+async def get_store_settings():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM store_settings LIMIT 1')
+            result = await cursor.fetchone()
+            if result:
+                return row_to_dict(result, cursor)
+            return {
+                "store_name": "QR Scan & Dine",
+                "rating": 4.5,
+                "total_reviews": 0
+            }
+
+@api_router.put("/store-settings")
+async def update_store_settings(settings: StoreSettingsUpdate):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            update_fields = []
+            values = []
+            
+            for field, value in settings.dict(exclude_unset=True).items():
+                if value is not None:
+                    update_fields.append(f"{field} = %s")
+                    values.append(value)
+            
+            if update_fields:
+                query = f"UPDATE store_settings SET {', '.join(update_fields)} WHERE id = 1"
+                await cursor.execute(query, values)
+                await conn.commit()
+            
+            return {"success": True, "message": "Store settings updated"}
+
+@api_router.get("/store-banners")
+async def get_store_banners():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'SELECT * FROM store_banners WHERE is_active = TRUE ORDER BY display_order'
+            )
+            results = await cursor.fetchall()
+            return [row_to_dict(row, cursor) for row in results]
+
+# COUPON ENDPOINTS
+
+@api_router.get("/coupons/available")
+async def get_available_coupons():
+    """Get active and valid coupons for customers"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                '''SELECT code, discount_type, discount_value, min_purchase, max_discount, 
+                          start_date, end_date, usage_limit, used_count
+                   FROM coupons 
+                   WHERE is_active = TRUE 
+                   AND (start_date IS NULL OR start_date <= NOW())
+                   AND (end_date IS NULL OR end_date >= NOW())
+                   AND (usage_limit = 0 OR used_count < usage_limit)
+                   ORDER BY discount_value DESC'''
+            )
+            results = await cursor.fetchall()
+            return [row_to_dict(row, cursor) for row in results]
+
+@api_router.post("/coupons/validate")
+async def validate_coupon(request: ApplyCouponRequest, total_amount: float):
+    """Validate coupon code and calculate discount"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Get coupon details
+            await cursor.execute(
+                '''SELECT * FROM coupons 
+                   WHERE code = %s 
+                   AND is_active = TRUE
+                   AND (start_date IS NULL OR start_date <= NOW())
+                   AND (end_date IS NULL OR end_date >= NOW())
+                   AND (usage_limit = 0 OR used_count < usage_limit)''',
+                (request.coupon_code.upper(),)
+            )
+            coupon = await cursor.fetchone()
+            
+            if not coupon:
+                raise HTTPException(status_code=400, detail="Kode kupon tidak valid atau sudah tidak berlaku")
+            
+            coupon_dict = row_to_dict(coupon, cursor)
+            
+            # Calculate discount
+            discount_result = calculate_discount(
+                total=total_amount,
+                discount_type=coupon_dict['discount_type'],
+                discount_value=float(coupon_dict['discount_value']),
+                min_purchase=float(coupon_dict['min_purchase']) if coupon_dict['min_purchase'] else 0
+            )
+            
+            if discount_result['error']:
+                raise HTTPException(status_code=400, detail=discount_result['error'])
+            
+            # Apply max discount if set
+            if coupon_dict['max_discount'] and discount_result['discount_amount'] > float(coupon_dict['max_discount']):
+                discount_result['discount_amount'] = float(coupon_dict['max_discount'])
+                discount_result['final_total'] = total_amount - discount_result['discount_amount']
+            
+            return {
+                "success": True,
+                "coupon": coupon_dict,
+                "original_amount": total_amount,
+                "discount_amount": discount_result['discount_amount'],
+                "final_total": discount_result['final_total']
+            }
 
 # WEBSOCKET ENDPOINT
 
