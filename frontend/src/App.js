@@ -72,7 +72,7 @@ function App() {
             } />
             <Route path="/customer/profile" element={
               <ProtectedRoute requiredAuth="customer">
-                <CustomerProfile />
+                <CustomerProfileNew />
               </ProtectedRoute>
             } />
             
