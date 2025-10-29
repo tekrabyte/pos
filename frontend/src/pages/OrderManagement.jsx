@@ -380,7 +380,7 @@ const OrderManagement = () => {
                             <div>
                               <p className="font-medium">Total</p>
                               <p className="font-bold text-green-600">
-                                Rp {order.total_amount.toLocaleString('id-ID')}
+                                Rp {formatCurrency(order.total_amount)}
                               </p>
                             </div>
                             <div>
