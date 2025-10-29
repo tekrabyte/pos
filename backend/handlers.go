@@ -712,13 +712,13 @@ func GetOrders(c *fiber.Ctx) error {
                         "payment_proof":    getNullString(o.PaymentProof),
                         "payment_verified": o.PaymentVerified,
                         "status":           getNullString(o.Status),
-                        "created_at":       o.CreatedAt,
+                        "created_at":       getNullTime(o.CreatedAt),
                         "coupon_id":        getNullInt(o.CouponID),
                         "coupon_code":      getNullString(o.CouponCode),
                         "discount_amount":  getNullFloat(o.DiscountAmount),
                         "original_amount":  getNullFloat(o.OriginalAmount),
                         "estimated_time":   getNullInt(o.EstimatedTime),
-                        "completed_at":     o.CompletedAt,
+                        "completed_at":     getNullTime(o.CompletedAt),
                 })
         }
 
