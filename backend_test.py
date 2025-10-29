@@ -620,6 +620,145 @@ class PosApiTester:
             
         return False
         
+    def test_admin_reset_password_auto_generate(self):
+        """Test admin reset customer password - auto generate mode (PRIORITY TEST)"""
+        print("\n=== Testing Admin Reset Customer Password - Auto Generate Mode (NEW) ===")
+        
+        if not self.customer_id:
+            self.log_test("Admin Reset Password Auto", False, "No customer_id available")
+            return False
+            
+        try:
+            # Test with empty body (auto-generate mode)
+            response = self.session.post(f"{API_BASE_URL}/admin/customers/{self.customer_id}/reset-password")
+            
+            if response.status_code == 200:
+                data = response.json()
+                expected_fields = ["success", "message", "email_sent"]
+                missing_fields = [field for field in expected_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_test("Admin Reset Password Auto", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                if data.get("success"):
+                    email_sent = data.get("email_sent", False)
+                    message = f"Auto-generate reset successful, email_sent: {email_sent}"
+                    
+                    # If email failed, temp_password should be shown
+                    if not email_sent and data.get("temp_password"):
+                        message += f", temp_password provided: {data['temp_password'][:3]}***"
+                        self.customer_password = data["temp_password"]  # Update for login test
+                    
+                    self.log_test("Admin Reset Password Auto", True, message)
+                    return True
+                else:
+                    self.log_test("Admin Reset Password Auto", False, f"Reset failed: {data}")
+            else:
+                self.log_test("Admin Reset Password Auto", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Admin Reset Password Auto", False, f"Exception: {str(e)}")
+            
+        return False
+        
+    def test_admin_reset_password_custom(self):
+        """Test admin reset customer password - custom password mode (PRIORITY TEST)"""
+        print("\n=== Testing Admin Reset Customer Password - Custom Password Mode (NEW) ===")
+        
+        if not self.customer_id:
+            self.log_test("Admin Reset Password Custom", False, "No customer_id available")
+            return False
+            
+        try:
+            # Test with custom password
+            custom_password = "CustomPass123"
+            request_data = {
+                "new_password": custom_password
+            }
+            
+            response = self.session.post(f"{API_BASE_URL}/admin/customers/{self.customer_id}/reset-password", 
+                json=request_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.customer_password = custom_password  # Update for login test
+                    email_sent = data.get("email_sent", False)
+                    message = f"Custom password reset successful, email_sent: {email_sent}"
+                    self.log_test("Admin Reset Password Custom", True, message)
+                    return True
+                else:
+                    self.log_test("Admin Reset Password Custom", False, f"Reset failed: {data}")
+            else:
+                self.log_test("Admin Reset Password Custom", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Admin Reset Password Custom", False, f"Exception: {str(e)}")
+            
+        return False
+        
+    def test_admin_reset_password_validation(self):
+        """Test admin reset password validation - password too short (PRIORITY TEST)"""
+        print("\n=== Testing Admin Reset Password Validation - Password Too Short ===")
+        
+        if not self.customer_id:
+            self.log_test("Admin Reset Password Validation", False, "No customer_id available")
+            return False
+            
+        try:
+            # Test with password too short (should fail)
+            request_data = {
+                "new_password": "12345"  # Only 5 characters, should fail
+            }
+            
+            response = self.session.post(f"{API_BASE_URL}/admin/customers/{self.customer_id}/reset-password", 
+                json=request_data)
+            
+            if response.status_code == 400:
+                data = response.json()
+                error_message = data.get("detail", "")
+                if "Password minimal 6 karakter" in error_message:
+                    self.log_test("Admin Reset Password Validation", True, f"Validation working: {error_message}")
+                    return True
+                else:
+                    self.log_test("Admin Reset Password Validation", False, f"Wrong error message: {error_message}")
+            else:
+                self.log_test("Admin Reset Password Validation", False, f"Expected HTTP 400, got {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Admin Reset Password Validation", False, f"Exception: {str(e)}")
+            
+        return False
+        
+    def test_customer_login_after_reset(self):
+        """Test customer login after password reset (PRIORITY TEST)"""
+        print("\n=== Testing Customer Login After Password Reset ===")
+        
+        if not hasattr(self, 'customer_email') or not self.customer_password:
+            self.log_test("Customer Login After Reset", False, "No customer email or password available")
+            return False
+            
+        try:
+            response = self.session.post(f"{API_BASE_URL}/auth/customer/login", 
+                json={"email": self.customer_email, "password": self.customer_password})
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("token"):
+                    self.customer_token = data["token"]
+                    self.log_test("Customer Login After Reset", True, f"Login successful with reset password, token received")
+                    return True
+                else:
+                    self.log_test("Customer Login After Reset", False, f"Login failed: {data.get('message', 'Unknown error')}")
+            else:
+                self.log_test("Customer Login After Reset", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test("Customer Login After Reset", False, f"Exception: {str(e)}")
+            
+        return False
+
     def test_delete_table(self):
         """Test table deletion"""
         print("\n=== Testing Table Deletion ===")
