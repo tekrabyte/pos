@@ -50,6 +50,14 @@ func getNullFloat(nf sql.NullFloat64) *float64 {
         return nil
 }
 
+func getNullTime(nt sql.NullTime) *string {
+        if nt.Valid {
+                formatted := nt.Time.Format(time.RFC3339)
+                return &formatted
+        }
+        return nil
+}
+
 // Health Check
 func HealthCheck(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
