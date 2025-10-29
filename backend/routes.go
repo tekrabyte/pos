@@ -20,6 +20,14 @@ func SetupRoutes(app *fiber.App) {
 	staff.Get("/me", AuthMiddleware, GetCurrentUser)
 	staff.Post("/logout", AuthMiddleware, Logout)
 
+	// Customer authentication
+	customer := auth.Group("/customer")
+	customer.Post("/register", CustomerRegister)
+	customer.Post("/login", CustomerLogin)
+	
+	// Customer routes
+	api.Post("/customer/change-password", AuthMiddleware, CustomerChangePassword)
+
 	// Product management
 	api.Get("/products", GetProducts)
 	api.Get("/products/:id", GetProduct)
