@@ -868,3 +868,50 @@ agent_communication:
       
       **Next: Frontend Phase 2/2**
 
+  - agent: "main"
+    message: |
+      🎉 EMAIL ISSUE FIXED & RESET PASSWORD FEATURE ADDED
+      
+      **✅ ISSUE #1 RESOLVED - Email Registration:**
+      **Root Cause:** SMTP credentials tidak ter-load karena `email_service.py` di-import SEBELUM `load_dotenv()` dipanggil
+      **Solution:** Tambahkan `load_dotenv()` di dalam `email_service.py` sendiri
+      **Result:** 
+      - ✅ SMTP berhasil connect ke Gmail (tekrabyte@gmail.com)
+      - ✅ Test email berhasil terkirim
+      - ✅ Registrasi customer sekarang mengirim email dengan password
+      
+      **✅ ISSUE #2 COMPLETED - Admin Reset Password Feature:**
+      **Backend Changes:**
+      - Updated `/api/admin/customers/{customer_id}/reset-password` endpoint
+      - Support 2 mode: auto-generate OR custom password
+      - Added `ResetPasswordRequest` model dengan optional `new_password`
+      - Validasi minimum 6 karakter untuk custom password
+      - Email otomatis terkirim dengan password baru
+      
+      **Frontend Changes (Customers.jsx):**
+      - ✅ Tambah tombol "Reset Password" pada setiap customer card
+      - ✅ Dialog reset password dengan 2 opsi:
+        1. **Auto-Generate**: Sistem buat password acak aman
+        2. **Custom Password**: Admin input password manual
+      - ✅ UI/UX yang jelas dengan radio button selection
+      - ✅ Loading state saat proses reset
+      - ✅ Toast notification untuk success/error
+      - ✅ Tampilkan password jika email gagal terkirim
+      
+      **Files Modified:**
+      1. `/app/backend/email_service.py` - Added load_dotenv()
+      2. `/app/backend/server.py` - Updated reset password endpoint
+      3. `/app/frontend/src/pages/Customers.jsx` - Added reset password UI
+      
+      **System Status:**
+      🟢 Backend running (PID 4142)
+      🟢 Email service operational
+      🟢 All endpoints ready
+      🟢 Frontend hot-reload active
+      
+      **Ready for Testing:**
+      - Customer registration dengan email delivery
+      - Admin reset password (auto-generate)
+      - Admin reset password (custom)
+      - Email notifications
+
