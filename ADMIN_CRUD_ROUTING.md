@@ -1,5 +1,31 @@
 # Admin CRUD System - Routing & Feature Documentation
 
+## ⚠️ IMPORTANT: Laravel Migration In Progress
+
+**Status:** FastAPI → Laravel migration dimulai (30% complete)
+**Laravel Location:** `/app/laravel/`
+**Full Migration Report:** [LARAVEL_MIGRATION_REPORT.md](LARAVEL_MIGRATION_REPORT.md)
+
+### Migration Progress:
+- ✅ Laravel 11 installed & configured
+- ✅ Database connection (same MySQL database)
+- ✅ JWT Authentication (Staff & Customer)
+- ✅ 17 Eloquent Models created
+- ✅ 3 API Controllers (Product, Category, Brand)
+- ⏳ 12 API Controllers remaining
+- ⏳ Blade Frontend not started
+- ⏳ Services & utilities not started
+
+### Current Systems:
+1. **FastAPI** (Port 8001) - Original system, fully functional
+2. **Laravel** (Port 8002) - New system, partially functional
+
+**Recommendation:** Continue using FastAPI until Laravel migration is 100% complete.
+
+---
+
+# Original FastAPI System Documentation
+
 ## 📋 Complete Admin Menu Routes
 
 ### ✅ Main Dashboard & Analytics
