@@ -179,11 +179,19 @@ const CustomerMenu = () => {
     if (isDineIn && tableInfo) {
       localStorage.setItem('orderType', 'dine-in');
       localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
+      navigate('/customer/cart');
     } else {
       localStorage.setItem('orderType', 'takeaway');
+      
+      // For takeaway, check if customer is logged in
+      if (!customer) {
+        // Redirect to combined auth-cart page (login/register with cart view)
+        navigate('/customer/auth-cart');
+      } else {
+        // Already logged in, go directly to cart checkout
+        navigate('/customer/cart');
+      }
     }
-    
-    navigate('/customer/cart');
   };
 
   const handleLogout = () => {
