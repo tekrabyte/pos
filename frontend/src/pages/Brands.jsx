@@ -31,7 +31,7 @@ const Brands = () => {
   const fetchBrands = async () => {
     try {
       const response = await axios.get(`${API}/brands`);
-      setBrands(response.data);
+      setBrands(response.data.brands || response.data || []);
     } catch (error) {
       console.error('Error fetching brands:', error);
       toast.error('Gagal mengambil data brand');
