@@ -477,9 +477,13 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Customer Authentication (Register & Login)"
+    - "Admin Reset Customer Password"
+    - "Customer Register Page"
+    - "Admin Customer Management with Reset Password"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
