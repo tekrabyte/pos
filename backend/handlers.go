@@ -225,7 +225,7 @@ func GetProducts(c *fiber.Ctx) error {
         }
         defer rows.Close()
 
-        var products []Product
+        var products []map[string]interface{}
         for rows.Next() {
                 var p Product
                 err := rows.Scan(&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
@@ -234,11 +234,25 @@ func GetProducts(c *fiber.Ctx) error {
                 if err != nil {
                         continue
                 }
-                products = append(products, p)
+                
+                products = append(products, map[string]interface{}{
+                        "id":          p.ID,
+                        "name":        p.Name,
+                        "sku":         getNullString(p.SKU),
+                        "price":       p.Price,
+                        "stock":       p.Stock,
+                        "category_id": getNullInt(p.CategoryID),
+                        "brand_id":    getNullInt(p.BrandID),
+                        "description": getNullString(p.Description),
+                        "image_url":   getNullString(p.ImageURL),
+                        "status":      getNullString(p.Status),
+                        "created_at":  p.CreatedAt,
+                        "updated_at":  p.UpdatedAt,
+                })
         }
 
         if products == nil {
-                products = []Product{}
+                products = []map[string]interface{}{}
         }
 
         return c.JSON(fiber.Map{
