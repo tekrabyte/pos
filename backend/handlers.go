@@ -215,7 +215,17 @@ func GetCurrentUser(c *fiber.Ctx) error {
 
         return c.JSON(fiber.Map{
                 "success": true,
-                "user":    user,
+                "user": fiber.Map{
+                        "id":         user.ID,
+                        "full_name":  getNullString(user.FullName),
+                        "username":   user.Username,
+                        "email":      getNullString(user.Email),
+                        "role":       getNullString(user.Role),
+                        "role_id":    getNullInt(user.RoleID),
+                        "outlet_id":  getNullInt(user.OutletID),
+                        "is_active":  getNullBool(user.IsActive),
+                        "created_at": getNullTime(user.CreatedAt),
+                },
         })
 }
 
