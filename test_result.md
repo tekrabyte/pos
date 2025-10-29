@@ -484,8 +484,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Customer Authentication (Register & Login)"
-    - "Admin Reset Customer Password"
     - "Customer Register Page"
     - "Admin Customer Management with Reset Password"
   stuck_tasks: []
