@@ -649,7 +649,18 @@ async def update_order_status(order_id: int, update: OrderStatusUpdate):
             
             await cursor.execute('SELECT * FROM orders WHERE id = %s', (order_id,))
             order = await cursor.fetchone()
-            return row_to_dict(order, cursor)
+            order_dict = row_to_dict(order, cursor)
+            
+            # Broadcast order status update via WebSocket
+            await broadcast_order_notification({
+                "type": "order_status_update",
+                "order_id": order_id,
+                "status": update.status,
+                "payment_verified": update.payment_verified,
+                "updated_at": datetime.now().isoformat()
+            })
+            
+            return order_dict
 
 @api_router.get("/orders/stats/pending")
 async def get_pending_orders_count():
