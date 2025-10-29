@@ -1832,6 +1832,30 @@ async def create_role(role: dict):
             result = await cursor.fetchone()
             return row_to_dict(result, cursor)
 
+@api_router.put("/roles/{role_id}")
+async def update_role(role_id: int, role: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE roles SET name = %s, max_discount = %s WHERE id = %s',
+                (role.get('name'), role.get('max_discount', 0), role_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM roles WHERE id = %s', (role_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/roles/{role_id}")
+async def delete_role(role_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM roles WHERE id = %s', (role_id,))
+            await conn.commit()
+            return {"success": True, "message": "Role deleted"}
+
 # PAYMENT METHODS
 
 @api_router.get("/payment-methods")
