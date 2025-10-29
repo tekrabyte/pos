@@ -324,7 +324,7 @@ const AddProduct = () => {
                               <SelectValue placeholder="Pilih produk" />
                             </SelectTrigger>
                             <SelectContent>
-                              {allProducts
+                              {Array.isArray(allProducts) && allProducts
                                 .filter((p) => !p.is_bundle)
                                 .map((product) => (
                                   <SelectItem key={product.id} value={product.id.toString()}>
