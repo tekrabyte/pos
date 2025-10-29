@@ -124,4 +124,38 @@ class CustomerController extends Controller
             'message' => 'Pelanggan berhasil dihapus'
         ]);
     }
+
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'required|exists:customers,id',
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $customer = Customer::find($request->customer_id);
+        
+        if (!Hash::check($request->old_password, $customer->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password lama tidak sesuai'
+            ], 400);
+        }
+
+        $customer->password = Hash::make($request->new_password);
+        $customer->save();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diubah'
+        ]);
+    }
 }
