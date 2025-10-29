@@ -1464,33 +1464,64 @@ func DeleteStoreBanner(c *fiber.Ctx) error {
 
 func GetAvailableCoupons(c *fiber.Ctx) error {
         rows, err := DB.Query(`
-                SELECT id, code, type, value, min_purchase, max_discount, start_date, end_date, 
-                       usage_limit, usage_count, is_active, created_at, updated_at
+                SELECT id, code, discount_type, discount_value, min_purchase, max_discount, 
+                       valid_from, valid_until, is_active, created_at, usage_limit, used_count
                 FROM coupons
                 WHERE is_active = 1
-                AND (start_date IS NULL OR start_date <= NOW())
-                AND (end_date IS NULL OR end_date >= NOW())
-                AND (usage_limit IS NULL OR usage_count < usage_limit)
+                AND (valid_from IS NULL OR valid_from <= NOW())
+                AND (valid_until IS NULL OR valid_until >= NOW())
+                AND (usage_limit IS NULL OR used_count < usage_limit)
                 ORDER BY created_at DESC
         `)
         if err != nil {
-                return ErrorResponse(c, "Failed to fetch available coupons", fiber.StatusInternalServerError)
+                return ErrorResponse(c, "Failed to fetch available coupons: "+err.Error(), fiber.StatusInternalServerError)
         }
         defer rows.Close()
 
-        var coupons []Coupon
+        var coupons []map[string]interface{}
         for rows.Next() {
-                var coupon Coupon
-                if err := rows.Scan(&coupon.ID, &coupon.Code, &coupon.Type, &coupon.Value, &coupon.MinPurchase,
-                        &coupon.MaxDiscount, &coupon.StartDate, &coupon.EndDate, &coupon.UsageLimit,
-                        &coupon.UsageCount, &coupon.IsActive, &coupon.CreatedAt, &coupon.UpdatedAt); err != nil {
+                var id int
+                var code, discountType string
+                var discountValue, minPurchase, maxDiscount float64
+                var validFrom, validUntil sql.NullTime
+                var isActive bool
+                var createdAt time.Time
+                var usageLimit, usedCount sql.NullInt64
+
+                if err := rows.Scan(&id, &code, &discountType, &discountValue, &minPurchase, &maxDiscount,
+                        &validFrom, &validUntil, &isActive, &createdAt, &usageLimit, &usedCount); err != nil {
                         continue
                 }
+
+                coupon := map[string]interface{}{
+                        "id":             id,
+                        "code":           code,
+                        "discount_type":  discountType,
+                        "discount_value": discountValue,
+                        "min_purchase":   minPurchase,
+                        "max_discount":   maxDiscount,
+                        "is_active":      isActive,
+                        "created_at":     createdAt,
+                }
+
+                if validFrom.Valid {
+                        coupon["valid_from"] = validFrom.Time
+                }
+                if validUntil.Valid {
+                        coupon["valid_until"] = validUntil.Time
+                }
+                if usageLimit.Valid {
+                        coupon["usage_limit"] = usageLimit.Int64
+                }
+                if usedCount.Valid {
+                        coupon["used_count"] = usedCount.Int64
+                }
+
                 coupons = append(coupons, coupon)
         }
 
         if coupons == nil {
-                coupons = []Coupon{}
+                coupons = []map[string]interface{}{}
         }
 
         return c.JSON(coupons)
