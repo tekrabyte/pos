@@ -35,8 +35,9 @@ const Products = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-pulse text-gray-500">Memuat data...</div>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="text-gray-500">Memuat data produk...</div>
         </div>
       </Layout>
     );
@@ -48,8 +49,19 @@ const Products = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Semua Produk</h1>
-          <div className="text-sm text-gray-500">
-            Total: {filteredProducts.length} produk
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-gray-500">
+              Total: {filteredProducts.length} produk
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
         </div>
 
@@ -62,6 +74,11 @@ const Products = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
+          {searchTerm && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+              {filteredProducts.length} hasil
+            </div>
+          )}
         </div>
 
         {/* Products Grid */}
