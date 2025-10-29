@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { ShoppingCart, Search, Plus, Minus, User, LogOut, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Search, Plus, Minus, User, LogOut, ShoppingBag, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -25,44 +25,34 @@ const CustomerMenu = () => {
   const [isDineIn, setIsDineIn] = useState(false);
 
   useEffect(() => {
-    // Add a small delay to ensure localStorage is ready
-    const checkAuth = async () => {
-      // Check if customer is logged in or if it's dine-in via QR
-      const customerData = localStorage.getItem('customer');
-      if (customerData) {
-        try {
-          setCustomer(JSON.parse(customerData));
-        } catch (error) {
-          console.error('Error parsing customer data:', error);
-        }
-      } else if (!tableToken) {
-        // No customer login and no table token, redirect to login
-        toast.error('Silakan login untuk memesan');
-        navigate('/customer/login');
-        return;
+    // Check if customer is logged in (optional)
+    const customerData = localStorage.getItem('customer');
+    if (customerData) {
+      try {
+        setCustomer(JSON.parse(customerData));
+      } catch (error) {
+        console.error('Error parsing customer data:', error);
       }
+    }
 
-      // If table token exists, it's dine-in
-      if (tableToken) {
-        setIsDineIn(true);
-        fetchTableInfo();
+    // If table token exists, it's dine-in
+    if (tableToken) {
+      setIsDineIn(true);
+      fetchTableInfo();
+    }
+
+    // Load cart from localStorage
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (error) {
+        console.error('Error parsing cart data:', error);
       }
+    }
 
-      // Load cart from localStorage
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        try {
-          setCart(JSON.parse(savedCart));
-        } catch (error) {
-          console.error('Error parsing cart data:', error);
-        }
-      }
-
-      fetchCategories();
-      fetchProducts();
-    };
-    
-    checkAuth();
+    fetchCategories();
+    fetchProducts();
   }, [tableToken]);
 
   const fetchTableInfo = async () => {
@@ -72,7 +62,6 @@ const CustomerMenu = () => {
       toast.success(`Welcome to Table ${response.data.table_number}`);
     } catch (error) {
       toast.error('Invalid table QR code');
-      navigate('/customer/login');
     }
   };
 
@@ -117,7 +106,7 @@ const CustomerMenu = () => {
     
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${product.name} ditambahkan ke keranjang`);
   };
 
   const updateQuantity = (productId, change) => {
@@ -137,7 +126,7 @@ const CustomerMenu = () => {
     const newCart = cart.filter(item => item.id !== productId);
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
-    toast.success('Item removed from cart');
+    toast.success('Item dihapus dari keranjang');
   };
 
   const getTotalItems = () => {
@@ -146,7 +135,7 @@ const CustomerMenu = () => {
 
   const handleCheckout = () => {
     if (cart.length === 0) {
-      toast.error('Your cart is empty');
+      toast.error('Keranjang Anda kosong');
       return;
     }
     
@@ -164,8 +153,11 @@ const CustomerMenu = () => {
   const handleLogout = () => {
     localStorage.removeItem('customer');
     localStorage.removeItem('customer_token');
-    localStorage.removeItem('cart');
     toast.success('Berhasil logout');
+    setCustomer(null);
+  };
+
+  const handleLogin = () => {
     navigate('/customer/login');
   };
 
@@ -176,21 +168,25 @@ const CustomerMenu = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">🍽️ Menu</h1>
+              <h1 className="text-2xl font-bold text-gray-800">🍽️ Menu Restoran</h1>
               {isDineIn && tableInfo && (
-                <p className="text-sm text-gray-600">Table {tableInfo.table_number}</p>
+                <p className="text-sm text-gray-600">Meja {tableInfo.table_number}</p>
               )}
               {customer && (
-                <p className="text-sm text-gray-600">Welcome, {customer.name}</p>
+                <p className="text-sm text-green-600">Selamat datang, {customer.name}</p>
+              )}
+              {!customer && !isDineIn && (
+                <p className="text-sm text-gray-600">Browse menu atau login untuk checkout</p>
               )}
             </div>
             <div className="flex items-center gap-2">
-              {customer && (
+              {customer ? (
                 <>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => navigate('/customer/orders')}
+                    title="Order History"
                   >
                     <ShoppingBag className="h-5 w-5" />
                   </Button>
@@ -198,6 +194,7 @@ const CustomerMenu = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => navigate('/customer/profile')}
+                    title="Profile"
                   >
                     <User className="h-5 w-5" />
                   </Button>
@@ -205,10 +202,21 @@ const CustomerMenu = () => {
                     variant="ghost"
                     size="icon"
                     onClick={handleLogout}
+                    title="Logout"
                   >
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleLogin}
+                  className="gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Button>
               )}
             </div>
           </div>
@@ -218,7 +226,7 @@ const CustomerMenu = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               type="text"
-              placeholder="Search menu..."
+              placeholder="Cari menu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -236,7 +244,7 @@ const CustomerMenu = () => {
               onClick={() => setSelectedCategory('all')}
               className="whitespace-nowrap"
             >
-              All Items
+              Semua Menu
             </Button>
             {categories.map(category => (
               <Button
@@ -274,7 +282,7 @@ const CustomerMenu = () => {
                   )}
                   {product.stock <= 0 && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <span className="text-white font-bold">Out of Stock</span>
+                      <span className="text-white font-bold">Stok Habis</span>
                     </div>
                   )}
                 </div>
@@ -317,7 +325,7 @@ const CustomerMenu = () => {
                         className="gap-1"
                       >
                         <Plus className="h-4 w-4" />
-                        Add
+                        Tambah
                       </Button>
                     )}
                   </div>
@@ -329,7 +337,7 @@ const CustomerMenu = () => {
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No products found</p>
+            <p className="text-gray-500 text-lg">Tidak ada produk ditemukan</p>
           </div>
         )}
       </div>
@@ -344,7 +352,7 @@ const CustomerMenu = () => {
               size="lg"
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
-              View Cart ({getTotalItems()} items)
+              Lihat Keranjang ({getTotalItems()} item)
             </Button>
           </div>
         </div>

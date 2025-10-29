@@ -41,8 +41,10 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
+          {/* Main Route - E-commerce Menu */}
+          <Route path="/" element={<CustomerMenu />} />
+          
           {/* Auth Routes */}
-          <Route path="/" element={<StaffLogin />} />
           <Route path="/staff/login" element={<StaffLogin />} />
           <Route path="/customer/login" element={<CustomerLogin />} />
           <Route path="/customer/register" element={<CustomerRegister />} />

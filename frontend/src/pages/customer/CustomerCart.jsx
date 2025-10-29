@@ -30,8 +30,8 @@ const CustomerCart = () => {
     if (savedCart) {
       setCart(JSON.parse(savedCart));
     } else {
-      toast.error('Your cart is empty');
-      navigate('/customer/menu');
+      toast.error('Keranjang Anda kosong');
+      navigate('/');
       return;
     }
 
@@ -49,6 +49,15 @@ const CustomerCart = () => {
       const table = localStorage.getItem('tableInfo');
       if (table) {
         setTableInfo(JSON.parse(table));
+      }
+    } else {
+      // For takeaway, check if customer is logged in
+      if (!customerData) {
+        toast.info('Silakan login untuk melanjutkan checkout takeaway');
+        // Save current path to redirect back after login
+        localStorage.setItem('redirectAfterLogin', '/customer/cart');
+        navigate('/customer/login');
+        return;
       }
     }
 
@@ -92,7 +101,7 @@ const CustomerCart = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB');
+        toast.error('Ukuran file maksimal 5MB');
         return;
       }
 
@@ -107,9 +116,9 @@ const CustomerCart = () => {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setPaymentProofUrl(response.data.url);
-        toast.success('Payment proof uploaded');
+        toast.success('Bukti pembayaran berhasil diupload');
       } catch (error) {
-        toast.error('Failed to upload payment proof');
+        toast.error('Gagal upload bukti pembayaran');
         console.error(error);
       }
     }
@@ -117,12 +126,13 @@ const CustomerCart = () => {
 
   const handleSubmitOrder = async () => {
     if (!paymentProofUrl) {
-      toast.error('Please upload payment proof');
+      toast.error('Mohon upload bukti pembayaran');
       return;
     }
 
     if (orderType === 'takeaway' && !customer) {
-      toast.error('Please login to place takeaway order');
+      toast.error('Silakan login untuk melanjutkan order takeaway');
+      localStorage.setItem('redirectAfterLogin', '/customer/cart');
       navigate('/customer/login');
       return;
     }
@@ -150,16 +160,23 @@ const CustomerCart = () => {
 
       const response = await axios.post(`${API_URL}/api/orders`, orderData);
       
-      // Clear cart
+      // Clear cart and order info
       localStorage.removeItem('cart');
       localStorage.removeItem('orderType');
       localStorage.removeItem('tableInfo');
       
-      toast.success('Order placed successfully!');
-      navigate('/customer/orders');
+      toast.success('Pesanan berhasil dibuat!');
+      
+      // Redirect based on order type
+      if (customer) {
+        navigate('/customer/orders');
+      } else {
+        // For guest dine-in, go back to menu
+        navigate('/');
+      }
     } catch (error) {
       console.error('Error submitting order:', error);
-      toast.error(error.response?.data?.detail || 'Failed to place order');
+      toast.error(error.response?.data?.detail || 'Gagal membuat pesanan');
     } finally {
       setIsSubmitting(false);
     }
@@ -174,7 +191,7 @@ const CustomerCart = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/customer/menu')}
+              onClick={() => navigate('/')}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -188,10 +205,10 @@ const CustomerCart = () => {
         <Card className="p-4">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm text-gray-600">Order Type</p>
-              <p className="font-semibold text-lg capitalize">{orderType}</p>
+              <p className="text-sm text-gray-600">Tipe Order</p>
+              <p className="font-semibold text-lg capitalize">{orderType === 'takeaway' ? 'Takeaway' : 'Dine-in'}</p>
               {tableInfo && (
-                <p className="text-sm text-gray-600">Table {tableInfo.table_number}</p>
+                <p className="text-sm text-gray-600">Meja {tableInfo.table_number}</p>
               )}
             </div>
             {customer && (
@@ -201,12 +218,18 @@ const CustomerCart = () => {
                 <p className="text-sm text-gray-600">{customer.phone}</p>
               </div>
             )}
+            {!customer && orderType === 'dine-in' && (
+              <div className="text-right">
+                <p className="text-sm text-green-600">Guest Dine-in</p>
+                <p className="text-xs text-gray-500">Login tidak diperlukan</p>
+              </div>
+            )}
           </div>
         </Card>
 
         {/* Cart Items */}
         <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4">Order Items</h2>
+          <h2 className="font-semibold text-lg mb-4">Item Pesanan</h2>
           <div className="space-y-3">
             {cart.map(item => (
               <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-b-0">
@@ -232,7 +255,7 @@ const CustomerCart = () => {
 
         {/* Payment Method */}
         <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4">Payment Method</h2>
+          <h2 className="font-semibold text-lg mb-4">Metode Pembayaran</h2>
           <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
             <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
               <RadioGroupItem value="qris" id="qris" />
@@ -248,7 +271,7 @@ const CustomerCart = () => {
               <Label htmlFor="bank_transfer" className="flex-1 cursor-pointer">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  <span className="font-medium">Bank Transfer</span>
+                  <span className="font-medium">Transfer Bank</span>
                 </div>
               </Label>
             </div>
@@ -257,7 +280,7 @@ const CustomerCart = () => {
           {/* QRIS Display */}
           {paymentMethod === 'qris' && qrisData && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
-              <p className="text-sm text-gray-600 mb-2">Scan QR Code to Pay</p>
+              <p className="text-sm text-gray-600 mb-2">Scan QR Code untuk Bayar</p>
               <img 
                 src={qrisData.qr_code_image} 
                 alt="QRIS" 
@@ -285,7 +308,7 @@ const CustomerCart = () => {
 
         {/* Upload Payment Proof */}
         <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4">Upload Payment Proof</h2>
+          <h2 className="font-semibold text-lg mb-4">Upload Bukti Pembayaran</h2>
           <div className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Input
@@ -298,9 +321,9 @@ const CustomerCart = () => {
               <Label htmlFor="payment-proof" className="cursor-pointer">
                 <Upload className="h-12 w-12 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">
-                  {paymentProof ? paymentProof.name : 'Click to upload payment proof'}
+                  {paymentProof ? paymentProof.name : 'Klik untuk upload bukti pembayaran'}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Max 5MB (JPG, PNG)</p>
+                <p className="text-xs text-gray-500 mt-1">Maksimal 5MB (JPG, PNG)</p>
               </Label>
             </div>
 
@@ -323,7 +346,7 @@ const CustomerCart = () => {
           className="w-full py-6 text-lg font-semibold"
           size="lg"
         >
-          {isSubmitting ? 'Placing Order...' : 'Place Order'}
+          {isSubmitting ? 'Memproses Pesanan...' : 'Buat Pesanan'}
         </Button>
       </div>
     </div>
