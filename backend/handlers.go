@@ -572,11 +572,46 @@ func CreateBrand(c *fiber.Ctx) error {
 }
 
 func UpdateBrand(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update brand - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Name        string `json:"name"`
+                Description string `json:"description"`
+                LogoURL     string `json:"logo_url"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE brands 
+                SET name = ?, description = ?, logo_url = ?
+                WHERE id = ?
+        `, req.Name, req.Description, req.LogoURL, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update brand: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Brand updated successfully",
+        })
 }
 
 func DeleteBrand(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete brand - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM brands WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete brand: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Brand deleted successfully",
+        })
 }
 
 // Get Orders
