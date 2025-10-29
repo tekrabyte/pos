@@ -575,6 +575,57 @@ async def delete_table(table_id: int):
                 raise HTTPException(status_code=404, detail="Table not found")
             return {"success": True, "message": "Table deleted"}
 
+@api_router.post("/tables/regenerate-qr")
+async def regenerate_all_qr_codes():
+    """Regenerate QR codes for all tables with current FRONTEND_URL"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Get all tables
+            await cursor.execute('SELECT id, table_number, qr_token FROM tables')
+            tables = await cursor.fetchall()
+            
+            if not tables:
+                return {"success": True, "message": "No tables to update", "updated_count": 0}
+            
+            # Get frontend URL from environment
+            frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+            updated_count = 0
+            
+            for table in tables:
+                table_id = table[0]
+                qr_token = table[2]
+                
+                # Generate new QR code with current frontend URL
+                qr_data = f"{frontend_url}/customer/menu?table={qr_token}"
+                qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+                qr.add_data(qr_data)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="black", back_color="white")
+                
+                # Convert to base64
+                buffer = io.BytesIO()
+                img.save(buffer, format='PNG')
+                buffer.seek(0)
+                qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+                qr_code_data = f"data:image/png;base64,{qr_code_base64}"
+                
+                # Update table with new QR code
+                await cursor.execute(
+                    'UPDATE tables SET qr_code = %s WHERE id = %s',
+                    (qr_code_data, table_id)
+                )
+                updated_count += 1
+            
+            await conn.commit()
+            
+            return {
+                "success": True, 
+                "message": f"Successfully regenerated QR codes for {updated_count} tables",
+                "updated_count": updated_count,
+                "frontend_url": frontend_url
+            }
+
 # PRODUCTS
 
 @api_router.get("/products")
