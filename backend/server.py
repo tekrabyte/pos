@@ -1222,6 +1222,193 @@ async def get_pending_orders_count():
             count = (await cursor.fetchone())[0]
             return {"count": count}
 
+# ORDER RATING
+@api_router.post("/orders/{order_id}/rating")
+async def rate_order(order_id: int, rating_req: RatingRequest, customer_id: int):
+    """Customer can rate completed order"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if order exists and belongs to customer
+            await cursor.execute(
+                'SELECT status, customer_id FROM orders WHERE id = %s',
+                (order_id,)
+            )
+            order = await cursor.fetchone()
+            
+            if not order:
+                raise HTTPException(status_code=404, detail="Order tidak ditemukan")
+            
+            if order[1] != customer_id:
+                raise HTTPException(status_code=403, detail="Anda tidak memiliki akses ke order ini")
+            
+            if order[0] != 'completed':
+                raise HTTPException(status_code=400, detail="Hanya order yang sudah selesai yang bisa diberi rating")
+            
+            # Check if already rated
+            await cursor.execute(
+                'SELECT id FROM order_ratings WHERE order_id = %s',
+                (order_id,)
+            )
+            if await cursor.fetchone():
+                raise HTTPException(status_code=400, detail="Order ini sudah diberi rating")
+            
+            # Insert rating
+            await cursor.execute(
+                'INSERT INTO order_ratings (order_id, customer_id, rating, review) VALUES (%s, %s, %s, %s)',
+                (order_id, customer_id, rating_req.rating, rating_req.review)
+            )
+            
+            # Update store average rating
+            await cursor.execute('SELECT AVG(rating), COUNT(*) FROM order_ratings')
+            avg_rating, total_reviews = await cursor.fetchone()
+            
+            await cursor.execute(
+                'UPDATE store_settings SET rating = %s, total_reviews = %s WHERE id = 1',
+                (round(float(avg_rating), 1), total_reviews)
+            )
+            
+            await conn.commit()
+            
+            return {"success": True, "message": "Terima kasih atas rating Anda!"}
+
+@api_router.get("/orders/{order_id}/tracking")
+async def track_order(order_id: int):
+    """Get order tracking details"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('''
+                SELECT o.*, c.name as customer_name_db, t.table_number,
+                       r.rating, r.review
+                FROM orders o
+                LEFT JOIN customers c ON o.customer_id = c.id
+                LEFT JOIN tables t ON o.table_id = t.id
+                LEFT JOIN order_ratings r ON o.id = r.order_id
+                WHERE o.id = %s
+            ''', (order_id,))
+            order = await cursor.fetchone()
+            
+            if not order:
+                raise HTTPException(status_code=404, detail="Order tidak ditemukan")
+            
+            order_dict = row_to_dict(order, cursor)
+            
+            # Get order items
+            await cursor.execute(
+                'SELECT * FROM order_items WHERE order_id = %s',
+                (order_id,)
+            )
+            items = await cursor.fetchall()
+            order_dict['items'] = [row_to_dict(item, cursor) for item in items]
+            
+            # Calculate progress percentage
+            status_progress = {
+                'pending': 20,
+                'confirmed': 40,
+                'cooking': 60,
+                'ready': 80,
+                'completed': 100,
+                'cancelled': 0
+            }
+            order_dict['progress'] = status_progress.get(order_dict['status'], 0)
+            
+            return order_dict
+
+# DASHBOARD STATS
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats():
+    """Get today's sales and order statistics"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            today = datetime.now().date()
+            
+            # Today's total sales
+            await cursor.execute('''
+                SELECT COALESCE(SUM(total_amount), 0) as total_sales,
+                       COUNT(*) as total_orders
+                FROM orders
+                WHERE DATE(created_at) = %s
+            ''', (today,))
+            sales_data = await cursor.fetchone()
+            
+            # Orders by status today
+            await cursor.execute('''
+                SELECT status, COUNT(*) as count
+                FROM orders
+                WHERE DATE(created_at) = %s
+                GROUP BY status
+            ''', (today,))
+            status_counts = {row[0]: row[1] for row in await cursor.fetchall()}
+            
+            # Orders by type today
+            await cursor.execute('''
+                SELECT order_type, COUNT(*) as count
+                FROM orders
+                WHERE DATE(created_at) = %s
+                GROUP BY order_type
+            ''', (today,))
+            type_counts = {row[0]: row[1] for row in await cursor.fetchall()}
+            
+            # Pending orders (all time)
+            await cursor.execute('SELECT COUNT(*) FROM orders WHERE status = %s', ('pending',))
+            pending_count = (await cursor.fetchone())[0]
+            
+            return {
+                "today": {
+                    "total_sales": float(sales_data[0]),
+                    "total_orders": sales_data[1],
+                    "by_status": status_counts,
+                    "by_type": type_counts
+                },
+                "pending_orders": pending_count
+            }
+
+# ADMIN - CUSTOMER MANAGEMENT
+@api_router.post("/admin/customers/{customer_id}/reset-password")
+async def admin_reset_customer_password(customer_id: int):
+    """Admin can reset customer password and send new one via email"""
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Get customer info
+            await cursor.execute(
+                'SELECT id, name, email FROM customers WHERE id = %s',
+                (customer_id,)
+            )
+            customer = await cursor.fetchone()
+            
+            if not customer:
+                raise HTTPException(status_code=404, detail="Customer tidak ditemukan")
+            
+            customer_dict = row_to_dict(customer, cursor)
+            
+            # Generate new password
+            new_password = generate_password()
+            hashed_pwd = hash_password(new_password)
+            
+            # Update password
+            await cursor.execute(
+                'UPDATE customers SET password = %s WHERE id = %s',
+                (hashed_pwd, customer_id)
+            )
+            await conn.commit()
+            
+            # Send email with new password
+            email_sent = email_service.send_new_password_email(
+                to_email=customer_dict['email'],
+                name=customer_dict['name'],
+                new_password=new_password
+            )
+            
+            return {
+                "success": True,
+                "message": "Password berhasil direset",
+                "email_sent": email_sent,
+                "temp_password": new_password if not email_sent else None
+            }
+
 # PAYMENT PROOF UPLOAD
 
 @api_router.post("/upload/payment-proof")
