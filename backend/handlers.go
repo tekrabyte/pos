@@ -518,22 +518,25 @@ func DeleteBrand(c *fiber.Ctx) error {
 // Get Orders
 func GetOrders(c *fiber.Ctx) error {
 	rows, err := DB.Query(`
-		SELECT id, order_number, customer_id, table_id, total_amount, discount_amount,
-		       tax_amount, final_amount, status, payment_method, payment_status, notes,
-		       created_by, created_at, updated_at
+		SELECT id, order_number, customer_id, table_id, order_type, customer_name,
+		       customer_phone, outlet_id, user_id, total_amount, payment_method,
+		       payment_proof, payment_verified, status, created_at, coupon_id,
+		       coupon_code, discount_amount, original_amount, estimated_time, completed_at
 		FROM orders ORDER BY created_at DESC
 	`)
 	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
 	}
 	defer rows.Close()
 
 	var orders []Order
 	for rows.Next() {
 		var o Order
-		err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.TotalAmount,
-			&o.DiscountAmount, &o.TaxAmount, &o.FinalAmount, &o.Status, &o.PaymentMethod,
-			&o.PaymentStatus, &o.Notes, &o.CreatedBy, &o.CreatedAt, &o.UpdatedAt)
+		err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.OrderType,
+			&o.CustomerName, &o.CustomerPhone, &o.OutletID, &o.UserID, &o.TotalAmount,
+			&o.PaymentMethod, &o.PaymentProof, &o.PaymentVerified, &o.Status, &o.CreatedAt,
+			&o.CouponID, &o.CouponCode, &o.DiscountAmount, &o.OriginalAmount,
+			&o.EstimatedTime, &o.CompletedAt)
 		if err != nil {
 			continue
 		}
