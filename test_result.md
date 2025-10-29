@@ -138,7 +138,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -155,18 +155,24 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ FIXED: Email service credentials tidak ter-load karena import sebelum load_dotenv(). Added load_dotenv() to email_service.py. Test email berhasil terkirim. Registrasi customer sekarang mengirim email dengan password auto-generated."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETE: Customer registration with email delivery working perfectly. POST /api/auth/customer/register returns HTTP 200 with success=true, customer_id, message, and email_sent=true. Email service confirmed operational with tekrabyte@gmail.com. Customer login after registration working with auto-generated password."
 
   - task: "Admin Reset Customer Password"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "NEW FEATURE: Implemented POST /api/admin/customers/{customer_id}/reset-password with 2 modes: auto-generate password OR custom password. Validates minimum 6 characters. Sends email with new password using email_service.send_new_password_email()."
+      - working: true
+        agent: "testing"
+        comment: "✅ ALL RESET PASSWORD MODES TESTED AND WORKING: (1) Auto-generate mode: POST with empty body returns HTTP 200, success=true, email_sent=true. (2) Custom password mode: POST with new_password='CustomPass123' returns HTTP 200, password set successfully. (3) Validation working: Password <6 chars returns HTTP 400 with 'Password minimal 6 karakter'. (4) Customer login after reset working with both auto-generated and custom passwords. Email delivery confirmed operational."
 
   - task: "Table Management CRUD"
     implemented: true
