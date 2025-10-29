@@ -63,6 +63,73 @@ const PaymentSettingsDetail = () => {
     }
   };
 
+  const fetchPaymentMethods = async () => {
+    try {
+      const response = await axios.get(`${API}/payment-methods`);
+      setPaymentMethods(response.data);
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      toast.error('Gagal mengambil data metode pembayaran');
+    }
+  };
+
+  const handleMethodSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editMethodId) {
+        await axios.put(`${API}/payment-methods/${editMethodId}`, methodFormData);
+        toast.success('Metode pembayaran berhasil diperbarui');
+      } else {
+        await axios.post(`${API}/payment-methods`, methodFormData);
+        toast.success('Metode pembayaran berhasil ditambahkan');
+      }
+      setShowMethodDialog(false);
+      setMethodFormData({
+        name: '',
+        type: 'cash',
+        is_active: true,
+      });
+      setEditMethodId(null);
+      fetchPaymentMethods();
+    } catch (error) {
+      console.error('Error saving payment method:', error);
+      toast.error('Gagal menyimpan metode pembayaran');
+    }
+  };
+
+  const handleEditMethod = (method) => {
+    setEditMethodId(method.id);
+    setMethodFormData({
+      name: method.name,
+      type: method.type,
+      is_active: method.is_active,
+    });
+    setShowMethodDialog(true);
+  };
+
+  const handleDeleteMethod = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus metode pembayaran ini?')) {
+      try {
+        await axios.delete(`${API}/payment-methods/${id}`);
+        toast.success('Metode pembayaran berhasil dihapus');
+        fetchPaymentMethods();
+      } catch (error) {
+        console.error('Error deleting payment method:', error);
+        toast.error('Gagal menghapus metode pembayaran');
+      }
+    }
+  };
+
+  const handleAddNewMethod = () => {
+    setEditMethodId(null);
+    setMethodFormData({
+      name: '',
+      type: 'cash',
+      is_active: true,
+    });
+    setShowMethodDialog(true);
+  };
+
   const handleQrisImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
