@@ -30,7 +30,7 @@ import BarcodeScanner from '@/components/BarcodeScanner';
 import ReceiptPrint from '@/components/ReceiptPrint';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = `${BACKEND_URL}`;
 
 const POSCashier = () => {
   const navigate = useNavigate();

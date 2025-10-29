@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = `${BACKEND_URL}`;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
