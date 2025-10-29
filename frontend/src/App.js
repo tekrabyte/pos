@@ -49,9 +49,18 @@ function App() {
           
           {/* Staff/Admin Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/coupons" element={<Coupons />} />
+          <Route path="/outlets" element={<Outlets />} />
+          <Route path="/roles" element={<Roles />} />
+          <Route path="/payment-settings" element={<PaymentSettings />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/add" element={<AddProduct />} />
+          <Route path="/brands" element={<Brands />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/pos" element={<POSCashier />} />
+          <Route path="/kiosk" element={<Kiosk />} />
           <Route path="/tables" element={<TableManagement />} />
           <Route path="/orders" element={<OrderManagement />} />
         </Routes>
