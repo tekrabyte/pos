@@ -187,10 +187,12 @@ func StaffLogin(c *fiber.Ctx) error {
                 "token":   token,
                 "user": fiber.Map{
                         "id":        user.ID,
-                        "full_name": user.FullName,
+                        "full_name": getNullString(user.FullName),
                         "username":  user.Username,
-                        "email":     user.Email,
+                        "email":     getNullString(user.Email),
                         "role":      roleStr,
+                        "role_id":   getNullInt(user.RoleID),
+                        "outlet_id": getNullInt(user.OutletID),
                 },
         })
 }
