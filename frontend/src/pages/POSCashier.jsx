@@ -143,7 +143,7 @@ const POSCashier = () => {
   const fetchCustomers = async () => {
     try {
       const response = await axios.get(`${API}/customers`);
-      setCustomers(response.data);
+      setCustomers(response.data.customers || response.data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
