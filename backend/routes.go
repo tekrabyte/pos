@@ -97,4 +97,42 @@ func SetupRoutes(app *fiber.App) {
 	// Dashboard & Analytics
 	api.Get("/dashboard/stats", AuthMiddleware, GetDashboardStats)
 	api.Get("/analytics", AuthMiddleware, GetAnalytics)
+
+	// Roles
+	api.Get("/roles", GetRoles)
+	api.Get("/roles/:id", GetRole)
+	api.Post("/roles", AuthMiddleware, CreateRole)
+	api.Put("/roles/:id", AuthMiddleware, UpdateRole)
+	api.Delete("/roles/:id", AuthMiddleware, DeleteRole)
+
+	// Bank Accounts
+	api.Get("/bank-accounts", GetBankAccounts)
+	api.Get("/bank-accounts/:id", GetBankAccount)
+	api.Post("/bank-accounts", AuthMiddleware, CreateBankAccount)
+	api.Put("/bank-accounts/:id", AuthMiddleware, UpdateBankAccount)
+	api.Delete("/bank-accounts/:id", AuthMiddleware, DeleteBankAccount)
+
+	// Store Settings
+	api.Get("/store-settings", GetStoreSettings)
+	api.Post("/store-settings", AuthMiddleware, UpdateStoreSettings)
+	api.Put("/store-settings", AuthMiddleware, UpdateStoreSettings)
+
+	// Store Banners
+	api.Get("/store-banners", GetStoreBanners)
+	api.Get("/store-banners/:id", GetStoreBanner)
+	api.Post("/store-banners", AuthMiddleware, CreateStoreBanner)
+	api.Put("/store-banners/:id", AuthMiddleware, UpdateStoreBanner)
+	api.Delete("/store-banners/:id", AuthMiddleware, DeleteStoreBanner)
+
+	// Coupons - Available
+	api.Get("/coupons/available", GetAvailableCoupons)
+
+	// File Uploads
+	api.Post("/upload/payment-proof", UploadPaymentProof)
+	api.Post("/upload/qris", UploadQRIS)
+
+	// QRIS & Payment Settings
+	api.Get("/payment-settings/qris", GetQRISSettings)
+	api.Post("/payment-settings/qris", AuthMiddleware, UpdateQRISSettings)
+	api.Post("/qris/generate", GenerateQRIS)
 }
