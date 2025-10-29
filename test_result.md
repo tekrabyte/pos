@@ -412,15 +412,15 @@ test_plan:
   current_focus:
     - "Staff/Admin Authentication"
     - "Customer Authentication (Register & Login)"
-    - "Table Management CRUD"
-    - "QR Code Generation for Tables"
     - "Order Creation (Takeaway & Dine-in)"
     - "Order Status Management"
-    - "Payment Proof Upload"
-    - "WebSocket Real-time Notifications"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
+  stuck_tasks:
+    - "Staff/Admin Authentication"
+    - "Customer Authentication (Register & Login)"
+    - "Order Creation (Takeaway & Dine-in)"
+    - "Order Status Management"
+  test_all: false
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
