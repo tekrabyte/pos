@@ -138,7 +138,7 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/orders`);
+      const response = await axios.get(`${API_URL}/orders`);
       setOrders(response.data);
       
       // Update pending count
@@ -154,7 +154,7 @@ const OrderManagement = () => {
 
   const fetchOrderDetails = async (orderId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/orders/${orderId}`);
+      const response = await axios.get(`${API_URL}/orders/${orderId}`);
       setSelectedOrder(response.data);
     } catch (error) {
       console.error('Error fetching order details:', error);
@@ -169,7 +169,7 @@ const OrderManagement = () => {
         updateData.payment_verified = paymentVerified;
       }
 
-      await axios.put(`${API_URL}/api/orders/${orderId}/status`, updateData);
+      await axios.put(`${API_URL}/orders/${orderId}/status`, updateData);
       toast.success(`Order ${newStatus}`);
       fetchOrders();
       
