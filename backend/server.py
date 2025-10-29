@@ -66,6 +66,11 @@ async def get_payment_methods():
             }
             
             # Add optional columns if they exist
+            if "config" in row:
+                method["config"] = row["config"]
+            else:
+                method["config"] = None
+                
             if "created_at" in row and row["created_at"]:
                 method["created_at"] = row["created_at"].isoformat()
             else:
