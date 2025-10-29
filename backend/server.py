@@ -5,7 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Set
 from datetime import datetime, timezone, timedelta
 import aiomysql
@@ -16,6 +16,15 @@ import base64
 import secrets
 import shutil
 import asyncio
+
+# Import custom modules
+from email_service import email_service
+from utils import (
+    generate_password, hash_password, verify_password,
+    validate_email, validate_phone, normalize_phone,
+    generate_reset_token, generate_order_number,
+    calculate_discount, is_valid_coupon_code
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
