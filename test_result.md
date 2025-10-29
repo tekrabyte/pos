@@ -196,7 +196,7 @@ backend:
 
   - task: "Order Creation (Takeaway & Dine-in)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -208,6 +208,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Orders table missing required columns: table_id, order_type, customer_name, customer_phone, payment_proof, payment_verified. Database schema mismatch causing HTTP 500 errors. Cannot create orders due to missing columns."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Database schema has been corrected. Both takeaway and dine-in order creation working perfectly. POST /api/orders successfully creates orders with all required fields including table_id, order_type, customer details, and payment information. WebSocket notifications broadcasting correctly on order creation."
 
   - task: "Order Status Management"
     implemented: true
