@@ -74,6 +74,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Delete("/customers/:id", AuthMiddleware, DeleteCustomer)
 
 	// Coupons
+	api.Get("/coupons/available", GetAvailableCoupons)
 	api.Get("/coupons", GetCoupons)
 	api.Get("/coupons/:id", GetCoupon)
 	api.Post("/coupons", AuthMiddleware, CreateCoupon)
