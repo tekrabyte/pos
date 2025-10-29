@@ -326,7 +326,7 @@ curl http://localhost:8002/api/products
 ```env
 APP_NAME="POS System"
 APP_ENV=production
-APP_URL=https://laravel-same-db.preview.emergentagent.com
+APP_URL=https://laravel-migration-3.preview.emergentagent.com
 
 DB_CONNECTION=mysql
 DB_HOST=srv1412.hstgr.io
