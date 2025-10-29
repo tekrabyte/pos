@@ -25,6 +25,7 @@ const CustomerMenu = lazy(() => import('@/pages/customer/CustomerMenu'));
 const CustomerCart = lazy(() => import('@/pages/customer/CustomerCart'));
 const CustomerOrders = lazy(() => import('@/pages/customer/CustomerOrders'));
 const CustomerProfile = lazy(() => import('@/pages/customer/CustomerProfile'));
+const CustomerProfileNew = lazy(() => import('@/pages/customer/CustomerProfileNew'));
 
 // Staff Pages - Lazy load
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
