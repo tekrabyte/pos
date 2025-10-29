@@ -355,6 +355,60 @@ async def startup():
                     ('BCA', '1234567890', 'POS MERCHANT', True)
                 )
             
+            # Insert default outlet
+            await cursor.execute('SELECT COUNT(*) FROM outlets')
+            outlet_exists = (await cursor.fetchone())[0]
+            if outlet_exists == 0:
+                await cursor.execute(
+                    'INSERT INTO outlets (name, address, city, country, postal_code, is_main) VALUES (%s, %s, %s, %s, %s, %s)',
+                    ('Main Restaurant', 'Jl. Sudirman No. 123', 'Jakarta', 'Indonesia', '12190', True)
+                )
+            
+            # Insert default roles
+            await cursor.execute('SELECT COUNT(*) FROM roles')
+            roles_exist = (await cursor.fetchone())[0]
+            if roles_exist == 0:
+                roles_data = [
+                    ('Admin', 100.00),
+                    ('Manager', 50.00),
+                    ('Cashier', 10.00)
+                ]
+                for role_name, max_discount in roles_data:
+                    await cursor.execute(
+                        'INSERT INTO roles (name, max_discount) VALUES (%s, %s)',
+                        (role_name, max_discount)
+                    )
+            
+            # Insert default payment methods
+            await cursor.execute('SELECT COUNT(*) FROM payment_methods')
+            payment_methods_exist = (await cursor.fetchone())[0]
+            if payment_methods_exist == 0:
+                payment_methods_data = [
+                    ('QRIS', 'qr_code', True, '{"provider": "QRIS", "merchant_id": "POSMERCHANT001"}'),
+                    ('Bank Transfer', 'bank_transfer', True, '{"banks": ["BCA", "BNI", "Mandiri"]}'),
+                    ('Cash', 'cash', True, '{}')
+                ]
+                for name, type_val, is_active, config in payment_methods_data:
+                    await cursor.execute(
+                        'INSERT INTO payment_methods (name, type, is_active, config) VALUES (%s, %s, %s, %s)',
+                        (name, type_val, is_active, config)
+                    )
+            
+            # Insert default brands
+            await cursor.execute('SELECT COUNT(*) FROM brands')
+            brands_exist = (await cursor.fetchone())[0]
+            if brands_exist == 0:
+                brands_data = [
+                    ('House Brand', 'Restaurant house brand products', None),
+                    ('Premium Selection', 'Premium quality products', None),
+                    ('Local Favorites', 'Local specialty products', None)
+                ]
+                for name, description, logo_url in brands_data:
+                    await cursor.execute(
+                        'INSERT INTO brands (name, description, logo_url) VALUES (%s, %s, %s)',
+                        (name, description, logo_url)
+                    )
+            
             await conn.commit()
 
 # AUTH ENDPOINTS
