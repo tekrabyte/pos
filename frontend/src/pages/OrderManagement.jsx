@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Bell, Clock, CheckCircle, XCircle, ChefHat, Package, Eye, Check, X } from 'lucide-react';
+import { Bell, Clock, CheckCircle, XCircle, ChefHat, Package, Eye, Check, X, UtensilsCrossed, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
