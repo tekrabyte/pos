@@ -115,8 +115,9 @@ class LaravelPOSCRUDTester:
         if response.status_code == 201 or response.status_code == 200:
             try:
                 data = response.json()
-                if data.get('success') and data.get('data'):
-                    product_id = data['data'].get('id')
+                if data.get('success') and (data.get('data') or data.get('product')):
+                    product_data = data.get('data') or data.get('product')
+                    product_id = product_data.get('id')
                     self.log_test("Create Product", True, f"Product created with ID: {product_id}", response_time, response.status_code)
                     return True, product_id
                 else:
