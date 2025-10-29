@@ -34,7 +34,7 @@ const Coupons = () => {
   const fetchCoupons = async () => {
     try {
       const response = await axios.get(`${API}/coupons`);
-      setCoupons(response.data);
+      setCoupons(response.data.coupons || response.data || []);
     } catch (error) {
       console.error('Error fetching coupons:', error);
       toast.error('Gagal mengambil data kupon');
