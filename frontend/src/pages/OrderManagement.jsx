@@ -11,7 +11,8 @@ import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
-const WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://');
+// Remove /api from WS_URL since API_URL already contains it
+const WS_URL = API_URL.replace('https://', 'wss://').replace('http://', 'ws://').replace('/api', '');
 
 const statusConfig = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', icon: Clock },
