@@ -418,7 +418,7 @@ func GetCategories(c *fiber.Ctx) error {
                         "name":        cat.Name,
                         "description": getNullString(cat.Description),
                         "parent_id":   getNullInt(cat.ParentID),
-                        "created_at":  cat.CreatedAt,
+                        "created_at":  getNullTime(cat.CreatedAt),
                 })
         }
 
