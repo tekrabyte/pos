@@ -122,12 +122,12 @@ type Outlet struct {
 }
 
 type PaymentMethod struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int            `json:"id"`
+	Name      string         `json:"name"`
+	Type      string         `json:"type"`
+	IsActive  bool           `json:"is_active"`
+	Config    sql.NullString `json:"config"`
+	CreatedAt sql.NullTime   `json:"created_at"`
 }
 
 type Role struct {
