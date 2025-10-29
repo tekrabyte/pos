@@ -56,14 +56,25 @@ async def get_payment_methods():
         
         methods = []
         for row in cursor.fetchall():
-            methods.append({
+            method = {
                 "id": row["id"],
                 "name": row["name"],
                 "type": row["type"],
                 "is_active": row["is_active"],
-                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-                "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
-            })
+            }
+            
+            # Add optional columns if they exist
+            if "created_at" in row and row["created_at"]:
+                method["created_at"] = row["created_at"].isoformat()
+            else:
+                method["created_at"] = None
+                
+            if "updated_at" in row and row["updated_at"]:
+                method["updated_at"] = row["updated_at"].isoformat()
+            else:
+                method["updated_at"] = None
+                
+            methods.append(method)
         
         cursor.close()
         conn.close()
