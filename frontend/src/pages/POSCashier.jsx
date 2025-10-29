@@ -124,7 +124,8 @@ const POSCashier = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${API}/products`);
-      const activeProducts = response.data.filter((p) => p.status === 'active' && p.stock > 0);
+      const productsArray = response.data.products || [];
+      const activeProducts = productsArray.filter((p) => p.status === 'active' && p.stock > 0);
       setProducts(activeProducts);
       setFilteredProducts(activeProducts);
       localStorage.setItem('cached_products', JSON.stringify(activeProducts));
