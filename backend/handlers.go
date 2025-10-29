@@ -654,23 +654,157 @@ func GetOrders(c *fiber.Ctx) error {
 
 // Simplified CRUD for Orders
 func GetOrder(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get order - to be implemented"})
+        id := c.Params("id")
+        var order Order
+
+        query := `SELECT id, order_number, customer_id, table_id, order_type, customer_name, 
+                  customer_phone, outlet_id, user_id, total_amount, payment_method, payment_proof,
+                  payment_verified, status, created_at, coupon_id, coupon_code, discount_amount,
+                  original_amount, estimated_time, completed_at
+                  FROM orders WHERE id = ?`
+        
+        err := DB.QueryRow(query, id).Scan(
+                &order.ID, &order.OrderNumber, &order.CustomerID, &order.TableID, &order.OrderType,
+                &order.CustomerName, &order.CustomerPhone, &order.OutletID, &order.UserID,
+                &order.TotalAmount, &order.PaymentMethod, &order.PaymentProof, &order.PaymentVerified,
+                &order.Status, &order.CreatedAt, &order.CouponID, &order.CouponCode,
+                &order.DiscountAmount, &order.OriginalAmount, &order.EstimatedTime, &order.CompletedAt,
+        )
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Order not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "order": order})
 }
 
 func CreateOrder(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create order - to be implemented"})
+        var req struct {
+                OrderNumber      string  `json:"order_number"`
+                CustomerID       *int    `json:"customer_id"`
+                TableID          *int    `json:"table_id"`
+                OrderType        string  `json:"order_type"`
+                CustomerName     string  `json:"customer_name"`
+                CustomerPhone    string  `json:"customer_phone"`
+                OutletID         *int    `json:"outlet_id"`
+                UserID           *int    `json:"user_id"`
+                TotalAmount      float64 `json:"total_amount"`
+                PaymentMethod    string  `json:"payment_method"`
+                PaymentProof     string  `json:"payment_proof"`
+                PaymentVerified  bool    `json:"payment_verified"`
+                Status           string  `json:"status"`
+                CouponID         *int    `json:"coupon_id"`
+                CouponCode       string  `json:"coupon_code"`
+                DiscountAmount   float64 `json:"discount_amount"`
+                OriginalAmount   float64 `json:"original_amount"`
+                EstimatedTime    int     `json:"estimated_time"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO orders (order_number, customer_id, table_id, order_type, customer_name, 
+                                   customer_phone, outlet_id, user_id, total_amount, payment_method, 
+                                   payment_proof, payment_verified, status, created_at, coupon_id, 
+                                   coupon_code, discount_amount, original_amount, estimated_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?)
+        `, req.OrderNumber, req.CustomerID, req.TableID, req.OrderType, req.CustomerName,
+                req.CustomerPhone, req.OutletID, req.UserID, req.TotalAmount, req.PaymentMethod,
+                req.PaymentProof, req.PaymentVerified, req.Status, req.CouponID, req.CouponCode,
+                req.DiscountAmount, req.OriginalAmount, req.EstimatedTime)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create order: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Order created successfully",
+                "order_id": id,
+        })
 }
 
 func UpdateOrder(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update order - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                CustomerID      *int    `json:"customer_id"`
+                TableID         *int    `json:"table_id"`
+                OrderType       string  `json:"order_type"`
+                CustomerName    string  `json:"customer_name"`
+                CustomerPhone   string  `json:"customer_phone"`
+                TotalAmount     float64 `json:"total_amount"`
+                PaymentMethod   string  `json:"payment_method"`
+                PaymentProof    string  `json:"payment_proof"`
+                PaymentVerified bool    `json:"payment_verified"`
+                Status          string  `json:"status"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE orders 
+                SET customer_id = ?, table_id = ?, order_type = ?, customer_name = ?, 
+                    customer_phone = ?, total_amount = ?, payment_method = ?, 
+                    payment_proof = ?, payment_verified = ?, status = ?
+                WHERE id = ?
+        `, req.CustomerID, req.TableID, req.OrderType, req.CustomerName, req.CustomerPhone,
+                req.TotalAmount, req.PaymentMethod, req.PaymentProof, req.PaymentVerified,
+                req.Status, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update order: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Order updated successfully",
+        })
 }
 
 func DeleteOrder(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete order - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM orders WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete order: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Order deleted successfully",
+        })
 }
 
 func UpdateOrderStatus(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update order status - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Status string `json:"status"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec("UPDATE orders SET status = ? WHERE id = ?", req.Status, id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update order status: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Order status updated successfully",
+        })
 }
 
 // Simplified handlers for other entities
