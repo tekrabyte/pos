@@ -29,7 +29,7 @@ const Roles = () => {
   const fetchRoles = async () => {
     try {
       const response = await axios.get(`${API}/roles`);
-      setRoles(response.data);
+      setRoles(response.data.roles || response.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
       toast.error('Gagal mengambil data role');
