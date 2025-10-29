@@ -555,7 +555,7 @@ func GetBrands(c *fiber.Ctx) error {
                         "name":        b.Name,
                         "description": getNullString(b.Description),
                         "logo_url":    getNullString(b.LogoURL),
-                        "created_at":  b.CreatedAt,
+                        "created_at":  getNullTime(b.CreatedAt),
                 })
         }
 
