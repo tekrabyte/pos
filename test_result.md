@@ -55,9 +55,15 @@ The application was experiencing multiple React rendering errors and API endpoin
 - Created `/app/frontend/.env` file with backend URL
 - Set `REACT_APP_BACKEND_URL=/api` (relative path to avoid CORS issues)
 - Using relative path ensures requests go through same domain and nginx proxy handles routing
+- **Frontend must be restarted after creating/modifying .env file** for changes to take effect
 
 **Files Created**:
 - `/app/frontend/.env`
+
+**Important Notes**:
+- React apps only read environment variables at build/start time, not at runtime
+- Any changes to `.env` file require frontend restart: `pkill -f "yarn start" && cd /app/frontend && yarn start &`
+- The .env file was missing even though it was documented as fixed, causing the `/undefined/...` error to persist
 
 ### Issue 5: CORS Configuration
 **Problem**: External backend URL caused CORS errors when frontend tried to access it from different origin.
