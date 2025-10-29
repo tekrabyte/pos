@@ -43,14 +43,20 @@ const PaymentSettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/payment-methods`, formData);
-      toast.success('Metode pembayaran berhasil ditambahkan');
+      if (editId) {
+        await axios.put(`${API}/payment-methods/${editId}`, formData);
+        toast.success('Metode pembayaran berhasil diperbarui');
+      } else {
+        await axios.post(`${API}/payment-methods`, formData);
+        toast.success('Metode pembayaran berhasil ditambahkan');
+      }
       setShowDialog(false);
       setFormData({
         name: '',
         type: 'cash',
         is_active: true,
       });
+      setEditId(null);
       fetchPaymentMethods();
     } catch (error) {
       console.error('Error saving payment method:', error);
@@ -58,7 +64,31 @@ const PaymentSettings = () => {
     }
   };
 
+  const handleEdit = (method) => {
+    setEditId(method.id);
+    setFormData({
+      name: method.name,
+      type: method.type,
+      is_active: method.is_active,
+    });
+    setShowDialog(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus metode pembayaran ini?')) {
+      try {
+        await axios.delete(`${API}/payment-methods/${id}`);
+        toast.success('Metode pembayaran berhasil dihapus');
+        fetchPaymentMethods();
+      } catch (error) {
+        console.error('Error deleting payment method:', error);
+        toast.error('Gagal menghapus metode pembayaran');
+      }
+    }
+  };
+
   const handleAddNew = () => {
+    setEditId(null);
     setFormData({
       name: '',
       type: 'cash',
