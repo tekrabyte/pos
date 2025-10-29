@@ -162,10 +162,10 @@ func GetCurrentUser(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
 
 	var user User
-	query := "SELECT id, name, username, email, role, outlet_id, created_at, updated_at FROM users WHERE id = ? LIMIT 1"
+	query := "SELECT id, full_name, username, email, role, role_id, outlet_id, is_active, created_at FROM users WHERE id = ? LIMIT 1"
 	err := DB.QueryRow(query, userID).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email,
-		&user.Role, &user.OutletID, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.FullName, &user.Username, &user.Email,
+		&user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
 	)
 
 	if err == sql.ErrNoRows {
