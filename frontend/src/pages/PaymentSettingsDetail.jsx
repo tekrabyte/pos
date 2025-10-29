@@ -230,8 +230,12 @@ const PaymentSettingsDetail = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="qris" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="methods" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="methods" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Metode Pembayaran
+            </TabsTrigger>
             <TabsTrigger value="qris" className="flex items-center gap-2">
               <QrCode className="h-4 w-4" />
               QRIS
@@ -241,6 +245,82 @@ const PaymentSettingsDetail = () => {
               Transfer Bank
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="methods" className="space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Kelola Metode Pembayaran</CardTitle>
+                <Button onClick={handleAddNewMethod} size="sm" className="bg-blue-600 hover:bg-blue-700" data-testid="add-payment-btn">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Metode
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {paymentMethods.length === 0 ? (
+                  <div className="text-center py-12">
+                    <CreditCard className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500 mb-4">Belum ada metode pembayaran</p>
+                    <Button onClick={handleAddNewMethod} variant="outline" data-testid="empty-add-payment-btn">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Tambah Metode Pertama
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {paymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                        data-testid={`payment-method-${method.id}`}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            {method.type === 'qris' ? (
+                              <Smartphone className="h-5 w-5 text-blue-600" />
+                            ) : (
+                              <CreditCard className="h-5 w-5 text-blue-600" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold">{method.name}</p>
+                            <p className="text-sm text-gray-600 capitalize">{method.type}</p>
+                          </div>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              method.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {method.is_active ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleEditMethod(method)}
+                            data-testid={`edit-payment-${method.id}`}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteMethod(method.id)}
+                            data-testid={`delete-payment-${method.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="qris" className="space-y-4">
             <Card>
