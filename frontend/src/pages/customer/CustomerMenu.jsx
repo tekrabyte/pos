@@ -74,7 +74,7 @@ const CustomerMenu = () => {
 
   const fetchStoreSettings = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/store-settings`);
+      const response = await axios.get(`${API_URL}/store-settings`);
       setStoreSettings(response.data);
     } catch (error) {
       console.error('Error fetching store settings:', error);
@@ -83,7 +83,7 @@ const CustomerMenu = () => {
 
   const fetchBanners = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/store-banners`);
+      const response = await axios.get(`${API_URL}/store-banners`);
       setBanners(response.data);
     } catch (error) {
       console.error('Error fetching banners:', error);
@@ -92,7 +92,7 @@ const CustomerMenu = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/coupons/available`);
+      const response = await axios.get(`${API_URL}/coupons/available`);
       setCoupons(response.data);
     } catch (error) {
       console.error('Error fetching coupons:', error);
@@ -101,7 +101,7 @@ const CustomerMenu = () => {
 
   const fetchTableInfo = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/tables/token/${tableToken}`);
+      const response = await axios.get(`${API_URL}/tables/token/${tableToken}`);
       setTableInfo(response.data);
       toast.success(`Selamat datang di Meja ${response.data.table_number}`);
     } catch (error) {
@@ -111,7 +111,7 @@ const CustomerMenu = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/categories`);
+      const response = await axios.get(`${API_URL}/categories`);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -120,7 +120,7 @@ const CustomerMenu = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/products`);
+      const response = await axios.get(`${API_URL}/products`);
       setProducts(response.data);
     } catch (error) {
       console.error('Error fetching products:', error);
