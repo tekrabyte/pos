@@ -33,9 +33,17 @@ const CustomerLogin = () => {
         localStorage.setItem('customer_token', response.data.token);
         toast.success('Login berhasil!');
         
+        // Check if there's a redirect path saved
+        const redirectPath = localStorage.getItem('redirectAfterLogin');
+        
         // Small delay to ensure localStorage is set before navigation
         setTimeout(() => {
-          navigate('/customer/menu');
+          if (redirectPath) {
+            localStorage.removeItem('redirectAfterLogin');
+            navigate(redirectPath);
+          } else {
+            navigate('/');
+          }
         }, 100);
       } else {
         toast.error(response.data.message || 'Login gagal');
