@@ -38,7 +38,7 @@ const CustomerOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/orders`);
+      const response = await axios.get(`${API_URL}/orders`);
       // Filter orders for this customer
       const customerData = JSON.parse(localStorage.getItem('customer'));
       const customerOrders = response.data.filter(
@@ -55,7 +55,7 @@ const CustomerOrders = () => {
 
   const fetchOrderDetails = async (orderId) => {
     try {
-      const response = await axios.get(`${API_URL}/api/orders/${orderId}`);
+      const response = await axios.get(`${API_URL}/orders/${orderId}`);
       setSelectedOrder(response.data);
     } catch (error) {
       console.error('Error fetching order details:', error);
