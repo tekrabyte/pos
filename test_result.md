@@ -32,15 +32,20 @@ The application was experiencing multiple React rendering errors and API endpoin
 **Files Modified**:
 - `/app/backend/handlers.go` (added `getNullBool` function, updated `GetCurrentUser` function lines 192-231)
 
-### Issue 3: Frontend Products Array Handling
-**Problem**: The backend API returns `{success: true, products: [...]}`, but the frontend was setting `products` state to the entire response object instead of just the products array, causing `products.filter()` to fail.
+### Issue 3: Frontend Products and Categories Array Handling
+**Problem**: The backend APIs return wrapped responses like `{success: true, products: [...]}` and `{categories: [...]}`, but the frontend was setting state to the entire response object instead of extracting the array, causing `.filter()` and `.map()` errors.
 
 **Fix Applied**:
-- Updated `fetchProducts` to extract `response.data.products` instead of `response.data`
-- Added fallback to empty array if products is undefined
+- Updated `fetchProducts` in CustomerMenu.jsx, Kiosk.jsx, and POSCashier.jsx to extract `response.data.products`
+- Updated `fetchCategories` in CustomerMenu.jsx and Kiosk.jsx to extract `response.data.categories`
+- Updated `fetchOrders` in CustomerOrders.jsx to extract `response.data.orders`
+- Added fallback to empty arrays if data is undefined
 
 **Files Modified**:
-- `/app/frontend/src/pages/customer/CustomerMenu.jsx` (line 124)
+- `/app/frontend/src/pages/customer/CustomerMenu.jsx`
+- `/app/frontend/src/pages/Kiosk.jsx`
+- `/app/frontend/src/pages/POSCashier.jsx`
+- `/app/frontend/src/pages/customer/CustomerOrders.jsx`
 
 ### Issue 4: Missing REACT_APP_BACKEND_URL Environment Variable
 **Problem**: The frontend had no `.env` file, causing `process.env.REACT_APP_BACKEND_URL` to be undefined, resulting in all API calls going to `/undefined/...`
