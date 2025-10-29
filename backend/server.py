@@ -1457,6 +1457,99 @@ async def get_bank_accounts():
             accounts = await cursor.fetchall()
             return rows_to_dict(accounts, cursor)
 
+@api_router.post("/bank-accounts")
+async def create_bank_account(account: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO bank_accounts (account_name, bank_name, account_number, is_active) VALUES (%s, %s, %s, %s)',
+                (account.get('account_name'), account.get('bank_name'), account.get('account_number'), account.get('is_active', True))
+            )
+            account_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM bank_accounts WHERE id = %s', (account_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/bank-accounts/{account_id}")
+async def delete_bank_account(account_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM bank_accounts WHERE id = %s', (account_id,))
+            await conn.commit()
+            return {"success": True, "message": "Bank account deleted"}
+
+# PAYMENT SETTINGS (QRIS)
+
+@api_router.get("/payment-settings/qris")
+async def get_qris_settings():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM payment_settings WHERE setting_key = "qris" LIMIT 1')
+            result = await cursor.fetchone()
+            if result:
+                row_dict = row_to_dict(result, cursor)
+                # Parse JSON value
+                import json
+                return json.loads(row_dict['setting_value'])
+            return None
+
+@api_router.post("/payment-settings/qris")
+async def save_qris_settings(settings: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            import json
+            settings_json = json.dumps(settings)
+            
+            # Check if exists
+            await cursor.execute('SELECT id FROM payment_settings WHERE setting_key = "qris"')
+            existing = await cursor.fetchone()
+            
+            if existing:
+                await cursor.execute(
+                    'UPDATE payment_settings SET setting_value = %s WHERE setting_key = "qris"',
+                    (settings_json,)
+                )
+            else:
+                await cursor.execute(
+                    'INSERT INTO payment_settings (setting_key, setting_value) VALUES (%s, %s)',
+                    ('qris', settings_json)
+                )
+            
+            await conn.commit()
+            return {"success": True, "message": "QRIS settings saved"}
+
+@api_router.post("/upload/qris")
+async def upload_qris_image(file: UploadFile = File(...)):
+    """Upload QRIS image"""
+    try:
+        # Create qris uploads directory
+        qris_dir = UPLOADS_DIR.parent / 'qris'
+        qris_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = file.filename.split('.')[-1]
+        filename = f"qris_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{file_extension}"
+        file_path = qris_dir / filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Return URL
+        return {
+            "success": True,
+            "filename": filename,
+            "url": f"{os.environ.get('FRONTEND_URL')}/uploads/qris/{filename}"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Analytics Endpoint
 @api_router.get("/analytics/overview")
 async def get_analytics_overview():
