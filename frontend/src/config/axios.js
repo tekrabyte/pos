@@ -5,7 +5,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Create axios instance with default config
 const axiosInstance = axios.create({
-  baseURL: `${BACKEND_URL}`,
+  baseURL: `${BACKEND_URL}/api`,
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
