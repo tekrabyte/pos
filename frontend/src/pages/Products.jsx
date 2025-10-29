@@ -23,9 +23,11 @@ const Products = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    if (!debouncedSearch) return products;
+    // Ensure products is always an array
+    const productsList = Array.isArray(products) ? products : [];
+    if (!debouncedSearch) return productsList;
     const search = debouncedSearch.toLowerCase();
-    return products.filter(
+    return productsList.filter(
       (p) =>
         p.name?.toLowerCase().includes(search) ||
         p.sku?.toLowerCase().includes(search)
