@@ -442,9 +442,31 @@ func CreateCategory(c *fiber.Ctx) error {
 
 // Update Category
 func UpdateCategory(c *fiber.Ctx) error {
+        id := c.Params("id")
+        
+        var req struct {
+                Name        string `json:"name"`
+                Description string `json:"description"`
+                ParentID    *int   `json:"parent_id"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE categories 
+                SET name = ?, description = ?, parent_id = ?
+                WHERE id = ?
+        `, req.Name, req.Description, req.ParentID, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update category: %v", err), fiber.StatusInternalServerError)
+        }
+
         return c.JSON(fiber.Map{
                 "success": true,
-                "message": "Update category endpoint - to be implemented",
+                "message": "Category updated successfully",
         })
 }
 
