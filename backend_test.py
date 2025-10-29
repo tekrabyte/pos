@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv('/app/backend/.env')
 
 # Use the backend URL from review request
-API_BASE_URL = "https://qrscan-dine-1.preview.emergentagent.com/api"
+API_BASE_URL = "https://speedy-app-fix.preview.emergentagent.com/api"
 
 print(f"🎯 PRIORITY TESTING: CRUD Endpoints for 422 Errors")
 print(f"Testing backend at: {API_BASE_URL}")

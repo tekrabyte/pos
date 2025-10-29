@@ -9,7 +9,7 @@ import json
 import time
 
 # Use the correct backend URL from frontend .env
-API_BASE_URL = "https://admin-panel-fix-35.preview.emergentagent.com/api"
+API_BASE_URL = "https://speedy-app-fix.preview.emergentagent.com/api"
 
 print(f"🎯 PRIORITY TESTING: CRUD Endpoints for 422 Errors")
 print(f"Testing backend at: {API_BASE_URL}")
