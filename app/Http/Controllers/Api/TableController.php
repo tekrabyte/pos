@@ -38,6 +38,23 @@ class TableController extends Controller
         ]);
     }
 
+    public function getByToken($token)
+    {
+        $table = Table::where('qr_token', $token)->first();
+        
+        if (!$table) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Meja tidak ditemukan atau token tidak valid'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'table' => $table
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
