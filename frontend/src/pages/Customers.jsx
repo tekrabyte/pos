@@ -17,6 +17,11 @@ const Customers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [resetMode, setResetMode] = useState('auto'); // 'auto' or 'custom'
+  const [customPassword, setCustomPassword] = useState('');
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
