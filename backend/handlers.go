@@ -1742,7 +1742,7 @@ func GetDashboardStats(c *fiber.Ctx) error {
 // Get Analytics
 func GetAnalytics(c *fiber.Ctx) error {
         var totalRevenue, avgOrderValue float64
-        var totalOrders int
+        var totalOrders, totalProducts, totalCustomers int
 
         // Revenue and orders
         DB.QueryRow(`
@@ -1756,16 +1756,54 @@ func GetAnalytics(c *fiber.Ctx) error {
                 avgOrderValue = totalRevenue / float64(totalOrders)
         }
 
+        // Total products
+        DB.QueryRow("SELECT COUNT(*) FROM products").Scan(&totalProducts)
+
+        // Total customers
+        DB.QueryRow("SELECT COUNT(*) FROM customers").Scan(&totalCustomers)
+
+        // Top products
+        topProductsRows, _ := DB.Query(`
+                SELECT p.name, COALESCE(SUM(oi.quantity), 0) as total_sold, 
+                       COALESCE(SUM(oi.subtotal), 0) as total_revenue
+                FROM products p
+                LEFT JOIN order_items oi ON p.id = oi.product_id
+                LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'completed'
+                GROUP BY p.id, p.name
+                HAVING total_sold > 0
+                ORDER BY total_sold DESC
+                LIMIT 5
+        `)
+
+        var topProducts []map[string]interface{}
+        if topProductsRows != nil {
+                defer topProductsRows.Close()
+                for topProductsRows.Next() {
+                        var name string
+                        var totalSold int
+                        var totalRevenue float64
+                        if err := topProductsRows.Scan(&name, &totalSold, &totalRevenue); err == nil {
+                                topProducts = append(topProducts, map[string]interface{}{
+                                        "name":          name,
+                                        "total_sold":    totalSold,
+                                        "total_revenue": totalRevenue,
+                                })
+                        }
+                }
+        }
+
+        if topProducts == nil {
+                topProducts = []map[string]interface{}{}
+        }
+
         return c.JSON(fiber.Map{
-                "success": true,
-                "analytics": fiber.Map{
-                        "revenue":             totalRevenue,
-                        "orders":              totalOrders,
-                        "average_order_value": avgOrderValue,
-                        "new_customers":       0,
-                        "returning_customers": 0,
-                        "products_sold":       0,
-                },
+                "success":         true,
+                "total_revenue":   totalRevenue,
+                "total_orders":    totalOrders,
+                "total_products":  totalProducts,
+                "total_customers": totalCustomers,
+                "top_products":    topProducts,
+                "recent_orders":   []interface{}{},
         })
 }
 
