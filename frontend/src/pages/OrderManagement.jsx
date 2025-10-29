@@ -542,11 +542,11 @@ const OrderManagement = () => {
                           <div>
                             <p className="font-medium">{item.product_name}</p>
                             <p className="text-sm text-gray-600">
-                              Rp {item.price.toLocaleString('id-ID')} x {item.quantity}
+                              Rp {formatCurrency(item.price)} x {item.quantity}
                             </p>
                           </div>
                           <p className="font-semibold">
-                            Rp {item.subtotal.toLocaleString('id-ID')}
+                            Rp {formatCurrency(item.subtotal)}
                           </p>
                         </div>
                       ))}
