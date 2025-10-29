@@ -1011,7 +1011,7 @@ agent_communication:
       🟢 load_dotenv() fix in email_service.py working correctly
 
       **SYSTEM STATUS:**
-      🟢 Backend running stable on https://crud-debug-1.preview.emergentagent.com/api
+      🟢 Backend running stable on https://admin-panel-fix-35.preview.emergentagent.com/api
       🟢 All priority endpoints tested and working perfectly
       🟢 No regressions detected in existing functionality
       🟢 Email & password reset features ready for production use
