@@ -54,6 +54,8 @@ export const useFetch = (url, options = {}) => {
           result = response.brands;
         } else if (response.payment_methods) {
           result = response.payment_methods;
+        } else if (response.bank_accounts) {
+          result = response.bank_accounts;
         } else if (response.orders) {
           result = response.orders;
         } else if (response.coupons) {
