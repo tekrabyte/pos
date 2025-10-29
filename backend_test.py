@@ -26,7 +26,7 @@ print(f"🎯 PRIORITY TESTING: CRUD Endpoints for 422 Errors")
 print(f"Testing backend at: {API_BASE_URL}")
 print("="*70)
 
-class PosApiTester:
+class CrudErrorTester:
     def __init__(self):
         self.session = requests.Session()
         self.staff_token = None
@@ -37,15 +37,26 @@ class PosApiTester:
         self.product_id = None
         self.order_id = None
         self.test_results = {}
+        self.error_422_found = []
+        self.validation_errors = []
         
-    def log_test(self, test_name, success, message="", response_data=None):
-        """Log test results"""
-        status = "✅ PASS" if success else "❌ FAIL"
+    def log_test(self, test_name, success, message="", response_data=None, status_code=None):
+        """Log test results with focus on 422 errors"""
+        if status_code == 422:
+            self.error_422_found.append(f"{test_name}: {message}")
+            status = "🔍 422 ERROR FOUND"
+        elif status_code and status_code >= 400:
+            self.validation_errors.append(f"{test_name}: HTTP {status_code} - {message}")
+            status = "⚠️ ERROR"
+        else:
+            status = "✅ PASS" if success else "❌ FAIL"
+            
         print(f"{status} {test_name}: {message}")
         self.test_results[test_name] = {
             "success": success,
             "message": message,
-            "response_data": response_data
+            "response_data": response_data,
+            "status_code": status_code
         }
         
     def test_staff_login(self):
