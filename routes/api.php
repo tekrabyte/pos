@@ -92,8 +92,10 @@ Route::post('tables/{id}/regenerate-qr', [TableController::class, 'regenerateQr'
 |--------------------------------------------------------------------------
 */
 Route::apiResource('customers', CustomerController::class);
+Route::post('customer/change-password', [CustomerController::class, 'changePassword']);
 
 Route::apiResource('coupons', CouponController::class);
+Route::get('coupons/available', [CouponController::class, 'available']);
 Route::post('coupons/validate', [CouponController::class, 'validate']);
 
 /*
