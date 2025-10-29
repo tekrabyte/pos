@@ -254,8 +254,8 @@ func GetProducts(c *fiber.Ctx) error {
                         "description": getNullString(p.Description),
                         "image_url":   getNullString(p.ImageURL),
                         "status":      getNullString(p.Status),
-                        "created_at":  p.CreatedAt,
-                        "updated_at":  p.UpdatedAt,
+                        "created_at":  getNullTime(p.CreatedAt),
+                        "updated_at":  getNullTime(p.UpdatedAt),
                 })
         }
 
