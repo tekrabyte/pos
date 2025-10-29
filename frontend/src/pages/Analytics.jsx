@@ -25,7 +25,7 @@ const Analytics = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await axios.get(`${API}/analytics/overview`);
+      const response = await axios.get(`${API}/analytics`);
       setAnalytics(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
