@@ -27,6 +27,29 @@ func ErrorResponse(c *fiber.Ctx, message string, statusCode int) error {
         })
 }
 
+// Helper to convert sql.Null types to plain values
+func getNullString(ns sql.NullString) string {
+        if ns.Valid {
+                return ns.String
+        }
+        return ""
+}
+
+func getNullInt(ni sql.NullInt64) *int {
+        if ni.Valid {
+                val := int(ni.Int64)
+                return &val
+        }
+        return nil
+}
+
+func getNullFloat(nf sql.NullFloat64) *float64 {
+        if nf.Valid {
+                return &nf.Float64
+        }
+        return nil
+}
+
 // Health Check
 func HealthCheck(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
