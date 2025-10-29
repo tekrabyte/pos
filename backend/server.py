@@ -877,6 +877,284 @@ async def generate_qris(request: dict):
         "expired_at": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
     }
 
+# BRANDS
+
+@api_router.get("/brands")
+async def get_brands():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM brands ORDER BY id DESC')
+            brands = await cursor.fetchall()
+            return rows_to_dict(brands, cursor)
+
+@api_router.post("/brands")
+async def create_brand(brand: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO brands (name, description, logo_url) VALUES (%s, %s, %s)',
+                (brand.get('name'), brand.get('description'), brand.get('logo_url'))
+            )
+            brand_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM brands WHERE id = %s', (brand_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.get("/brands/{brand_id}")
+async def get_brand(brand_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM brands WHERE id = %s', (brand_id,))
+            brand = await cursor.fetchone()
+            if not brand:
+                raise HTTPException(status_code=404, detail="Brand not found")
+            return row_to_dict(brand, cursor)
+
+@api_router.put("/brands/{brand_id}")
+async def update_brand(brand_id: int, brand: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE brands SET name = %s, description = %s, logo_url = %s WHERE id = %s',
+                (brand.get('name'), brand.get('description'), brand.get('logo_url'), brand_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM brands WHERE id = %s', (brand_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/brands/{brand_id}")
+async def delete_brand(brand_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM brands WHERE id = %s', (brand_id,))
+            await conn.commit()
+            return {"success": True, "message": "Brand deleted"}
+
+# CUSTOMERS CRUD
+
+@api_router.get("/customers")
+async def get_customers():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT id, name, email, phone, address, created_at FROM customers ORDER BY id DESC')
+            customers = await cursor.fetchall()
+            return rows_to_dict(customers, cursor)
+
+@api_router.post("/customers")
+async def create_customer_admin(customer: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Check if email exists
+            await cursor.execute('SELECT id FROM customers WHERE email = %s', (customer.get('email'),))
+            if await cursor.fetchone():
+                raise HTTPException(status_code=400, detail="Email already registered")
+            
+            await cursor.execute(
+                'INSERT INTO customers (name, email, password, phone, address) VALUES (%s, %s, %s, %s, %s)',
+                (customer.get('name'), customer.get('email'), customer.get('password', 'password123'), customer.get('phone'), customer.get('address'))
+            )
+            customer_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT id, name, email, phone, address, created_at FROM customers WHERE id = %s', (customer_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.get("/customers/{customer_id}")
+async def get_customer(customer_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT id, name, email, phone, address, created_at FROM customers WHERE id = %s', (customer_id,))
+            customer = await cursor.fetchone()
+            if not customer:
+                raise HTTPException(status_code=404, detail="Customer not found")
+            return row_to_dict(customer, cursor)
+
+@api_router.put("/customers/{customer_id}")
+async def update_customer(customer_id: int, customer: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE customers SET name = %s, email = %s, phone = %s, address = %s WHERE id = %s',
+                (customer.get('name'), customer.get('email'), customer.get('phone'), customer.get('address'), customer_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT id, name, email, phone, address, created_at FROM customers WHERE id = %s', (customer_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM customers WHERE id = %s', (customer_id,))
+            await conn.commit()
+            return {"success": True, "message": "Customer deleted"}
+
+# COUPONS
+
+@api_router.get("/coupons")
+async def get_coupons():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM coupons ORDER BY id DESC')
+            coupons = await cursor.fetchall()
+            return rows_to_dict(coupons, cursor)
+
+@api_router.post("/coupons")
+async def create_coupon(coupon: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO coupons (code, discount_type, discount_value, min_purchase, max_discount, valid_from, valid_until, is_active) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                (coupon.get('code'), coupon.get('discount_type'), coupon.get('discount_value'), 
+                 coupon.get('min_purchase'), coupon.get('max_discount'), 
+                 coupon.get('valid_from'), coupon.get('valid_until'), coupon.get('is_active', True))
+            )
+            coupon_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM coupons WHERE id = %s', (coupon_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.get("/coupons/{coupon_id}")
+async def get_coupon(coupon_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM coupons WHERE id = %s', (coupon_id,))
+            coupon = await cursor.fetchone()
+            if not coupon:
+                raise HTTPException(status_code=404, detail="Coupon not found")
+            return row_to_dict(coupon, cursor)
+
+@api_router.put("/coupons/{coupon_id}")
+async def update_coupon(coupon_id: int, coupon: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE coupons SET code = %s, discount_type = %s, discount_value = %s, min_purchase = %s, max_discount = %s, valid_from = %s, valid_until = %s, is_active = %s WHERE id = %s',
+                (coupon.get('code'), coupon.get('discount_type'), coupon.get('discount_value'),
+                 coupon.get('min_purchase'), coupon.get('max_discount'),
+                 coupon.get('valid_from'), coupon.get('valid_until'), coupon.get('is_active'), coupon_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM coupons WHERE id = %s', (coupon_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/coupons/{coupon_id}")
+async def delete_coupon(coupon_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM coupons WHERE id = %s', (coupon_id,))
+            await conn.commit()
+            return {"success": True, "message": "Coupon deleted"}
+
+# OUTLETS
+
+@api_router.get("/outlets")
+async def get_outlets():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM outlets ORDER BY id DESC')
+            outlets = await cursor.fetchall()
+            return rows_to_dict(outlets, cursor)
+
+@api_router.post("/outlets")
+async def create_outlet(outlet: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO outlets (name, address, city, country, postal_code, is_main) VALUES (%s, %s, %s, %s, %s, %s)',
+                (outlet.get('name'), outlet.get('address'), outlet.get('city'), 
+                 outlet.get('country'), outlet.get('postal_code'), outlet.get('is_main', False))
+            )
+            outlet_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM outlets WHERE id = %s', (outlet_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+# ROLES
+
+@api_router.get("/roles")
+async def get_roles():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM roles ORDER BY id DESC')
+            roles = await cursor.fetchall()
+            return rows_to_dict(roles, cursor)
+
+@api_router.post("/roles")
+async def create_role(role: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'INSERT INTO roles (name, max_discount) VALUES (%s, %s)',
+                (role.get('name'), role.get('max_discount', 0))
+            )
+            role_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM roles WHERE id = %s', (role_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+# PAYMENT METHODS
+
+@api_router.get("/payment-methods")
+async def get_payment_methods():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM payment_methods WHERE is_active = TRUE ORDER BY id DESC')
+            methods = await cursor.fetchall()
+            return rows_to_dict(methods, cursor)
+
+@api_router.post("/payment-methods")
+async def create_payment_method(method: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            config_json = json.dumps(method.get('config')) if method.get('config') else None
+            await cursor.execute(
+                'INSERT INTO payment_methods (name, type, is_active, config) VALUES (%s, %s, %s, %s)',
+                (method.get('name'), method.get('type'), method.get('is_active', True), config_json)
+            )
+            method_id = cursor.lastrowid
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM payment_methods WHERE id = %s', (method_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
 @api_router.get("/")
 async def root():
     return {"message": "POS API is running", "version": "2.0.0"}
