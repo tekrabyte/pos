@@ -475,6 +475,68 @@ const PaymentSettingsDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Payment Methods Dialog */}
+      <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>
+        <DialogContent data-testid="payment-dialog">
+          <DialogHeader>
+            <DialogTitle>{editMethodId ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran'}</DialogTitle>
+            <DialogDescription>Masukkan informasi metode pembayaran</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleMethodSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nama Metode *</Label>
+                <Input
+                  id="name"
+                  value={methodFormData.name}
+                  onChange={(e) => setMethodFormData({ ...methodFormData, name: e.target.value })}
+                  placeholder="QRIS / Cash / Transfer"
+                  required
+                  data-testid="payment-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Tipe *</Label>
+                <Select value={methodFormData.type} onValueChange={(value) => setMethodFormData({ ...methodFormData, type: value })}>
+                  <SelectTrigger data-testid="payment-type-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="qris">QRIS</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="transfer">Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="is_active">Status</Label>
+                <Select
+                  value={methodFormData.is_active.toString()}
+                  onValueChange={(value) => setMethodFormData({ ...methodFormData, is_active: value === 'true' })}
+                >
+                  <SelectTrigger data-testid="payment-status-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Aktif</SelectItem>
+                    <SelectItem value="false">Nonaktif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowMethodDialog(false)} data-testid="cancel-payment-btn">
+                Batal
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700" data-testid="save-payment-btn">
+                {editMethodId ? 'Update' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
