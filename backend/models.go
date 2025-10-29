@@ -22,48 +22,55 @@ type Product struct {
 	ID          int            `json:"id"`
 	Name        string         `json:"name"`
 	SKU         sql.NullString `json:"sku"`
-	Description sql.NullString `json:"description"`
 	Price       float64        `json:"price"`
-	Cost        float64        `json:"cost"`
 	Stock       int            `json:"stock"`
 	CategoryID  sql.NullInt64  `json:"category_id"`
 	BrandID     sql.NullInt64  `json:"brand_id"`
-	Image       sql.NullString `json:"image"`
-	IsActive    bool           `json:"is_active"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	Description sql.NullString `json:"description"`
+	ImageURL    sql.NullString `json:"image_url"`
+	Status      sql.NullString `json:"status"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
+	UpdatedAt   sql.NullTime   `json:"updated_at"`
 }
 
 type Category struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          int            `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	ParentID    sql.NullInt64  `json:"parent_id"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
 }
 
 type Brand struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID          int            `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	LogoURL     sql.NullString `json:"logo_url"`
+	CreatedAt   sql.NullTime   `json:"created_at"`
 }
 
 type Order struct {
-	ID              int            `json:"id"`
-	OrderNumber     string         `json:"order_number"`
-	CustomerID      sql.NullInt64  `json:"customer_id"`
-	TableID         sql.NullInt64  `json:"table_id"`
-	TotalAmount     float64        `json:"total_amount"`
-	DiscountAmount  float64        `json:"discount_amount"`
-	TaxAmount       float64        `json:"tax_amount"`
-	FinalAmount     float64        `json:"final_amount"`
-	Status          string         `json:"status"`
-	PaymentMethod   sql.NullString `json:"payment_method"`
-	PaymentStatus   string         `json:"payment_status"`
-	Notes           sql.NullString `json:"notes"`
-	CreatedBy       sql.NullInt64  `json:"created_by"`
-	CreatedAt       time.Time      `json:"created_at"`
-	UpdatedAt       time.Time      `json:"updated_at"`
+	ID               int            `json:"id"`
+	OrderNumber      string         `json:"order_number"`
+	CustomerID       sql.NullInt64  `json:"customer_id"`
+	TableID          sql.NullInt64  `json:"table_id"`
+	OrderType        sql.NullString `json:"order_type"`
+	CustomerName     sql.NullString `json:"customer_name"`
+	CustomerPhone    sql.NullString `json:"customer_phone"`
+	OutletID         sql.NullInt64  `json:"outlet_id"`
+	UserID           sql.NullInt64  `json:"user_id"`
+	TotalAmount      float64        `json:"total_amount"`
+	PaymentMethod    sql.NullString `json:"payment_method"`
+	PaymentProof     sql.NullString `json:"payment_proof"`
+	PaymentVerified  sql.NullBool   `json:"payment_verified"`
+	Status           sql.NullString `json:"status"`
+	CreatedAt        sql.NullTime   `json:"created_at"`
+	CouponID         sql.NullInt64  `json:"coupon_id"`
+	CouponCode       sql.NullString `json:"coupon_code"`
+	DiscountAmount   sql.NullFloat64 `json:"discount_amount"`
+	OriginalAmount   sql.NullFloat64 `json:"original_amount"`
+	EstimatedTime    sql.NullInt64  `json:"estimated_time"`
+	CompletedAt      sql.NullTime   `json:"completed_at"`
 }
 
 type Table struct {
