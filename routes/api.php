@@ -128,3 +128,28 @@ Route::apiResource('banners', StoreBannerController::class)->except(['index']);
 */
 Route::get('dashboard/stats', [DashboardController::class, 'stats']);
 Route::get('analytics', [DashboardController::class, 'analytics']);
+
+/*
+|--------------------------------------------------------------------------
+| QRIS Routes
+|--------------------------------------------------------------------------
+*/
+Route::post('qris/generate', [QrisController::class, 'generate']);
+Route::post('qris/check-status', [QrisController::class, 'checkStatus']);
+
+/*
+|--------------------------------------------------------------------------
+| Upload Routes
+|--------------------------------------------------------------------------
+*/
+Route::post('upload/payment-proof', [UploadController::class, 'uploadPaymentProof']);
+Route::post('upload/qris', [UploadController::class, 'uploadQris']);
+Route::post('upload/product-image', [UploadController::class, 'uploadProductImage']);
+
+/*
+|--------------------------------------------------------------------------
+| Payment Settings Routes
+|--------------------------------------------------------------------------
+*/
+Route::get('payment-settings/qris', [PaymentSettingController::class, 'getQrisSettings']);
+Route::post('payment-settings/qris', [PaymentSettingController::class, 'updateQrisSettings']);
