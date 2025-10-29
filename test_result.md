@@ -214,7 +214,7 @@ backend:
 
   - task: "Order Status Management"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -226,6 +226,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Cannot test order status updates due to order creation failures. GET /api/orders also failing with HTTP 500 due to database schema mismatch (missing table_id column in JOIN query)."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Order status management fully functional. PUT /api/orders/{id}/status successfully updates order status through complete workflow: pending → confirmed → cooking → ready → completed. GET /api/orders returns all orders with proper JOIN including table information. WebSocket broadcasts working on status updates."
 
   - task: "Payment Proof Upload"
     implemented: true
