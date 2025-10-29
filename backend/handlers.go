@@ -536,17 +536,23 @@ func GetBrands(c *fiber.Ctx) error {
         }
         defer rows.Close()
 
-        var brands []Brand
+        var brands []map[string]interface{}
         for rows.Next() {
                 var b Brand
                 if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt); err != nil {
                         continue
                 }
-                brands = append(brands, b)
+                brands = append(brands, map[string]interface{}{
+                        "id":          b.ID,
+                        "name":        b.Name,
+                        "description": getNullString(b.Description),
+                        "logo_url":    getNullString(b.LogoURL),
+                        "created_at":  b.CreatedAt,
+                })
         }
 
         if brands == nil {
-                brands = []Brand{}
+                brands = []map[string]interface{}{}
         }
 
         return c.JSON(fiber.Map{
