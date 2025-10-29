@@ -69,10 +69,13 @@ const PaymentSettingsDetail = () => {
   const fetchPaymentMethods = async () => {
     try {
       const response = await axios.get(`${API}/payment-methods`);
-      setPaymentMethods(response.data);
+      // Extract payment_methods array from response
+      const methods = response.data?.payment_methods || response.data || [];
+      setPaymentMethods(Array.isArray(methods) ? methods : []);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
       toast.error('Gagal mengambil data metode pembayaran');
+      setPaymentMethods([]);
     }
   };
 
