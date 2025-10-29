@@ -32,7 +32,11 @@ const CustomerLogin = () => {
         localStorage.setItem('customer', JSON.stringify(customer));
         localStorage.setItem('customer_token', response.data.token);
         toast.success('Login berhasil!');
-        navigate('/customer/menu');
+        
+        // Small delay to ensure localStorage is set before navigation
+        setTimeout(() => {
+          navigate('/customer/menu');
+        }, 100);
       } else {
         toast.error(response.data.message || 'Login gagal');
       }
