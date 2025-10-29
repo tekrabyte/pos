@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Suite for QR Scan & Dine POS System
-Tests all backend endpoints according to priority order
+PRIORITY: Test CRUD endpoints for 422 errors and validation issues
 """
 
 import requests
@@ -19,22 +19,12 @@ sys.path.append('/app/backend')
 from dotenv import load_dotenv
 load_dotenv('/app/backend/.env')
 
-# Get backend URL from frontend .env
-frontend_env_path = Path('/app/frontend/.env')
-backend_url = None
-if frontend_env_path.exists():
-    with open(frontend_env_path, 'r') as f:
-        for line in f:
-            if line.startswith('REACT_APP_BACKEND_URL='):
-                backend_url = line.split('=', 1)[1].strip()
-                break
+# Use the backend URL from review request
+API_BASE_URL = "https://qrscan-dine-1.preview.emergentagent.com/api"
 
-if not backend_url:
-    backend_url = "http://localhost:8001"
-
-API_BASE_URL = f"{backend_url}/api"
-
+print(f"🎯 PRIORITY TESTING: CRUD Endpoints for 422 Errors")
 print(f"Testing backend at: {API_BASE_URL}")
+print("="*70)
 
 class PosApiTester:
     def __init__(self):
