@@ -53,10 +53,9 @@ const CustomerCart = () => {
     } else {
       // For takeaway, check if customer is logged in
       if (!customerData) {
-        toast.info('Silakan login untuk melanjutkan checkout takeaway');
-        // Save current path to redirect back after login
-        localStorage.setItem('redirectAfterLogin', '/customer/cart');
-        navigate('/customer/login');
+        toast.info('Silakan login untuk melanjutkan checkout');
+        // Redirect to auth-cart page (combined login/register with cart view)
+        navigate('/customer/auth-cart');
         return;
       }
     }
