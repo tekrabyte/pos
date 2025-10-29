@@ -59,6 +59,7 @@ function App() {
             <Route path="/staff/login" element={<StaffLogin />} />
             <Route path="/customer/login" element={<CustomerLogin />} />
             <Route path="/customer/register" element={<CustomerRegister />} />
+            <Route path="/customer/auth-cart" element={<CustomerAuthCart />} />
             
             {/* Customer Routes */}
             <Route path="/customer/menu" element={<CustomerMenu />} />
