@@ -131,13 +131,14 @@ backend:
         agent: "testing"
         comment: "✅ FIXED: Removed is_active column check from staff login query. Staff authentication now working correctly. POST /api/auth/staff/login returns 200 with valid token for admin/admin123 credentials."
 
+backend:
   - task: "Customer Authentication (Register & Login)"
     implemented: true
     working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -148,6 +149,24 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FIXED: Removed is_active column check from customer login query. Customer registration and login now working correctly. POST /api/auth/customer/register creates customers successfully, POST /api/auth/customer/login returns 200 with valid token."
+      - working: false
+        agent: "user"
+        comment: "User reported: Email tidak terkirim saat registrasi customer"
+      - working: true
+        agent: "main"
+        comment: "✅ FIXED: Email service credentials tidak ter-load karena import sebelum load_dotenv(). Added load_dotenv() to email_service.py. Test email berhasil terkirim. Registrasi customer sekarang mengirim email dengan password auto-generated."
+
+  - task: "Admin Reset Customer Password"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NEW FEATURE: Implemented POST /api/admin/customers/{customer_id}/reset-password with 2 modes: auto-generate password OR custom password. Validates minimum 6 characters. Sends email with new password using email_service.send_new_password_email()."
 
   - task: "Table Management CRUD"
     implemented: true
