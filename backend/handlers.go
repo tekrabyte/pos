@@ -992,9 +992,9 @@ func GetCustomer(c *fiber.Ctx) error {
         id := c.Params("id")
         var customer Customer
 
-        query := "SELECT id, name, email, phone, address, points, created_at, updated_at FROM customers WHERE id = ?"
+        query := "SELECT id, name, email, phone, address, created_at, updated_at FROM customers WHERE id = ?"
         err := DB.QueryRow(query, id).Scan(&customer.ID, &customer.Name, &customer.Email, &customer.Phone,
-                &customer.Address, &customer.Points, &customer.CreatedAt, &customer.UpdatedAt)
+                &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Customer not found", fiber.StatusNotFound)
@@ -1012,7 +1012,6 @@ func CreateCustomer(c *fiber.Ctx) error {
                 Email   string `json:"email"`
                 Phone   string `json:"phone"`
                 Address string `json:"address"`
-                Points  int    `json:"points"`
         }
 
         if err := c.BodyParser(&req); err != nil {
@@ -1024,9 +1023,9 @@ func CreateCustomer(c *fiber.Ctx) error {
         }
 
         result, err := DB.Exec(`
-                INSERT INTO customers (name, email, phone, address, points, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-        `, req.Name, req.Email, req.Phone, req.Address, req.Points)
+                INSERT INTO customers (name, email, phone, address, created_at, updated_at)
+                VALUES (?, ?, ?, ?, NOW(), NOW())
+        `, req.Name, req.Email, req.Phone, req.Address)
 
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to create customer: %v", err), fiber.StatusInternalServerError)
@@ -1043,7 +1042,6 @@ func CreateCustomer(c *fiber.Ctx) error {
                         "email":   req.Email,
                         "phone":   req.Phone,
                         "address": req.Address,
-                        "points":  req.Points,
                 },
         })
 }
@@ -1056,7 +1054,6 @@ func UpdateCustomer(c *fiber.Ctx) error {
                 Email   string `json:"email"`
                 Phone   string `json:"phone"`
                 Address string `json:"address"`
-                Points  int    `json:"points"`
         }
 
         if err := c.BodyParser(&req); err != nil {
@@ -1065,9 +1062,9 @@ func UpdateCustomer(c *fiber.Ctx) error {
 
         _, err := DB.Exec(`
                 UPDATE customers 
-                SET name = ?, email = ?, phone = ?, address = ?, points = ?, updated_at = NOW()
+                SET name = ?, email = ?, phone = ?, address = ?, updated_at = NOW()
                 WHERE id = ?
-        `, req.Name, req.Email, req.Phone, req.Address, req.Points, id)
+        `, req.Name, req.Email, req.Phone, req.Address, id)
 
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to update customer: %v", err), fiber.StatusInternalServerError)
