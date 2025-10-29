@@ -31,7 +31,7 @@ import Coupons from '@/pages/Coupons';
 import Outlets from '@/pages/Outlets';
 import Kiosk from '@/pages/Kiosk';
 import Roles from '@/pages/Roles';
-import PaymentSettings from '@/pages/PaymentSettings';
+import PaymentSettingsDetail from '@/pages/PaymentSettingsDetail';
 
 // Error Pages
 import NotFound from '@/pages/NotFound';
