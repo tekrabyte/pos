@@ -308,6 +308,142 @@ const Customers = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent data-testid="reset-password-dialog" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-blue-600" />
+              Reset Password Customer
+            </DialogTitle>
+            <DialogDescription>
+              Reset password untuk <strong>{selectedCustomer?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Info Alert */}
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-sm text-blue-700">
+                Password baru akan dikirim ke email: <strong>{selectedCustomer?.email}</strong>
+              </AlertDescription>
+            </Alert>
+
+            {/* Reset Mode Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Pilih Mode Reset:</Label>
+              
+              {/* Auto Generate Option */}
+              <div 
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  resetMode === 'auto' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-blue-300'
+                }`}
+                onClick={() => setResetMode('auto')}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="resetMode"
+                    checked={resetMode === 'auto'}
+                    onChange={() => setResetMode('auto')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label className="text-base font-medium cursor-pointer">
+                      Auto-Generate Password
+                    </Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Sistem akan membuat password acak yang aman dan mengirimkannya ke email customer
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Custom Password Option */}
+              <div 
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  resetMode === 'custom' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-gray-200 hover:border-blue-300'
+                }`}
+                onClick={() => setResetMode('custom')}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="radio"
+                    name="resetMode"
+                    checked={resetMode === 'custom'}
+                    onChange={() => setResetMode('custom')}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label className="text-base font-medium cursor-pointer">
+                      Custom Password
+                    </Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Tentukan password baru sendiri
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Password Input */}
+            {resetMode === 'custom' && (
+              <div className="space-y-2 animate-in fade-in duration-200">
+                <Label htmlFor="customPassword">Password Baru *</Label>
+                <Input
+                  id="customPassword"
+                  type="text"
+                  value={customPassword}
+                  onChange={(e) => setCustomPassword(e.target.value)}
+                  placeholder="Masukkan password baru (min. 6 karakter)"
+                  minLength={6}
+                  data-testid="custom-password-input"
+                />
+                <p className="text-xs text-gray-500">
+                  Password akan dikirim ke email customer
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setShowResetDialog(false)}
+              disabled={resetLoading}
+              data-testid="cancel-reset-btn"
+            >
+              Batal
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleResetPasswordSubmit}
+              disabled={resetLoading}
+              className="bg-blue-600 hover:bg-blue-700"
+              data-testid="confirm-reset-btn"
+            >
+              {resetLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="h-4 w-4 mr-2" />
+                  Reset Password
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
