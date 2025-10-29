@@ -158,7 +158,7 @@ const Products = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-lg font-bold text-blue-600">
-                          Rp {parseFloat(product.price).toLocaleString('id-ID')}
+                          Rp {formatCurrency(product.price)}
                         </p>
                         <p className="text-xs text-gray-500">Stok: {product.stock}</p>
                       </div>
