@@ -55,46 +55,62 @@ axiosInstance.interceptors.response.use(
       const status = error.response.status;
       const message = error.response.data?.message || error.response.data?.detail || 'Terjadi kesalahan';
       
+      // Check if request should be silent (no toast)
+      const isSilent = error.config?.silent === true;
+      
       switch (status) {
         case 400:
-          toast.error(`Bad Request: ${message}`);
+          if (!isSilent) toast.error(`Bad Request: ${message}`);
           break;
         case 401:
-          toast.error('Session expired - Silakan login kembali');
+          // Only show toast and redirect if user was previously authenticated
+          const hadToken = localStorage.getItem('token') || localStorage.getItem('customer_token');
+          if (hadToken && !isSilent) {
+            toast.error('Session expired - Silakan login kembali');
+          }
           // Clear auth data
           localStorage.removeItem('token');
           localStorage.removeItem('customer_token');
           localStorage.removeItem('user');
           localStorage.removeItem('customer');
-          // Redirect to login
-          setTimeout(() => {
-            const isCustomer = window.location.pathname.includes('customer');
-            window.location.href = isCustomer ? '/customer/login' : '/staff/login';
-          }, 1500);
+          // Only redirect if not already on login page
+          const currentPath = window.location.pathname;
+          if (!currentPath.includes('/login') && hadToken) {
+            setTimeout(() => {
+              const isCustomer = currentPath.includes('customer');
+              window.location.href = isCustomer ? '/customer/login' : '/staff/login';
+            }, 1500);
+          }
           break;
         case 403:
-          toast.error('Akses ditolak - Anda tidak memiliki izin');
+          if (!isSilent) toast.error('Akses ditolak - Anda tidak memiliki izin');
           break;
         case 404:
-          toast.error('Data tidak ditemukan');
+          if (!isSilent) toast.error('Data tidak ditemukan');
           break;
         case 422:
-          toast.error(`Validasi gagal: ${message}`);
+          if (!isSilent) toast.error(`Validasi gagal: ${message}`);
           break;
         case 500:
-          toast.error('Server error - Silakan coba lagi');
+          if (!isSilent) toast.error('Server error - Silakan coba lagi');
           console.error('Server error:', error.response.data);
           break;
         default:
-          toast.error(`Error: ${message}`);
+          if (!isSilent) toast.error(`Error: ${message}`);
       }
     } else if (error.request) {
       // Request made but no response
-      toast.error('Tidak dapat terhubung ke server - Periksa koneksi internet');
+      const isSilent = error.config?.silent === true;
+      if (!isSilent) {
+        toast.error('Tidak dapat terhubung ke server - Periksa koneksi internet');
+      }
       console.error('Network error:', error.request);
     } else {
       // Something else happened
-      toast.error('Terjadi kesalahan yang tidak terduga');
+      const isSilent = error.config?.silent === true;
+      if (!isSilent) {
+        toast.error('Terjadi kesalahan yang tidak terduga');
+      }
       console.error('Error:', error.message);
     }
     
