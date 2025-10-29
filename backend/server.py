@@ -84,8 +84,12 @@ async def get_payment_methods():
         return {"success": True, "payment_methods": methods}
         
     except mysql.connector.Error as e:
+        print(f"Database error: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     except Exception as e:
+        print(f"Internal server error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":
