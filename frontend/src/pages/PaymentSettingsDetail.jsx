@@ -20,6 +20,14 @@ const PaymentSettingsDetail = () => {
   const [qrisImage, setQrisImage] = useState(null);
   const [qrisPreview, setQrisPreview] = useState('');
   const [bankAccounts, setBankAccounts] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [showMethodDialog, setShowMethodDialog] = useState(false);
+  const [editMethodId, setEditMethodId] = useState(null);
+  const [methodFormData, setMethodFormData] = useState({
+    name: '',
+    type: 'cash',
+    is_active: true,
+  });
   const [qrisSettings, setQrisSettings] = useState({
     merchant_name: 'QR Scan & Dine',
     merchant_id: '',
