@@ -36,11 +36,14 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Calculate request duration
+    // Calculate request duration only for slow requests
     const config = response.config;
     if (config.metadata && config.metadata.startTime) {
       const duration = new Date() - config.metadata.startTime;
-      console.log(`API Request completed in ${duration}ms: ${config.method.toUpperCase()} ${config.url}`);
+      // Only log if request took more than 1000ms (1 second)
+      if (duration > 1000) {
+        console.warn(`⚠️ Slow API Request (${duration}ms): ${config.method.toUpperCase()} ${config.url}`);
+      }
     }
     
     return response;
