@@ -975,3 +975,33 @@ if __name__ == "__main__":
     tester = PosApiTester()
     # Run priority tests first (from review request)
     tester.run_priority_tests()
+    
+    print("\n" + "="*70)
+    print("🔍 Running Additional Backend Verification Tests")
+    print("="*70)
+    
+    # Run some additional key tests to ensure no regressions
+    tester.test_staff_login()
+    tester.test_get_categories()
+    tester.test_get_products()
+    tester.test_get_tables()
+    tester.test_get_bank_accounts()
+    
+    # Print final summary
+    print("\n" + "="*70)
+    print("📊 FINAL TEST SUMMARY")
+    print("="*70)
+    
+    passed = sum(1 for result in tester.test_results.values() if result["success"])
+    total = len(tester.test_results)
+    
+    print(f"Total Tests: {total}")
+    print(f"Passed: {passed}")
+    print(f"Failed: {total - passed}")
+    print(f"Success Rate: {(passed/total)*100:.1f}%")
+    
+    if total - passed > 0:
+        print("\n⚠️  FAILED TESTS:")
+        for test_name, result in tester.test_results.items():
+            if not result["success"]:
+                print(f"❌ {test_name}: {result['message']}")
