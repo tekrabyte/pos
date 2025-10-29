@@ -1999,6 +1999,42 @@ async def create_payment_method(method: dict):
             result = await cursor.fetchone()
             return row_to_dict(result, cursor)
 
+@api_router.get("/payment-methods/{method_id}")
+async def get_payment_method(method_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM payment_methods WHERE id = %s', (method_id,))
+            method = await cursor.fetchone()
+            if not method:
+                raise HTTPException(status_code=404, detail="Payment method not found")
+            return row_to_dict(method, cursor)
+
+@api_router.put("/payment-methods/{method_id}")
+async def update_payment_method(method_id: int, method: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            config_json = json.dumps(method.get('config')) if method.get('config') else None
+            await cursor.execute(
+                'UPDATE payment_methods SET name = %s, type = %s, is_active = %s, config = %s WHERE id = %s',
+                (method.get('name'), method.get('type'), method.get('is_active', True), config_json, method_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM payment_methods WHERE id = %s', (method_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/payment-methods/{method_id}")
+async def delete_payment_method(method_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM payment_methods WHERE id = %s', (method_id,))
+            await conn.commit()
+            return {"success": True, "message": "Payment method deleted"}
+
 @api_router.get("/")
 async def root():
     return {"message": "POS API is running", "version": "2.0.0"}
