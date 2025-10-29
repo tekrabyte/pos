@@ -144,7 +144,11 @@ class LaravelPOSCRUDTester:
             "name": "Updated Test Product API",
             "description": "Updated test product via API testing",
             "price": 30000,
-            "stock": 150
+            "category_id": 1,
+            "brand_id": 1,
+            "stock": 150,
+            "sku": f"UPDATED-{int(time.time())}",
+            "status": "active"
         }
         
         response, response_time = self.make_request('PUT', f'/products/{product_id}', update_data, use_auth=True)
