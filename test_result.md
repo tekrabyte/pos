@@ -47,7 +47,7 @@ The application was experiencing multiple React rendering errors and API endpoin
 
 **Fix Applied**:
 - Created `/app/frontend/.env` file with proper backend URL
-- Set `REACT_APP_BACKEND_URL=https://go-api-sync.preview.emergentagent.com/api`
+- Set `REACT_APP_BACKEND_URL=/api`
 
 **Files Created**:
 - `/app/frontend/.env`
