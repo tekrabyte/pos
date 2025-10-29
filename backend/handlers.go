@@ -416,16 +416,16 @@ func DeleteCategory(c *fiber.Ctx) error {
 
 // Get Brands
 func GetBrands(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, created_at, updated_at FROM brands ORDER BY name")
+	rows, err := DB.Query("SELECT id, name, description, logo_url, created_at FROM brands ORDER BY name")
 	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
 	}
 	defer rows.Close()
 
 	var brands []Brand
 	for rows.Next() {
 		var b Brand
-		if err := rows.Scan(&b.ID, &b.Name, &b.CreatedAt, &b.UpdatedAt); err != nil {
+		if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt); err != nil {
 			continue
 		}
 		brands = append(brands, b)
