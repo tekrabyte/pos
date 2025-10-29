@@ -472,9 +472,16 @@ func UpdateCategory(c *fiber.Ctx) error {
 
 // Delete Category
 func DeleteCategory(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM categories WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete category: %v", err), fiber.StatusInternalServerError)
+        }
+
         return c.JSON(fiber.Map{
                 "success": true,
-                "message": "Delete category endpoint - to be implemented",
+                "message": "Category deleted successfully",
         })
 }
 
