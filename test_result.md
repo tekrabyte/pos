@@ -115,147 +115,183 @@ user_problem_statement: |
 backend:
   - task: "Staff/Admin Authentication"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented POST /api/auth/staff/login endpoint with username/password authentication"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Database schema mismatch. Users table has role_id column but code expects role column. Authentication endpoints returning HTTP 500 errors. Database initialization not matching code expectations."
 
   - task: "Customer Authentication (Register & Login)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented POST /api/auth/customer/register and POST /api/auth/customer/login with email/password"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Customers table missing password column. Registration and login endpoints failing with HTTP 500 errors. Database schema does not match code requirements."
 
   - task: "Table Management CRUD"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented GET/POST/DELETE /api/tables with auto QR code generation using environment variable for URL"
+      - working: true
+        agent: "testing"
+        comment: "✅ All table operations working correctly. POST /api/tables creates table with QR code, GET /api/tables lists all tables, GET /api/tables/{id} retrieves specific table, DELETE /api/tables/{id} removes table successfully."
 
   - task: "QR Code Generation for Tables"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "QR codes generated with production URL from FRONTEND_URL env variable, includes unique token"
+      - working: true
+        agent: "testing"
+        comment: "✅ QR code generation working perfectly. Generated base64 encoded PNG images with proper data:image/png;base64 format. Uses production URL from FRONTEND_URL environment variable."
 
   - task: "Product & Category Management"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented GET/POST /api/products and /api/categories"
+      - working: true
+        agent: "testing"
+        comment: "✅ Product and category management fully functional. POST /api/categories creates categories, GET /api/categories lists all categories, POST /api/products creates products, GET /api/products lists all products with category relationships."
 
   - task: "Order Creation (Takeaway & Dine-in)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/orders supports both takeaway (requires customer_id) and dine-in (requires table_id). Broadcasts WebSocket notification on new order"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Orders table missing required columns: table_id, order_type, customer_name, customer_phone, payment_proof, payment_verified. Database schema mismatch causing HTTP 500 errors. Cannot create orders due to missing columns."
 
   - task: "Order Status Management"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "PUT /api/orders/{id}/status with status flow: pending → confirmed → cooking → ready → completed. Broadcasts WebSocket on status update"
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL: Cannot test order status updates due to order creation failures. GET /api/orders also failing with HTTP 500 due to database schema mismatch (missing table_id column in JOIN query)."
 
   - task: "Payment Proof Upload"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/upload/payment-proof for file upload, returns URL for storage in order"
+      - working: true
+        agent: "testing"
+        comment: "✅ Payment proof upload working correctly. Successfully uploads image files and returns filename and URL. File storage in /app/backend/uploads/payment_proofs/ directory functioning properly."
 
   - task: "QRIS Generation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/qris/generate creates dynamic QRIS QR code with amount"
+      - working: true
+        agent: "testing"
+        comment: "✅ QRIS generation working perfectly. Generates proper QRIS QR codes with base64 encoded images, includes amount, order number, merchant ID, and expiration time."
 
   - task: "WebSocket Real-time Notifications"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "WebSocket endpoint at /api/ws/orders broadcasts new_order and order_status_update events to all connected kasir clients"
+      - working: true
+        agent: "testing"
+        comment: "✅ WebSocket connection established successfully at wss://qrscan-dine-1.preview.emergentagent.com/api/ws/orders. Connection accepts properly and responds with status messages. Real-time communication working."
 
   - task: "Pending Orders Counter"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/orders/stats/pending returns count of pending orders"
+      - working: true
+        agent: "testing"
+        comment: "✅ Pending orders counter working correctly. GET /api/orders/stats/pending returns proper count format with integer value."
 
   - task: "Bank Accounts Management"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/bank-accounts returns active bank accounts for transfer payment method"
+      - working: true
+        agent: "testing"
+        comment: "✅ Bank accounts management working correctly. GET /api/bank-accounts returns list of active bank accounts with proper structure."
 
 frontend:
   - task: "Staff Login Page"
