@@ -21,10 +21,11 @@ const CustomerProfile = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('customer');
+    localStorage.removeItem('customer_token');
     localStorage.removeItem('cart');
     localStorage.removeItem('orderType');
     localStorage.removeItem('tableInfo');
-    toast.success('Logged out successfully');
+    toast.success('Berhasil logout');
     navigate('/customer/login');
   };
 
