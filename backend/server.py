@@ -1978,7 +1978,7 @@ async def get_payment_methods():
     pool = await get_db()
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
-            await cursor.execute('SELECT * FROM payment_methods WHERE is_active = TRUE ORDER BY id DESC')
+            await cursor.execute('SELECT * FROM payment_methods ORDER BY id DESC')
             methods = await cursor.fetchall()
             return rows_to_dict(methods, cursor)
 
