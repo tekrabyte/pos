@@ -1366,8 +1366,12 @@ async def get_dashboard_stats():
             }
 
 # ADMIN - CUSTOMER MANAGEMENT
+
+class ResetPasswordRequest(BaseModel):
+    new_password: Optional[str] = None  # If None, auto-generate
+
 @api_router.post("/admin/customers/{customer_id}/reset-password")
-async def admin_reset_customer_password(customer_id: int):
+async def admin_reset_customer_password(customer_id: int, request: ResetPasswordRequest = None):
     """Admin can reset customer password and send new one via email"""
     pool = await get_db()
     async with pool.acquire() as conn:
@@ -1384,8 +1388,16 @@ async def admin_reset_customer_password(customer_id: int):
             
             customer_dict = row_to_dict(customer, cursor)
             
-            # Generate new password
-            new_password = generate_password()
+            # Use custom password or auto-generate
+            if request and request.new_password:
+                # Custom password from admin
+                new_password = request.new_password
+                if len(new_password) < 6:
+                    raise HTTPException(status_code=400, detail="Password minimal 6 karakter")
+            else:
+                # Auto-generate password
+                new_password = generate_password()
+            
             hashed_pwd = hash_password(new_password)
             
             # Update password
@@ -1404,7 +1416,7 @@ async def admin_reset_customer_password(customer_id: int):
             
             return {
                 "success": True,
-                "message": "Password berhasil direset",
+                "message": "Password berhasil direset dan dikirim ke email customer",
                 "email_sent": email_sent,
                 "temp_password": new_password if not email_sent else None
             }
