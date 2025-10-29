@@ -361,6 +361,23 @@ async def customer_login(request: LoginRequest):
             else:
                 return LoginResponse(success=False, message="Invalid credentials")
 
+# WEBSOCKET ENDPOINT
+
+@api_router.websocket("/ws/orders")
+async def websocket_orders(websocket: WebSocket):
+    await websocket.accept()
+    websocket_connections.add(websocket)
+    try:
+        while True:
+            # Keep connection alive and listen for messages
+            data = await websocket.receive_text()
+            # Echo back or handle client messages if needed
+            await websocket.send_json({"status": "connected"})
+    except WebSocketDisconnect:
+        websocket_connections.discard(websocket)
+    except Exception as e:
+        websocket_connections.discard(websocket)
+
 # TABLE MANAGEMENT
 
 @api_router.get("/tables")
