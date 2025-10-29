@@ -852,3 +852,19 @@ agent_communication:
       🟢 Guest browsing fully functional
       🟢 Ready for testing
 
+
+  - agent: "main"
+    message: |
+      🎯 E-COMMERCE BACKEND COMPLETE - Phase 1/2
+      
+      **✅ Backend Implementation Done:**
+      - Database schema updated (8 new tables/columns)
+      - Email service with SMTP Gmail configured
+      - 13 new API endpoints added
+      - Auto-password generation & email delivery
+      - Coupon system with validation
+      - Order rating & tracking
+      - Dashboard stats for kasir
+      
+      **Next: Frontend Phase 2/2**
+
