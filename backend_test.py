@@ -1297,37 +1297,81 @@ class CrudErrorTester:
                 if not result["success"]:
                     print(f"❌ {test_name}: {result['message']}")
 
+    def run_crud_validation_tests(self):
+        """Run all CRUD validation tests to find 422 errors"""
+        print("🎯 STARTING CRUD VALIDATION TESTS - Finding 422 Errors and Validation Issues")
+        print("="*80)
+        
+        # First get authentication token
+        self.test_staff_login()
+        
+        # PRIORITY TESTS from review request
+        self.test_order_creation_validation_errors()
+        self.test_order_status_update_validation()
+        self.test_product_crud_validation()
+        self.test_category_crud_validation()
+        self.test_table_crud_validation()
+        self.test_customer_reset_password_validation()
+        
+        # Print detailed summary
+        self.print_detailed_summary()
+        
+    def print_detailed_summary(self):
+        """Print detailed test summary with focus on 422 errors"""
+        print("\n" + "="*80)
+        print("📊 CRUD VALIDATION TEST RESULTS - 422 ERROR ANALYSIS")
+        print("="*80)
+        
+        total = len(self.test_results)
+        passed = sum(1 for result in self.test_results.values() if result["success"])
+        failed = total - passed
+        
+        print(f"Total Tests: {total}")
+        print(f"Passed: {passed}")
+        print(f"Failed: {failed}")
+        print(f"Success Rate: {(passed/total)*100:.1f}%")
+        
+        # Show 422 errors found
+        if self.error_422_found:
+            print(f"\n🔍 422 ERRORS FOUND ({len(self.error_422_found)}):")
+            for error in self.error_422_found:
+                print(f"   🔍 {error}")
+        else:
+            print("\n✅ NO 422 ERRORS FOUND")
+            
+        # Show other validation errors
+        if self.validation_errors:
+            print(f"\n⚠️ OTHER VALIDATION ERRORS ({len(self.validation_errors)}):")
+            for error in self.validation_errors:
+                print(f"   ⚠️ {error}")
+        else:
+            print("\n✅ NO OTHER VALIDATION ERRORS FOUND")
+            
+        # Show all test results
+        print(f"\n📋 DETAILED TEST RESULTS:")
+        for test_name, result in self.test_results.items():
+            status_code = result.get("status_code", "")
+            status_info = f" (HTTP {status_code})" if status_code else ""
+            
+            if result["success"]:
+                print(f"✅ {test_name}: {result['message']}{status_info}")
+            else:
+                print(f"❌ {test_name}: {result['message']}{status_info}")
+                
+        # Summary of findings
+        print(f"\n🎯 SUMMARY OF FINDINGS:")
+        print(f"   • 422 Validation Errors Found: {len(self.error_422_found)}")
+        print(f"   • Other HTTP Errors Found: {len(self.validation_errors)}")
+        print(f"   • Total Endpoints Tested: {total}")
+        
+        if self.error_422_found or self.validation_errors:
+            print(f"\n⚠️ RECOMMENDATION: Review the endpoints with validation errors above")
+            print(f"   These may need better input validation or error handling")
+        else:
+            print(f"\n✅ EXCELLENT: No validation errors found in CRUD endpoints")
+
 if __name__ == "__main__":
-    tester = PosApiTester()
-    # Run priority tests first (from review request)
-    tester.run_priority_tests()
+    tester = CrudErrorTester()
     
-    print("\n" + "="*70)
-    print("🔍 Running Additional Backend Verification Tests")
-    print("="*70)
-    
-    # Run some additional key tests to ensure no regressions
-    tester.test_staff_login()
-    tester.test_get_categories()
-    tester.test_get_products()
-    tester.test_get_tables()
-    tester.test_get_bank_accounts()
-    
-    # Print final summary
-    print("\n" + "="*70)
-    print("📊 FINAL TEST SUMMARY")
-    print("="*70)
-    
-    passed = sum(1 for result in tester.test_results.values() if result["success"])
-    total = len(tester.test_results)
-    
-    print(f"Total Tests: {total}")
-    print(f"Passed: {passed}")
-    print(f"Failed: {total - passed}")
-    print(f"Success Rate: {(passed/total)*100:.1f}%")
-    
-    if total - passed > 0:
-        print("\n⚠️  FAILED TESTS:")
-        for test_name, result in tester.test_results.items():
-            if not result["success"]:
-                print(f"❌ {test_name}: {result['message']}")
+    # Run the CRUD validation tests as requested
+    tester.run_crud_validation_tests()
