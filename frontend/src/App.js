@@ -1,40 +1,49 @@
 import '@/App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
+import { lazy, Suspense } from 'react';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-// Auth Pages
+// Loading Component
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+    <div className="mt-4 text-gray-600 text-lg">Memuat halaman...</div>
+  </div>
+);
+
+// Auth Pages - Direct import (small, need quick load)
 import StaffLogin from '@/pages/auth/StaffLogin';
 import CustomerLogin from '@/pages/auth/CustomerLogin';
 import CustomerRegister from '@/pages/auth/CustomerRegister';
 
-// Customer Pages
-import CustomerMenu from '@/pages/customer/CustomerMenu';
-import CustomerCart from '@/pages/customer/CustomerCart';
-import CustomerOrders from '@/pages/customer/CustomerOrders';
-import CustomerProfile from '@/pages/customer/CustomerProfile';
+// Customer Pages - Lazy load
+const CustomerMenu = lazy(() => import('@/pages/customer/CustomerMenu'));
+const CustomerCart = lazy(() => import('@/pages/customer/CustomerCart'));
+const CustomerOrders = lazy(() => import('@/pages/customer/CustomerOrders'));
+const CustomerProfile = lazy(() => import('@/pages/customer/CustomerProfile'));
 
-// Staff Pages
-import Dashboard from '@/pages/Dashboard';
-import Products from '@/pages/Products';
-import AddProduct from '@/pages/AddProduct';
-import Categories from '@/pages/Categories';
-import Brands from '@/pages/Brands';
-import POSCashier from '@/pages/POSCashier';
-import TableManagement from '@/pages/TableManagement';
-import OrderManagement from '@/pages/OrderManagement';
-import Analytics from '@/pages/Analytics';
-import Customers from '@/pages/Customers';
-import Coupons from '@/pages/Coupons';
-import Outlets from '@/pages/Outlets';
-import Kiosk from '@/pages/Kiosk';
-import Roles from '@/pages/Roles';
-import PaymentSettingsDetail from '@/pages/PaymentSettingsDetail';
+// Staff Pages - Lazy load
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Products = lazy(() => import('@/pages/Products'));
+const AddProduct = lazy(() => import('@/pages/AddProduct'));
+const Categories = lazy(() => import('@/pages/Categories'));
+const Brands = lazy(() => import('@/pages/Brands'));
+const POSCashier = lazy(() => import('@/pages/POSCashier'));
+const TableManagement = lazy(() => import('@/pages/TableManagement'));
+const OrderManagement = lazy(() => import('@/pages/OrderManagement'));
+const Analytics = lazy(() => import('@/pages/Analytics'));
+const Customers = lazy(() => import('@/pages/Customers'));
+const Coupons = lazy(() => import('@/pages/Coupons'));
+const Outlets = lazy(() => import('@/pages/Outlets'));
+const Kiosk = lazy(() => import('@/pages/Kiosk'));
+const Roles = lazy(() => import('@/pages/Roles'));
+const PaymentSettingsDetail = lazy(() => import('@/pages/PaymentSettingsDetail'));
 
 // Error Pages
-import NotFound from '@/pages/NotFound';
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
