@@ -96,7 +96,7 @@ function App() {
           } />
           <Route path="/payment-settings" element={
             <ProtectedRoute requiredAuth="staff">
-              <PaymentSettings />
+              <PaymentSettingsDetail />
             </ProtectedRoute>
           } />
           <Route path="/products" element={
