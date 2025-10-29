@@ -58,6 +58,13 @@ func getNullTime(nt sql.NullTime) *string {
         return nil
 }
 
+func getNullBool(nb sql.NullBool) *bool {
+        if nb.Valid {
+                return &nb.Bool
+        }
+        return nil
+}
+
 // Health Check
 func HealthCheck(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
