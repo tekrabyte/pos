@@ -303,7 +303,7 @@ async def staff_login(request: LoginRequest):
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
             await cursor.execute(
-                'SELECT id, username, email, full_name, role FROM users WHERE username = %s AND password = %s AND is_active = TRUE',
+                'SELECT id, username, email, full_name, role FROM users WHERE username = %s AND password = %s',
                 (request.username, request.password)
             )
             user = await cursor.fetchone()
