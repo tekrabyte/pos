@@ -2,6 +2,9 @@ import '@/App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 
+// Components
+import ProtectedRoute from '@/components/ProtectedRoute';
+
 // Auth Pages
 import StaffLogin from '@/pages/auth/StaffLogin';
 import CustomerLogin from '@/pages/auth/CustomerLogin';
@@ -29,6 +32,9 @@ import Outlets from '@/pages/Outlets';
 import Kiosk from '@/pages/Kiosk';
 import Roles from '@/pages/Roles';
 import PaymentSettings from '@/pages/PaymentSettings';
+
+// Error Pages
+import NotFound from '@/pages/NotFound';
 
 function App() {
   return (
