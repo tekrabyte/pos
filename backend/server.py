@@ -150,6 +150,7 @@ class CreateOrderRequest(BaseModel):
     total_amount: float
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
+    coupon_code: Optional[str] = None  # New: optional coupon code
 
 class OrderStatusUpdate(BaseModel):
     status: str  # pending, confirmed, cooking, ready, completed, cancelled
