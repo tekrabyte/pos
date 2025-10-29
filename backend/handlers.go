@@ -315,16 +315,16 @@ func DeleteProduct(c *fiber.Ctx) error {
 
 // Get Categories
 func GetCategories(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, created_at, updated_at FROM categories ORDER BY name")
+	rows, err := DB.Query("SELECT id, name, description, parent_id, created_at FROM categories ORDER BY name")
 	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
 	}
 	defer rows.Close()
 
 	var categories []Category
 	for rows.Next() {
 		var cat Category
-		if err := rows.Scan(&cat.ID, &cat.Name, &cat.CreatedAt, &cat.UpdatedAt); err != nil {
+		if err := rows.Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt); err != nil {
 			continue
 		}
 		categories = append(categories, cat)
