@@ -462,3 +462,49 @@ agent_communication:
       - Order status updates
 
       Frontend will need manual testing or UI testing agent after backend is verified.
+
+  - agent: "testing"
+    message: |
+      🔍 BACKEND TESTING COMPLETED - CRITICAL DATABASE SCHEMA ISSUES FOUND
+
+      **Test Results Summary (13/21 tests passed - 61.9% success rate):**
+
+      ✅ **WORKING COMPONENTS:**
+      - Table Management CRUD (create, read, delete)
+      - QR Code Generation (base64 PNG format)
+      - Product & Category Management (full CRUD)
+      - Payment Proof Upload (file handling)
+      - QRIS Generation (proper QR codes)
+      - WebSocket Real-time Notifications (connection established)
+      - Pending Orders Counter
+      - Bank Accounts Management
+
+      ❌ **CRITICAL FAILURES - DATABASE SCHEMA MISMATCH:**
+      
+      **1. Authentication System (Both Staff & Customer):**
+      - Users table has `role_id` column but code expects `role` column
+      - Customers table missing `password` column entirely
+      - All authentication endpoints returning HTTP 500 errors
+      - Cannot login staff or register/login customers
+      
+      **2. Order Management System:**
+      - Orders table missing critical columns: `table_id`, `order_type`, `customer_name`, `customer_phone`, `payment_proof`, `payment_verified`
+      - Current orders table only has: id, order_number, customer_id, outlet_id, user_id, total_amount, payment_method, status, created_at
+      - Cannot create takeaway or dine-in orders
+      - Cannot update order status
+      - Cannot retrieve orders (JOIN query fails on missing table_id)
+
+      **ROOT CAUSE:**
+      The database schema appears to be from a different/previous implementation. The backend code expects a specific schema but the actual database has a different structure. The startup database initialization is not working correctly or there's a schema version mismatch.
+
+      **IMMEDIATE ACTION REQUIRED:**
+      1. Fix database schema to match backend code expectations
+      2. Ensure proper database initialization on startup
+      3. Add missing columns to existing tables
+      4. Test authentication flows after schema fix
+      5. Test order management after schema fix
+
+      **IMPACT:**
+      - Core POS functionality (orders, authentication) is completely broken
+      - Only basic CRUD operations (tables, products, categories) and utility functions work
+      - System cannot handle customer registration, staff login, or order processing
