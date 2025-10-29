@@ -16,10 +16,19 @@ import CustomerProfile from '@/pages/customer/CustomerProfile';
 // Staff Pages
 import Dashboard from '@/pages/Dashboard';
 import Products from '@/pages/Products';
+import AddProduct from '@/pages/AddProduct';
 import Categories from '@/pages/Categories';
+import Brands from '@/pages/Brands';
 import POSCashier from '@/pages/POSCashier';
 import TableManagement from '@/pages/TableManagement';
 import OrderManagement from '@/pages/OrderManagement';
+import Analytics from '@/pages/Analytics';
+import Customers from '@/pages/Customers';
+import Coupons from '@/pages/Coupons';
+import Outlets from '@/pages/Outlets';
+import Kiosk from '@/pages/Kiosk';
+import Roles from '@/pages/Roles';
+import PaymentSettings from '@/pages/PaymentSettings';
 
 function App() {
   return (
