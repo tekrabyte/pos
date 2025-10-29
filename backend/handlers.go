@@ -2155,7 +2155,10 @@ func GetBankAccounts(c *fiber.Ctx) error {
                 accounts = []map[string]interface{}{}
         }
 
-        return c.JSON(accounts)
+        return c.JSON(fiber.Map{
+                "success":       true,
+                "bank_accounts": accounts,
+        })
 }
 
 func GetBankAccount(c *fiber.Ctx) error {
