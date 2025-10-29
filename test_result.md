@@ -484,7 +484,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Payment Methods CRUD - Complete System"
     - "Payment Settings Page - Complete CRUD"
   stuck_tasks: []
   test_all: false
