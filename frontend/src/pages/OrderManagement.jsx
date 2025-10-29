@@ -158,7 +158,9 @@ const OrderManagement = () => {
   const fetchOrderDetails = async (orderId) => {
     try {
       const response = await axios.get(`${API_URL}/orders/${orderId}`);
-      setSelectedOrder(response.data);
+      // Handle both object formats
+      const orderData = response.data.order || response.data;
+      setSelectedOrder(orderData);
     } catch (error) {
       console.error('Error fetching order details:', error);
       toast.error('Failed to load order details');
