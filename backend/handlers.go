@@ -845,11 +845,15 @@ func GetTables(c *fiber.Ctx) error {
 
 func GetTable(c *fiber.Ctx) error {
         id := c.Params("id")
-        var table Table
+        
+        var tid int
+        var tableNumber, token string
+        var qrCode, status sql.NullString
+        var outletID sql.NullInt64
+        var createdAt, updatedAt sql.NullTime
 
-        query := "SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE id = ?"
-        err := DB.QueryRow(query, id).Scan(&table.ID, &table.Name, &table.Token, &table.QRCode,
-                &table.Status, &table.OutletID, &table.CreatedAt, &table.UpdatedAt)
+        query := "SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&tid, &tableNumber, &token, &qrCode, &status, &outletID, &createdAt, &updatedAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Table not found", fiber.StatusNotFound)
@@ -858,16 +862,29 @@ func GetTable(c *fiber.Ctx) error {
                 return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
         }
 
-        return c.JSON(fiber.Map{"success": true, "table": table})
+        return c.JSON(fiber.Map{"success": true, "table": map[string]interface{}{
+                "id":           tid,
+                "table_number": tableNumber,
+                "token":        token,
+                "qr_code":      qrCode,
+                "status":       status,
+                "outlet_id":    outletID,
+                "created_at":   createdAt,
+                "updated_at":   updatedAt,
+        }})
 }
 
 func GetTableByToken(c *fiber.Ctx) error {
         token := c.Params("token")
-        var table Table
+        
+        var tid int
+        var tableNumber, ttoken string
+        var qrCode, status sql.NullString
+        var outletID sql.NullInt64
+        var createdAt, updatedAt sql.NullTime
 
-        query := "SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE token = ?"
-        err := DB.QueryRow(query, token).Scan(&table.ID, &table.Name, &table.Token, &table.QRCode,
-                &table.Status, &table.OutletID, &table.CreatedAt, &table.UpdatedAt)
+        query := "SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE token = ?"
+        err := DB.QueryRow(query, token).Scan(&tid, &tableNumber, &ttoken, &qrCode, &status, &outletID, &createdAt, &updatedAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Table not found", fiber.StatusNotFound)
@@ -876,31 +893,40 @@ func GetTableByToken(c *fiber.Ctx) error {
                 return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
         }
 
-        return c.JSON(fiber.Map{"success": true, "table": table})
+        return c.JSON(fiber.Map{"success": true, "table": map[string]interface{}{
+                "id":           tid,
+                "table_number": tableNumber,
+                "token":        ttoken,
+                "qr_code":      qrCode,
+                "status":       status,
+                "outlet_id":    outletID,
+                "created_at":   createdAt,
+                "updated_at":   updatedAt,
+        }})
 }
 
 func CreateTable(c *fiber.Ctx) error {
         var req struct {
-                Name     string `json:"name"`
-                Status   string `json:"status"`
-                OutletID *int   `json:"outlet_id"`
+                TableNumber string `json:"table_number"`
+                Status      string `json:"status"`
+                OutletID    *int   `json:"outlet_id"`
         }
 
         if err := c.BodyParser(&req); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
-        if req.Name == "" {
-                return ErrorResponse(c, "Table name is required", fiber.StatusBadRequest)
+        if req.TableNumber == "" {
+                return ErrorResponse(c, "Table number is required", fiber.StatusBadRequest)
         }
 
         // Generate unique token
         token := fmt.Sprintf("TBL-%d", time.Now().Unix())
 
         result, err := DB.Exec(`
-                INSERT INTO tables (name, token, status, outlet_id, created_at, updated_at)
+                INSERT INTO tables (table_number, token, status, outlet_id, created_at, updated_at)
                 VALUES (?, ?, ?, ?, NOW(), NOW())
-        `, req.Name, token, req.Status, req.OutletID)
+        `, req.TableNumber, token, req.Status, req.OutletID)
 
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to create table: %v", err), fiber.StatusInternalServerError)
@@ -912,10 +938,10 @@ func CreateTable(c *fiber.Ctx) error {
                 "success": true,
                 "message": "Table created successfully",
                 "table": fiber.Map{
-                        "id":     id,
-                        "name":   req.Name,
-                        "token":  token,
-                        "status": req.Status,
+                        "id":           id,
+                        "table_number": req.TableNumber,
+                        "token":        token,
+                        "status":       req.Status,
                 },
         })
 }
@@ -924,9 +950,9 @@ func UpdateTable(c *fiber.Ctx) error {
         id := c.Params("id")
         
         var req struct {
-                Name     string `json:"name"`
-                Status   string `json:"status"`
-                OutletID *int   `json:"outlet_id"`
+                TableNumber string `json:"table_number"`
+                Status      string `json:"status"`
+                OutletID    *int   `json:"outlet_id"`
         }
 
         if err := c.BodyParser(&req); err != nil {
@@ -935,9 +961,9 @@ func UpdateTable(c *fiber.Ctx) error {
 
         _, err := DB.Exec(`
                 UPDATE tables 
-                SET name = ?, status = ?, outlet_id = ?, updated_at = NOW()
+                SET table_number = ?, status = ?, outlet_id = ?, updated_at = NOW()
                 WHERE id = ?
-        `, req.Name, req.Status, req.OutletID, id)
+        `, req.TableNumber, req.Status, req.OutletID, id)
 
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to update table: %v", err), fiber.StatusInternalServerError)
