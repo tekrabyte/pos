@@ -870,23 +870,31 @@ func CustomerChangePassword(c *fiber.Ctx) error {
 // ========== ROLES CRUD ==========
 
 func GetRoles(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, name, max_discount, created_at, updated_at FROM roles ORDER BY created_at DESC")
+        rows, err := DB.Query("SELECT id, name, max_discount, created_at FROM roles ORDER BY created_at DESC")
         if err != nil {
                 return ErrorResponse(c, "Failed to fetch roles: "+err.Error(), fiber.StatusInternalServerError)
         }
         defer rows.Close()
 
-        var roles []Role
+        var roles []map[string]interface{}
         for rows.Next() {
-                var role Role
-                if err := rows.Scan(&role.ID, &role.Name, &role.MaxDiscount, &role.CreatedAt, &role.UpdatedAt); err != nil {
+                var id int
+                var name string
+                var maxDiscount float64
+                var createdAt time.Time
+                if err := rows.Scan(&id, &name, &maxDiscount, &createdAt); err != nil {
                         continue
                 }
-                roles = append(roles, role)
+                roles = append(roles, map[string]interface{}{
+                        "id":           id,
+                        "name":         name,
+                        "max_discount": maxDiscount,
+                        "created_at":   createdAt,
+                })
         }
 
         if roles == nil {
-                roles = []Role{}
+                roles = []map[string]interface{}{}
         }
 
         return c.JSON(roles)
@@ -894,10 +902,14 @@ func GetRoles(c *fiber.Ctx) error {
 
 func GetRole(c *fiber.Ctx) error {
         id := c.Params("id")
-        var role Role
+        var role map[string]interface{}
+        var roleID int
+        var name string
+        var maxDiscount float64
+        var createdAt time.Time
 
-        err := DB.QueryRow("SELECT id, name, max_discount, created_at, updated_at FROM roles WHERE id = ?", id).
-                Scan(&role.ID, &role.Name, &role.MaxDiscount, &role.CreatedAt, &role.UpdatedAt)
+        err := DB.QueryRow("SELECT id, name, max_discount, created_at FROM roles WHERE id = ?", id).
+                Scan(&roleID, &name, &maxDiscount, &createdAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Role not found", fiber.StatusNotFound)
@@ -906,47 +918,64 @@ func GetRole(c *fiber.Ctx) error {
                 return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
         }
 
+        role = map[string]interface{}{
+                "id":           roleID,
+                "name":         name,
+                "max_discount": maxDiscount,
+                "created_at":   createdAt,
+        }
+
         return c.JSON(role)
 }
 
 func CreateRole(c *fiber.Ctx) error {
-        var role Role
-        if err := c.BodyParser(&role); err != nil {
+        var input struct {
+                Name        string  `json:"name"`
+                MaxDiscount float64 `json:"max_discount"`
+        }
+        
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         result, err := DB.Exec(`
-                INSERT INTO roles (name, max_discount, created_at, updated_at)
-                VALUES (?, ?, NOW(), NOW())
-        `, role.Name, role.MaxDiscount)
+                INSERT INTO roles (name, max_discount, created_at)
+                VALUES (?, ?, NOW())
+        `, input.Name, input.MaxDiscount)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to create role: "+err.Error(), fiber.StatusInternalServerError)
         }
 
         id, _ := result.LastInsertId()
-        role.ID = int(id)
 
         return c.Status(fiber.StatusCreated).JSON(fiber.Map{
                 "success": true,
                 "message": "Role created successfully",
-                "data":    role,
+                "data": map[string]interface{}{
+                        "id":           id,
+                        "name":         input.Name,
+                        "max_discount": input.MaxDiscount,
+                },
         })
 }
 
 func UpdateRole(c *fiber.Ctx) error {
         id := c.Params("id")
-        var role Role
+        var input struct {
+                Name        string  `json:"name"`
+                MaxDiscount float64 `json:"max_discount"`
+        }
 
-        if err := c.BodyParser(&role); err != nil {
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         _, err := DB.Exec(`
                 UPDATE roles 
-                SET name = ?, max_discount = ?, updated_at = NOW()
+                SET name = ?, max_discount = ?
                 WHERE id = ?
-        `, role.Name, role.MaxDiscount, id)
+        `, input.Name, input.MaxDiscount, id)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to update role", fiber.StatusInternalServerError)
