@@ -242,7 +242,7 @@ const AddProduct = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Tidak ada brand</SelectItem>
-                      {brands.map((brand) => (
+                      {Array.isArray(brands) && brands.map((brand) => (
                         <SelectItem key={brand.id} value={brand.id.toString()}>
                           {brand.name}
                         </SelectItem>
