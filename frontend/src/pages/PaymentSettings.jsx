@@ -278,7 +278,7 @@ const PaymentSettings = () => {
                 Batal
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700" data-testid="save-payment-btn">
-                Simpan
+                {editId ? 'Update' : 'Simpan'}
               </Button>
             </DialogFooter>
           </form>
