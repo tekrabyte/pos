@@ -989,19 +989,108 @@ func GetCustomers(c *fiber.Ctx) error {
 }
 
 func GetCustomer(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get customer - to be implemented"})
+        id := c.Params("id")
+        var customer Customer
+
+        query := "SELECT id, name, email, phone, address, points, created_at, updated_at FROM customers WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&customer.ID, &customer.Name, &customer.Email, &customer.Phone,
+                &customer.Address, &customer.Points, &customer.CreatedAt, &customer.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Customer not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "customer": customer})
 }
 
 func CreateCustomer(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create customer - to be implemented"})
+        var req struct {
+                Name    string `json:"name"`
+                Email   string `json:"email"`
+                Phone   string `json:"phone"`
+                Address string `json:"address"`
+                Points  int    `json:"points"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Customer name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO customers (name, email, phone, address, points, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        `, req.Name, req.Email, req.Phone, req.Address, req.Points)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create customer: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Customer created successfully",
+                "customer": fiber.Map{
+                        "id":      id,
+                        "name":    req.Name,
+                        "email":   req.Email,
+                        "phone":   req.Phone,
+                        "address": req.Address,
+                        "points":  req.Points,
+                },
+        })
 }
 
 func UpdateCustomer(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update customer - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Name    string `json:"name"`
+                Email   string `json:"email"`
+                Phone   string `json:"phone"`
+                Address string `json:"address"`
+                Points  int    `json:"points"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE customers 
+                SET name = ?, email = ?, phone = ?, address = ?, points = ?, updated_at = NOW()
+                WHERE id = ?
+        `, req.Name, req.Email, req.Phone, req.Address, req.Points, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update customer: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Customer updated successfully",
+        })
 }
 
 func DeleteCustomer(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete customer - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM customers WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete customer: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Customer deleted successfully",
+        })
 }
 
 func GetCoupons(c *fiber.Ctx) error {
