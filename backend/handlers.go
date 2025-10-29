@@ -1145,46 +1145,117 @@ func DeleteBankAccount(c *fiber.Ctx) error {
 // ========== STORE SETTINGS ==========
 
 func GetStoreSettings(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, `key`, value, updated_at FROM store_settings")
+        var settings map[string]interface{}
+        var id int
+        var storeName, storeDescription, bannerURL, logoURL, address, phone, email, openingHours sql.NullString
+        var rating sql.NullFloat64
+        var totalReviews sql.NullInt64
+        var isOpen sql.NullBool
+        var createdAt, updatedAt time.Time
+
+        err := DB.QueryRow(`
+                SELECT id, store_name, store_description, banner_url, logo_url, address, phone, email, 
+                       rating, total_reviews, opening_hours, is_open, created_at, updated_at
+                FROM store_settings LIMIT 1
+        `).Scan(&id, &storeName, &storeDescription, &bannerURL, &logoURL, &address, &phone, &email,
+                &rating, &totalReviews, &openingHours, &isOpen, &createdAt, &updatedAt)
+
+        if err == sql.ErrNoRows {
+                // Return default empty settings
+                return c.JSON(map[string]interface{}{
+                        "store_name":        "",
+                        "store_description": "",
+                        "banner_url":        "",
+                        "logo_url":          "",
+                        "address":           "",
+                        "phone":             "",
+                        "email":             "",
+                        "rating":            0.0,
+                        "total_reviews":     0,
+                        "opening_hours":     "",
+                        "is_open":           true,
+                })
+        }
         if err != nil {
                 return ErrorResponse(c, "Failed to fetch store settings: "+err.Error(), fiber.StatusInternalServerError)
         }
-        defer rows.Close()
 
-        settings := make(map[string]interface{})
-        for rows.Next() {
-                var id int
-                var key string
-                var value sql.NullString
-                var updatedAt time.Time
-                if err := rows.Scan(&id, &key, &value, &updatedAt); err != nil {
-                        continue
-                }
-                if value.Valid {
-                        settings[key] = value.String
-                } else {
-                        settings[key] = nil
-                }
+        settings = map[string]interface{}{
+                "id":                id,
+                "store_name":        nullStringToString(storeName),
+                "store_description": nullStringToString(storeDescription),
+                "banner_url":        nullStringToString(bannerURL),
+                "logo_url":          nullStringToString(logoURL),
+                "address":           nullStringToString(address),
+                "phone":             nullStringToString(phone),
+                "email":             nullStringToString(email),
+                "rating":            nullFloat64ToFloat(rating),
+                "total_reviews":     nullInt64ToInt(totalReviews),
+                "opening_hours":     nullStringToString(openingHours),
+                "is_open":           nullBoolToBool(isOpen),
+                "created_at":        createdAt,
+                "updated_at":        updatedAt,
         }
 
         return c.JSON(settings)
 }
 
 func UpdateStoreSettings(c *fiber.Ctx) error {
-        var settings map[string]string
-        if err := c.BodyParser(&settings); err != nil {
+        var input map[string]interface{}
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
-        for key, value := range settings {
-                _, err := DB.Exec(`
-                        INSERT INTO store_settings (` + "`key`" + `, value, updated_at)
-                        VALUES (?, ?, NOW())
-                        ON DUPLICATE KEY UPDATE value = ?, updated_at = NOW()
-                `, key, value, value)
+        // Check if settings exist
+        var count int
+        DB.QueryRow("SELECT COUNT(*) FROM store_settings").Scan(&count)
 
+        if count == 0 {
+                // Insert new settings
+                _, err := DB.Exec(`
+                        INSERT INTO store_settings (store_name, store_description, banner_url, logo_url, address, 
+                                                   phone, email, rating, total_reviews, opening_hours, is_open, 
+                                                   created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                `, 
+                        getMapValue(input, "store_name"),
+                        getMapValue(input, "store_description"),
+                        getMapValue(input, "banner_url"),
+                        getMapValue(input, "logo_url"),
+                        getMapValue(input, "address"),
+                        getMapValue(input, "phone"),
+                        getMapValue(input, "email"),
+                        getMapValue(input, "rating"),
+                        getMapValue(input, "total_reviews"),
+                        getMapValue(input, "opening_hours"),
+                        getMapValue(input, "is_open"),
+                )
                 if err != nil {
-                        return ErrorResponse(c, "Failed to update setting: "+key, fiber.StatusInternalServerError)
+                        return ErrorResponse(c, "Failed to create store settings: "+err.Error(), fiber.StatusInternalServerError)
+                }
+        } else {
+                // Update existing settings
+                _, err := DB.Exec(`
+                        UPDATE store_settings 
+                        SET store_name = ?, store_description = ?, banner_url = ?, logo_url = ?, address = ?,
+                            phone = ?, email = ?, rating = ?, total_reviews = ?, opening_hours = ?, is_open = ?,
+                            updated_at = NOW()
+                        WHERE id = (SELECT id FROM (SELECT id FROM store_settings LIMIT 1) as temp)
+                `,
+                        getMapValue(input, "store_name"),
+                        getMapValue(input, "store_description"),
+                        getMapValue(input, "banner_url"),
+                        getMapValue(input, "logo_url"),
+                        getMapValue(input, "address"),
+                        getMapValue(input, "phone"),
+                        getMapValue(input, "email"),
+                        getMapValue(input, "rating"),
+                        getMapValue(input, "total_reviews"),
+                        getMapValue(input, "opening_hours"),
+                        getMapValue(input, "is_open"),
+                )
+                if err != nil {
+                        return ErrorResponse(c, "Failed to update store settings: "+err.Error(), fiber.StatusInternalServerError)
                 }
         }
 
@@ -1192,6 +1263,42 @@ func UpdateStoreSettings(c *fiber.Ctx) error {
                 "success": true,
                 "message": "Store settings updated successfully",
         })
+}
+
+// Helper functions
+func nullStringToString(ns sql.NullString) string {
+        if ns.Valid {
+                return ns.String
+        }
+        return ""
+}
+
+func nullFloat64ToFloat(nf sql.NullFloat64) float64 {
+        if nf.Valid {
+                return nf.Float64
+        }
+        return 0.0
+}
+
+func nullInt64ToInt(ni sql.NullInt64) int {
+        if ni.Valid {
+                return int(ni.Int64)
+        }
+        return 0
+}
+
+func nullBoolToBool(nb sql.NullBool) bool {
+        if nb.Valid {
+                return nb.Bool
+        }
+        return false
+}
+
+func getMapValue(m map[string]interface{}, key string) interface{} {
+        if val, ok := m[key]; ok {
+                return val
+        }
+        return nil
 }
 
 // ========== STORE BANNERS CRUD ==========
