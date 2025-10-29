@@ -83,16 +83,16 @@ class PosApiTester:
         return False
         
     def test_customer_register(self):
-        """Test customer registration"""
-        print("\n=== Testing Customer Registration ===")
+        """Test customer registration with email (PRIORITY TEST)"""
+        print("\n=== Testing Customer Registration with Email (FIXED) ===")
         
         try:
+            # Use the specific test data from review request
             customer_data = {
-                "name": "John Doe",
-                "email": f"john.doe.{int(time.time())}@example.com",  # Unique email
-                "password": "password123",
+                "name": "Test Customer Email",
+                "email": "tekrabyte@gmail.com",
                 "phone": "081234567890",
-                "address": "123 Test Street, Test City"
+                "address": "Test Address"
             }
             
             response = self.session.post(f"{API_BASE_URL}/auth/customer/register", 
@@ -103,8 +103,24 @@ class PosApiTester:
                 if data.get("success"):
                     self.customer_id = data.get("customer_id")
                     self.customer_email = customer_data["email"]
-                    self.customer_password = customer_data["password"]
-                    self.log_test("Customer Registration", True, f"Registration successful, customer_id: {self.customer_id}")
+                    # Password is auto-generated, we'll get it from temp_password if email fails
+                    self.customer_password = data.get("temp_password")
+                    
+                    # Check expected response fields
+                    expected_fields = ["success", "customer_id", "message", "email_sent"]
+                    missing_fields = [field for field in expected_fields if field not in data]
+                    
+                    if missing_fields:
+                        self.log_test("Customer Registration", False, f"Missing fields: {missing_fields}")
+                        return False
+                    
+                    email_sent = data.get("email_sent", False)
+                    message = f"Registration successful, customer_id: {self.customer_id}, email_sent: {email_sent}"
+                    if not email_sent and data.get("temp_password"):
+                        message += f", temp_password provided: {data['temp_password'][:3]}***"
+                        self.customer_password = data["temp_password"]
+                    
+                    self.log_test("Customer Registration", True, message)
                     return True
                 else:
                     self.log_test("Customer Registration", False, f"Registration failed: {data}")
