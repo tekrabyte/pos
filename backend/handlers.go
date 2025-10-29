@@ -677,7 +677,7 @@ func GetOrders(c *fiber.Ctx) error {
         }
         defer rows.Close()
 
-        var orders []Order
+        var orders []map[string]interface{}
         for rows.Next() {
                 var o Order
                 err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.OrderType,
@@ -688,11 +688,34 @@ func GetOrders(c *fiber.Ctx) error {
                 if err != nil {
                         continue
                 }
-                orders = append(orders, o)
+                
+                orders = append(orders, map[string]interface{}{
+                        "id":               o.ID,
+                        "order_number":     o.OrderNumber,
+                        "customer_id":      getNullInt(o.CustomerID),
+                        "table_id":         getNullInt(o.TableID),
+                        "order_type":       getNullString(o.OrderType),
+                        "customer_name":    getNullString(o.CustomerName),
+                        "customer_phone":   getNullString(o.CustomerPhone),
+                        "outlet_id":        getNullInt(o.OutletID),
+                        "user_id":          getNullInt(o.UserID),
+                        "total_amount":     o.TotalAmount,
+                        "payment_method":   getNullString(o.PaymentMethod),
+                        "payment_proof":    getNullString(o.PaymentProof),
+                        "payment_verified": o.PaymentVerified,
+                        "status":           getNullString(o.Status),
+                        "created_at":       o.CreatedAt,
+                        "coupon_id":        getNullInt(o.CouponID),
+                        "coupon_code":      getNullString(o.CouponCode),
+                        "discount_amount":  getNullFloat(o.DiscountAmount),
+                        "original_amount":  getNullFloat(o.OriginalAmount),
+                        "estimated_time":   getNullInt(o.EstimatedTime),
+                        "completed_at":     o.CompletedAt,
+                })
         }
 
         if orders == nil {
-                orders = []Order{}
+                orders = []map[string]interface{}{}
         }
 
         return c.JSON(fiber.Map{
