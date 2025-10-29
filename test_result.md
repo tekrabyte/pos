@@ -329,7 +329,7 @@ frontend:
 
   - task: "Customer Login Page"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/pages/auth/CustomerLogin.jsx"
     stuck_count: 1
     priority: "high"
@@ -344,6 +344,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "ISSUE IDENTIFIED: Potential timing issue with localStorage and useEffect in CustomerMenu.jsx. The authentication check might run before localStorage is fully set. Will optimize the login flow."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Added 100ms setTimeout before navigation to ensure localStorage is properly set. Improved useEffect in CustomerMenu.jsx to use async function wrapper and removed 'navigate' from dependency array to prevent unwanted re-renders. Added try-catch for localStorage parsing. Updated logout functions to clear customer_token and use Indonesian messages."
 
   - task: "Customer Register Page"
     implemented: true
