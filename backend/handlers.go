@@ -1411,19 +1411,102 @@ func GetPaymentMethods(c *fiber.Ctx) error {
 }
 
 func GetPaymentMethod(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get payment method - to be implemented"})
+        id := c.Params("id")
+        var pm PaymentMethod
+
+        query := "SELECT id, name, type, is_active, created_at, updated_at FROM payment_methods WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive,
+                &pm.CreatedAt, &pm.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Payment method not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "payment_method": pm})
 }
 
 func CreatePaymentMethod(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create payment method - to be implemented"})
+        var req struct {
+                Name     string `json:"name"`
+                Type     string `json:"type"`
+                IsActive bool   `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Payment method name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO payment_methods (name, type, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, NOW(), NOW())
+        `, req.Name, req.Type, req.IsActive)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create payment method: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Payment method created successfully",
+                "payment_method": fiber.Map{
+                        "id":        id,
+                        "name":      req.Name,
+                        "type":      req.Type,
+                        "is_active": req.IsActive,
+                },
+        })
 }
 
 func UpdatePaymentMethod(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update payment method - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Name     string `json:"name"`
+                Type     string `json:"type"`
+                IsActive bool   `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE payment_methods 
+                SET name = ?, type = ?, is_active = ?, updated_at = NOW()
+                WHERE id = ?
+        `, req.Name, req.Type, req.IsActive, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update payment method: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Payment method updated successfully",
+        })
 }
 
 func DeletePaymentMethod(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete payment method - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM payment_methods WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete payment method: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Payment method deleted successfully",
+        })
 }
 
 // Get Dashboard Stats
