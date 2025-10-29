@@ -285,8 +285,14 @@ const OrderManagement = () => {
 
         {/* Orders Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-8 gap-1">
             <TabsTrigger value="all">All ({orders.length})</TabsTrigger>
+            <TabsTrigger value="dine-in">
+              Dine-in ({orders.filter(o => o.order_type === 'dine-in').length})
+            </TabsTrigger>
+            <TabsTrigger value="takeaway">
+              Takeaway ({orders.filter(o => o.order_type === 'takeaway').length})
+            </TabsTrigger>
             <TabsTrigger value="pending" className="relative">
               Pending
               {pendingCount > 0 && (
