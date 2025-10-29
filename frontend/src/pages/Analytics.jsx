@@ -2,11 +2,8 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, TrendingUp, Package, ShoppingCart } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}`;
 
 const Analytics = () => {
   const [analytics, setAnalytics] = useState({
@@ -20,12 +17,22 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+      // Don't fetch data if not logged in
+      setLoading(false);
+      return;
+    }
+    
     fetchAnalytics();
   }, []);
 
   const fetchAnalytics = async () => {
     try {
-      const response = await axios.get(`${API}/analytics`);
+      const response = await axiosInstance.get('/analytics');
       setAnalytics(response.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
