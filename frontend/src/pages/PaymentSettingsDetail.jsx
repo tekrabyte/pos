@@ -43,9 +43,12 @@ const PaymentSettingsDetail = () => {
   const fetchBankAccounts = async () => {
     try {
       const response = await axios.get(`${API}/bank-accounts`);
-      setBankAccounts(response.data);
+      // Extract bank_accounts array from response
+      const accounts = response.data?.bank_accounts || response.data || [];
+      setBankAccounts(Array.isArray(accounts) ? accounts : []);
     } catch (error) {
       console.error('Error fetching bank accounts:', error);
+      setBankAccounts([]);
     }
   };
 
