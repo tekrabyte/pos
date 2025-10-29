@@ -227,8 +227,8 @@ const PaymentSettings = () => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="payment-dialog">
           <DialogHeader>
-            <DialogTitle>Tambah Metode Pembayaran</DialogTitle>
-            <DialogDescription>Masukkan informasi metode pembayaran baru</DialogDescription>
+            <DialogTitle>{editId ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran'}</DialogTitle>
+            <DialogDescription>Masukkan informasi metode pembayaran</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
