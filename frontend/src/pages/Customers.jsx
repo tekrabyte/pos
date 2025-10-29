@@ -96,6 +96,61 @@ const Customers = () => {
     setShowDialog(true);
   };
 
+  const handleResetPassword = (customer) => {
+    setSelectedCustomer(customer);
+    setResetMode('auto');
+    setCustomPassword('');
+    setShowResetDialog(true);
+  };
+
+  const handleResetPasswordSubmit = async () => {
+    if (resetMode === 'custom' && !customPassword) {
+      toast.error('Silakan masukkan password baru');
+      return;
+    }
+
+    if (resetMode === 'custom' && customPassword.length < 6) {
+      toast.error('Password minimal 6 karakter');
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const payload = resetMode === 'auto' 
+        ? {} 
+        : { new_password: customPassword };
+
+      const response = await axios.post(
+        `${API}/admin/customers/${selectedCustomer.id}/reset-password`,
+        payload
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message, {
+          duration: 5000
+        });
+
+        // Show password if email failed
+        if (!response.data.email_sent && response.data.temp_password) {
+          toast.info(`Password Baru: ${response.data.temp_password}`, {
+            duration: 10000
+          });
+        }
+
+        setShowResetDialog(false);
+        setSelectedCustomer(null);
+        setCustomPassword('');
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      const errorMsg = error.response?.data?.detail || 'Gagal reset password';
+      toast.error(errorMsg);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
