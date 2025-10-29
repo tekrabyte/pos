@@ -48,10 +48,16 @@ type Claims struct {
 // Generate JWT token
 func GenerateToken(user *User) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
+	
+	roleStr := ""
+	if user.Role.Valid {
+		roleStr = user.Role.String
+	}
+	
 	claims := &Claims{
 		UserID:   user.ID,
 		Username: user.Username,
-		Role:     user.Role,
+		Role:     roleStr,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
