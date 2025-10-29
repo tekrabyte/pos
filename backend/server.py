@@ -397,8 +397,11 @@ async def create_table(table: Table):
             # Generate unique token for QR
             qr_token = secrets.token_urlsafe(16)
             
+            # Get frontend URL from environment or use default
+            frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+            
             # Generate QR code
-            qr_data = f"http://localhost:3000/customer/menu?table={qr_token}"
+            qr_data = f"{frontend_url}/customer/menu?table={qr_token}"
             qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
             qr.add_data(qr_data)
             qr.make(fit=True)
