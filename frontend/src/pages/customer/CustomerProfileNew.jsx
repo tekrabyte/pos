@@ -102,7 +102,7 @@ const CustomerProfileNew = () => {
     setLoading(true);
     try {
       const response = await axios.put(
-        `${API_URL}/api/customer/profile/${customer.id}`,
+        `${API_URL}/customer/profile/${customer.id}`,
         editData
       );
       
@@ -139,7 +139,7 @@ const CustomerProfileNew = () => {
     
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/api/customer/change-password`, {
+      const response = await axios.post(`${API_URL}/customer/change-password`, {
         customer_id: customer.id,
         old_password: passwordData.old_password,
         new_password: passwordData.new_password
@@ -170,7 +170,7 @@ const CustomerProfileNew = () => {
     
     setLoading(true);
     try {
-      const response = await axios.delete(`${API_URL}/api/customer/account/${customer.id}`);
+      const response = await axios.delete(`${API_URL}/customer/account/${customer.id}`);
       
       if (response.data.success) {
         toast.success('Akun berhasil dihapus');
