@@ -558,7 +558,19 @@ async def create_order(order_req: CreateOrderRequest):
                 
                 await cursor.execute('SELECT * FROM orders WHERE id = %s', (order_id,))
                 order = await cursor.fetchone()
-                return row_to_dict(order, cursor)
+                order_dict = row_to_dict(order, cursor)
+                
+                # Broadcast new order notification via WebSocket
+                await broadcast_order_notification({
+                    "type": "new_order",
+                    "order_id": order_id,
+                    "order_number": order_number,
+                    "order_type": order_req.order_type,
+                    "total_amount": float(order_req.total_amount),
+                    "created_at": datetime.now().isoformat()
+                })
+                
+                return order_dict
             except Exception as e:
                 await conn.rollback()
                 raise HTTPException(status_code=500, detail=str(e))
