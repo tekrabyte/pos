@@ -370,16 +370,24 @@ const AddProduct = () => {
                   onClick={() => navigate('/products')}
                   className="flex-1"
                   data-testid="cancel-btn"
+                  disabled={saving}
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={saving || loadingCategories || loadingBrands}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                   data-testid="save-product-btn"
                 >
-                  {loading ? 'Menyimpan...' : id ? 'Update Produk' : 'Simpan Produk'}
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    id ? 'Update Produk' : 'Simpan Produk'
+                  )}
                 </Button>
               </div>
             </form>
