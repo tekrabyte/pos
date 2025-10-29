@@ -109,17 +109,17 @@ func StaffLogin(c *fiber.Ctx) error {
 	}
 
 	var user User
-	query := "SELECT id, name, username, email, password, role, outlet_id, created_at, updated_at FROM users WHERE username = ? LIMIT 1"
+	query := "SELECT id, full_name, username, email, password, role, role_id, outlet_id, is_active, created_at FROM users WHERE username = ? LIMIT 1"
 	err := DB.QueryRow(query, loginReq.Username).Scan(
-		&user.ID, &user.Name, &user.Username, &user.Email, &user.Password,
-		&user.Role, &user.OutletID, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.FullName, &user.Username, &user.Email, &user.Password,
+		&user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
 	)
 
 	if err == sql.ErrNoRows {
 		return ErrorResponse(c, "Invalid credentials", fiber.StatusUnauthorized)
 	}
 	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
 	}
 
 	// Check password
@@ -133,15 +133,20 @@ func StaffLogin(c *fiber.Ctx) error {
 		return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
 	}
 
+	roleStr := ""
+	if user.Role.Valid {
+		roleStr = user.Role.String
+	}
+
 	return c.JSON(fiber.Map{
 		"success": true,
 		"token":   token,
 		"user": fiber.Map{
-			"id":       user.ID,
-			"name":     user.Name,
-			"username": user.Username,
-			"email":    user.Email,
-			"role":     user.Role,
+			"id":        user.ID,
+			"full_name": user.FullName,
+			"username":  user.Username,
+			"email":     user.Email,
+			"role":      roleStr,
 		},
 	})
 }
