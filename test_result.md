@@ -421,18 +421,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Staff/Admin Authentication"
-    - "Customer Authentication (Register & Login)"
-    - "Order Creation (Takeaway & Dine-in)"
-    - "Order Status Management"
-  stuck_tasks:
-    - "Staff/Admin Authentication"
-    - "Customer Authentication (Register & Login)"
-    - "Order Creation (Takeaway & Dine-in)"
-    - "Order Status Management"
-  test_all: false
-  test_priority: "stuck_first"
+  current_focus: []
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
