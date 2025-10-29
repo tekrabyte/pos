@@ -532,11 +532,26 @@ async def customer_login(request: LoginRequest):
     pool = await get_db()
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
+            # Get customer by email
             await cursor.execute(
-                'SELECT id, name, email, phone, address FROM customers WHERE email = %s AND password = %s',
-                (request.email, request.password)
+                'SELECT id, name, email, phone, address, password FROM customers WHERE email = %s',
+                (request.email,)
             )
             customer = await cursor.fetchone()
+            
+            if customer:
+                customer_dict = row_to_dict(customer, cursor)
+                stored_password = customer_dict.pop('password')  # Remove password from response
+                
+                # Verify password
+                if verify_password(request.password, stored_password):
+                    return LoginResponse(
+                        success=True,
+                        user=customer_dict,
+                        token=secrets.token_urlsafe(32)
+                    )
+            
+            return LoginResponse(success=False, message="Email atau password salah")
             
             if customer:
                 customer_dict = row_to_dict(customer, cursor)
