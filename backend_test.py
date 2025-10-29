@@ -10,9 +10,9 @@ import time
 from datetime import datetime
 
 class LaravelPOSAPITester:
-    def __init__(self, base_url="https://crud-flow-optimize.preview.emergentagent.com"):
+    def __init__(self, base_url="https://crud-flow-optimize.preview.emergentagent.com/api"):
         self.base_url = base_url
-        self.api_url = f"{base_url}/api"
+        self.api_url = base_url
         self.token = None
         self.headers = {
             'Content-Type': 'application/json',
