@@ -17,10 +17,6 @@ import { clearCacheByPattern } from '@/hooks/useApi';
 const AddProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -35,57 +31,44 @@ const AddProduct = () => {
     bundle_items: [],
   });
 
+  // Fetch categories, brands, and products using custom hook
+  const { data: categories = [], loading: loadingCategories } = useFetch('/categories', {
+    initialData: [],
+    cacheKey: 'categories-list',
+  });
+
+  const { data: brands = [], loading: loadingBrands } = useFetch('/brands', {
+    initialData: [],
+    cacheKey: 'brands-list',
+  });
+
+  const { data: allProducts = [], loading: loadingProducts } = useFetch('/products', {
+    initialData: [],
+    cacheKey: 'products-list',
+  });
+
+  // Fetch product for edit mode
   useEffect(() => {
-    fetchCategories();
-    fetchBrands();
-    fetchAllProducts();
     if (id) {
       fetchProduct();
     }
   }, [id]);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await axios.get(`${API}/categories`);
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  const fetchBrands = async () => {
-    try {
-      const response = await axios.get(`${API}/brands`);
-      setBrands(response.data);
-    } catch (error) {
-      console.error('Error fetching brands:', error);
-    }
-  };
-
-  const fetchAllProducts = async () => {
-    try {
-      const response = await axios.get(`${API}/products`);
-      setAllProducts(response.data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
-
   const fetchProduct = async () => {
     try {
-      const response = await axios.get(`${API}/products/${id}`);
+      const response = await api.get(`/products/${id}`);
       setFormData({
-        name: response.data.name,
-        sku: response.data.sku,
-        price: response.data.price,
-        stock: response.data.stock,
-        category_id: response.data.category_id || null,
-        brand_id: response.data.brand_id || null,
-        description: response.data.description || '',
-        image_url: response.data.image_url || '',
-        status: response.data.status,
-        is_bundle: response.data.is_bundle || false,
-        bundle_items: response.data.bundle_items || [],
+        name: response.name,
+        sku: response.sku,
+        price: response.price,
+        stock: response.stock,
+        category_id: response.category_id || null,
+        brand_id: response.brand_id || null,
+        description: response.description || '',
+        image_url: response.image_url || '',
+        status: response.status,
+        is_bundle: response.is_bundle || false,
+        bundle_items: response.bundle_items || [],
       });
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -93,33 +76,41 @@ const AddProduct = () => {
     }
   };
 
+  // Mutation for create/update product
+  const { mutate: saveProduct, loading: saving } = useMutation(
+    async (payload) => {
+      if (id) {
+        return await api.put(`/products/${id}`, payload);
+      } else {
+        return await api.post('/products', payload);
+      }
+    },
+    {
+      onSuccess: () => {
+        toast.success(id ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan');
+        // Clear products cache to force refresh
+        clearCacheByPattern('products');
+        setTimeout(() => navigate('/products'), 500);
+      },
+      onError: (error) => {
+        console.error('Error saving product:', error);
+        toast.error(id ? 'Gagal memperbarui produk' : 'Gagal menambahkan produk');
+      },
+    }
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
-    try {
-      const payload = {
-        ...formData,
-        price: parseFloat(formData.price),
-        stock: parseFloat(formData.stock),
-        category_id: formData.category_id ? parseInt(formData.category_id) : null,
-        brand_id: formData.brand_id ? parseInt(formData.brand_id) : null,
-      };
+    const payload = {
+      ...formData,
+      price: parseFloat(formData.price),
+      stock: parseFloat(formData.stock),
+      category_id: formData.category_id ? parseInt(formData.category_id) : null,
+      brand_id: formData.brand_id ? parseInt(formData.brand_id) : null,
+    };
 
-      if (id) {
-        await axios.put(`${API}/products/${id}`, payload);
-        toast.success('Produk berhasil diperbarui');
-      } else {
-        await axios.post(`${API}/products`, payload);
-        toast.success('Produk berhasil ditambahkan');
-      }
-      navigate('/products');
-    } catch (error) {
-      console.error('Error saving product:', error);
-      toast.error(id ? 'Gagal memperbarui produk' : 'Gagal menambahkan produk');
-    } finally {
-      setLoading(false);
-    }
+    await saveProduct(payload);
   };
 
   const handleChange = (field, value) => {
