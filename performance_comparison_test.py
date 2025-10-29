@@ -11,7 +11,7 @@ from datetime import datetime
 
 class PerformanceComparisonTester:
     def __init__(self):
-        self.api_url = "https://laravel-api-sync.preview.emergentagent.com/api"
+        self.api_url = "https://just-run-1.preview.emergentagent.com/api"
         self.token = None
         self.headers = {
             'Content-Type': 'application/json',

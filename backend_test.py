@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 class LaravelPOSAPITester:
-    def __init__(self, base_url="https://laravel-api-sync.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://just-run-1.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.api_url = base_url
         self.token = None

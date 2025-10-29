@@ -211,7 +211,7 @@ DELETE /api/payment-methods/{id}     - Delete method
 ## 🚀 How to Access
 
 ### Admin Panel
-1. Navigate to: `https://laravel-api-sync.preview.emergentagent.com/staff/login`
+1. Navigate to: `https://just-run-1.preview.emergentagent.com/staff/login`
 2. Login: `admin` / `admin123`
 3. Access all admin features from sidebar menu
 
