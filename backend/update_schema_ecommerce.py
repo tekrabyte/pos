@@ -170,11 +170,11 @@ async def update_database_schema():
             
             if result[0] == 0:
                 await cursor.execute("""
-                    INSERT INTO coupons (code, description, discount_type, discount_value, min_purchase, max_discount, usage_limit, is_active, start_date, end_date)
+                    INSERT INTO coupons (code, discount_type, discount_value, min_purchase, max_discount, usage_limit, is_active, start_date, end_date)
                     VALUES 
-                    ('WELCOME10', 'Diskon 10% untuk pelanggan baru', 'percentage', 10.00, 30000, 50000, 100, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY)),
-                    ('HEMAT20K', 'Potongan Rp 20.000 untuk pembelian min Rp 100.000', 'nominal', 20000, 100000, NULL, 50, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY)),
-                    ('SPESIAL25', 'Diskon spesial 25% max Rp 75.000', 'percentage', 25.00, 50000, 75000, 30, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
+                    ('WELCOME10', 'percentage', 10.00, 30000, 50000, 100, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY)),
+                    ('HEMAT20K', 'nominal', 20000, 100000, NULL, 50, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY)),
+                    ('SPESIAL25', 'percentage', 25.00, 50000, 75000, 30, TRUE, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY))
                 """)
             
             print("✅ Database schema updated successfully!")
