@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { QrCode, Plus, Trash2, Download, Printer } from 'lucide-react';
+import { QrCode, Download, Printer, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 
@@ -16,19 +14,12 @@ const TableManagement = () => {
   const navigate = useNavigate();
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newTable, setNewTable] = useState({
-    table_number: '',
-    capacity: 4,
-    status: 'available'
-  });
-  const printRef = useRef();
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Check authentication
     const user = localStorage.getItem('user');
     if (!user) {
-      toast.error('Please login first');
+      toast.error('Silakan login terlebih dahulu');
       navigate('/staff/login');
       return;
     }
@@ -38,47 +29,18 @@ const TableManagement = () => {
   const fetchTables = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/tables`);
-      setTables(response.data);
+      setTables(response.data || []);
     } catch (error) {
       console.error('Error fetching tables:', error);
-      toast.error('Failed to load tables');
+      toast.error('Gagal memuat data meja');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddTable = async () => {
-    if (!newTable.table_number) {
-      toast.error('Please enter table number');
-      return;
-    }
-
-    try {
-      await axios.post(`${API_URL}/api/tables`, newTable);
-      toast.success('Table added successfully');
-      setIsAddDialogOpen(false);
-      setNewTable({ table_number: '', capacity: 4, status: 'available' });
-      fetchTables();
-    } catch (error) {
-      console.error('Error adding table:', error);
-      toast.error(error.response?.data?.detail || 'Failed to add table');
-    }
-  };
-
-  const handleDeleteTable = async (tableId) => {
-    if (!window.confirm('Are you sure you want to delete this table?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_URL}/api/tables/${tableId}`);
-      toast.success('Table deleted successfully');
-      fetchTables();
-    } catch (error) {
-      console.error('Error deleting table:', error);
-      toast.error('Failed to delete table');
-    }
-  };
+  const filteredTables = tables.filter(table =>
+    table.table_number?.toString().includes(searchTerm)
+  );
 
   const downloadQR = (qrCode, tableNumber) => {
     const link = document.createElement('a');
@@ -87,7 +49,7 @@ const TableManagement = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('QR Code downloaded');
+    toast.success('QR Code berhasil diunduh');
   };
 
   const printQR = (qrCode, tableNumber) => {
@@ -95,67 +57,60 @@ const TableManagement = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Print QR Code - Table ${tableNumber}</title>
+          <title>Print QR Code - Meja ${tableNumber}</title>
           <style>
             body {
               display: flex;
               flex-direction: column;
-              align-items: center;
               justify-content: center;
-              min-height: 100vh;
+              align-items: center;
+              height: 100vh;
               margin: 0;
               font-family: Arial, sans-serif;
             }
-            .container {
+            .print-container {
               text-align: center;
-              padding: 20px;
-            }
-            h1 {
-              font-size: 32px;
-              margin-bottom: 10px;
-            }
-            p {
-              font-size: 18px;
-              color: #666;
-              margin-bottom: 20px;
             }
             img {
-              width: 400px;
-              height: 400px;
-              border: 2px solid #333;
+              max-width: 300px;
+              height: auto;
+            }
+            h2 {
+              margin-top: 20px;
+              font-size: 24px;
             }
             @media print {
               body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                margin: 0;
               }
             }
           </style>
         </head>
         <body>
-          <div class="container">
-            <h1>Table ${tableNumber}</h1>
-            <p>Scan to Order</p>
+          <div class="print-container">
+            <h2>Meja ${tableNumber}</h2>
             <img src="${qrCode}" alt="QR Code" />
+            <p>Scan untuk memesan</p>
           </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() {
+                window.close();
+              };
+            };
+          </script>
         </body>
       </html>
     `);
     printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
-      printWindow.close();
-    };
   };
 
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading tables...</p>
-          </div>
+          <div className="animate-pulse text-gray-500">Memuat data...</div>
         </div>
       </Layout>
     );
@@ -164,122 +119,88 @@ const TableManagement = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Table Management</h1>
-            <p className="text-gray-600 mt-1">Manage restaurant tables and QR codes</p>
+            <h1 className="text-2xl font-bold text-gray-800">Manajemen Meja</h1>
+            <p className="text-sm text-gray-500 mt-1">Kelola QR code untuk setiap meja</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Table
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Table</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="table_number">Table Number *</Label>
-                  <Input
-                    id="table_number"
-                    placeholder="e.g., T01, A1, Table 1"
-                    value={newTable.table_number}
-                    onChange={(e) => setNewTable({ ...newTable, table_number: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="capacity">Capacity</Label>
-                  <Input
-                    id="capacity"
-                    type="number"
-                    min="1"
-                    value={newTable.capacity}
-                    onChange={(e) => setNewTable({ ...newTable, capacity: parseInt(e.target.value) })}
-                  />
-                </div>
-                <Button onClick={handleAddTable} className="w-full">
-                  Create Table with QR Code
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <div className="text-sm text-gray-500">
+            Total: {filteredTables.length} meja
+          </div>
         </div>
 
-        {/* Tables Grid */}
-        {tables.length === 0 ? (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Cari nomor meja..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {filteredTables.length === 0 ? (
           <Card className="p-12 text-center">
-            <QrCode className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">No tables yet</h3>
-            <p className="text-gray-600 mb-4">Add your first table to generate a QR code</p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Table
-            </Button>
+            <QrCode className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-500">Tidak ada meja ditemukan</p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tables.map(table => (
-              <Card key={table.id} className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">Table {table.table_number}</h3>
-                    <p className="text-sm text-gray-600">Capacity: {table.capacity} persons</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredTables.map((table) => (
+              <Card key={table.id} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Meja {table.table_number}</h3>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        table.status === 'available'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {table.status === 'available' ? 'Tersedia' : 'Terisi'}
+                    </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteTable(table.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
 
-                {/* QR Code */}
-                <div className="bg-white border-2 border-gray-200 rounded-lg p-4 mb-4">
-                  {table.qr_code ? (
-                    <img
-                      src={table.qr_code}
-                      alt={`QR Code for Table ${table.table_number}`}
-                      className="w-full h-auto"
-                    />
-                  ) : (
-                    <div className="aspect-square flex items-center justify-center bg-gray-100 rounded">
-                      <QrCode className="h-12 w-12 text-gray-400" />
-                    </div>
-                  )}
-                </div>
+                  <div className="bg-white border-2 border-gray-200 rounded-lg p-4">
+                    {table.qr_code ? (
+                      <img
+                        src={table.qr_code}
+                        alt={`QR Code Meja ${table.table_number}`}
+                        className="w-full h-auto"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="aspect-square flex items-center justify-center text-gray-400">
+                        <QrCode className="h-16 w-16" />
+                      </div>
+                    )}
+                  </div>
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => downloadQR(table.qr_code, table.table_number)}
-                    className="gap-1"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => printQR(table.qr_code, table.table_number)}
-                    className="gap-1"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Print
-                  </Button>
-                </div>
+                  <p className="text-sm text-gray-600">
+                    Kapasitas: {table.capacity} orang
+                  </p>
 
-                {/* Table Info */}
-                <div className="mt-4 pt-4 border-t text-xs text-gray-500">
-                  <p>Created: {new Date(table.created_at).toLocaleDateString('id-ID')}</p>
-                  <p className="truncate" title={table.qr_token}>Token: {table.qr_token?.substring(0, 16)}...</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => downloadQR(table.qr_code, table.table_number)}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Unduh
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => printQR(table.qr_code, table.table_number)}
+                    >
+                      <Printer className="h-4 w-4 mr-1" />
+                      Cetak
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
