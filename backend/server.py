@@ -520,6 +520,41 @@ async def create_category(category: Category):
             result = await cursor.fetchone()
             return row_to_dict(result, cursor)
 
+@api_router.get("/categories/{category_id}")
+async def get_category(category_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM categories WHERE id = %s', (category_id,))
+            category = await cursor.fetchone()
+            if not category:
+                raise HTTPException(status_code=404, detail="Category not found")
+            return row_to_dict(category, cursor)
+
+@api_router.put("/categories/{category_id}")
+async def update_category(category_id: int, category: Category):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE categories SET name = %s, description = %s, parent_id = %s WHERE id = %s',
+                (category.name, category.description, category.parent_id, category_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM categories WHERE id = %s', (category_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/categories/{category_id}")
+async def delete_category(category_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM categories WHERE id = %s', (category_id,))
+            await conn.commit()
+            return {"success": True, "message": "Category deleted"}
+
 # ORDERS
 
 @api_router.post("/orders")
