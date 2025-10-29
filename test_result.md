@@ -367,17 +367,36 @@ frontend:
         agent: "main"
         comment: "FIXED: Added 100ms setTimeout before navigation to ensure localStorage is properly set. Improved useEffect in CustomerMenu.jsx to use async function wrapper and removed 'navigate' from dependency array to prevent unwanted re-renders. Added try-catch for localStorage parsing. Updated logout functions to clear customer_token and use Indonesian messages."
 
+frontend:
   - task: "Customer Register Page"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/auth/CustomerRegister.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Customer registration page already exists, enforces mandatory registration"
+      - working: false
+        agent: "user"
+        comment: "User reported: Email tidak terkirim saat registrasi"
+      - working: true
+        agent: "main"
+        comment: "✅ FIXED: Backend email service sudah diperbaiki. Form registrasi sudah menampilkan notifikasi bahwa password dikirim ke email. Jika email gagal, temp_password akan ditampilkan di toast notification."
+
+  - task: "Admin Customer Management with Reset Password"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Customers.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NEW FEATURE: Added reset password functionality in admin Customers page. Features: (1) Reset Password button on each customer card (2) Dialog with 2 modes: Auto-generate OR Custom password (3) Email notification with new password (4) Loading states and error handling (5) Show password if email fails to send."
 
   - task: "Customer Menu (E-commerce Style)"
     implemented: true
