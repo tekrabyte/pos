@@ -140,7 +140,7 @@ const PaymentSettings = () => {
                     className="p-4 border rounded-lg hover:shadow-md transition-shadow"
                     data-testid={`payment-method-${method.id}`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         {method.type === 'qris' ? (
                           <Smartphone className="h-5 w-5 text-blue-600" />
@@ -159,6 +159,27 @@ const PaymentSettings = () => {
                       >
                         {method.is_active ? 'Aktif' : 'Nonaktif'}
                       </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEdit(method)}
+                        data-testid={`edit-payment-${method.id}`}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDelete(method.id)}
+                        data-testid={`delete-payment-${method.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
