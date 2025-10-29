@@ -69,7 +69,7 @@ const Kiosk = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${API}/categories`);
-      setCategories(response.data);
+      setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
