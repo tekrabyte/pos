@@ -7,6 +7,17 @@ use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\TableController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\OutletController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\BankAccountController;
+use App\Http\Controllers\Api\StoreSettingController;
+use App\Http\Controllers\Api\StoreBannerController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +30,8 @@ Route::get('/health', function () {
     return response()->json([
         'status' => 'OK',
         'message' => 'Laravel POS API is running',
-        'timestamp' => now()->toDateTimeString()
+        'timestamp' => now()->toDateTimeString(),
+        'version' => '1.0.0'
     ]);
 });
 
@@ -62,44 +74,51 @@ Route::apiResource('brands', BrandController::class);
 
 /*
 |--------------------------------------------------------------------------
-| Order Management Routes (To be implemented)
+| Order Management Routes
 |--------------------------------------------------------------------------
 */
-// Route::apiResource('orders', OrderController::class);
-// Route::apiResource('tables', TableController::class);
+Route::apiResource('orders', OrderController::class);
+Route::put('orders/{id}/status', [OrderController::class, 'updateStatus']);
+
+Route::apiResource('tables', TableController::class);
+Route::post('tables/{id}/regenerate-qr', [TableController::class, 'regenerateQr']);
 
 /*
 |--------------------------------------------------------------------------
-| Customer Management Routes (To be implemented)
+| Customer Management Routes
 |--------------------------------------------------------------------------
 */
-// Route::apiResource('customers', CustomerController::class);
-// Route::apiResource('coupons', CouponController::class);
+Route::apiResource('customers', CustomerController::class);
+
+Route::apiResource('coupons', CouponController::class);
+Route::post('coupons/validate', [CouponController::class, 'validate']);
 
 /*
 |--------------------------------------------------------------------------
-| Settings Routes (To be implemented)
+| Settings Routes
 |--------------------------------------------------------------------------
 */
-// Route::apiResource('outlets', OutletController::class);
-// Route::apiResource('roles', RoleController::class);
-// Route::apiResource('payment-methods', PaymentMethodController::class);
-// Route::apiResource('payment-settings', PaymentSettingController::class);
-// Route::apiResource('bank-accounts', BankAccountController::class);
+Route::apiResource('outlets', OutletController::class);
+Route::apiResource('roles', RoleController::class);
+Route::apiResource('payment-methods', PaymentMethodController::class);
+Route::apiResource('bank-accounts', BankAccountController::class);
 
 /*
 |--------------------------------------------------------------------------
-| Store & Banner Routes (To be implemented)
+| Store & Banner Routes
 |--------------------------------------------------------------------------
 */
-// Route::get('store-settings', [StoreSettingController::class, 'index']);
-// Route::put('store-settings', [StoreSettingController::class, 'update']);
-// Route::apiResource('store-banners', StoreBannerController::class);
+Route::get('store-settings', [StoreSettingController::class, 'index']);
+Route::put('store-settings', [StoreSettingController::class, 'update']);
+
+Route::get('store-banners', [StoreBannerController::class, 'index']);
+Route::get('store-banners/all', [StoreBannerController::class, 'all']);
+Route::apiResource('banners', StoreBannerController::class)->except(['index']);
 
 /*
 |--------------------------------------------------------------------------
-| Analytics & Dashboard Routes (To be implemented)
+| Analytics & Dashboard Routes
 |--------------------------------------------------------------------------
 */
-// Route::get('dashboard/stats', [DashboardController::class, 'stats']);
-// Route::get('analytics', [AnalyticsController::class, 'index']);
+Route::get('dashboard/stats', [DashboardController::class, 'stats']);
+Route::get('analytics', [DashboardController::class, 'analytics']);
