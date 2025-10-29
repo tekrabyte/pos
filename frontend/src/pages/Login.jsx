@@ -65,7 +65,7 @@ const Login = () => {
     setRegLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/register-customer`, {
+      const response = await axios.post(`${API}/auth/customer/register`, {
         name: custName,
         email: custEmail,
         phone: custPhone,
