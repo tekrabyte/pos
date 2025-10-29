@@ -125,9 +125,6 @@ func SetupRoutes(app *fiber.App) {
 	api.Put("/store-banners/:id", AuthMiddleware, UpdateStoreBanner)
 	api.Delete("/store-banners/:id", AuthMiddleware, DeleteStoreBanner)
 
-	// Coupons - Available
-	api.Get("/coupons/available", GetAvailableCoupons)
-
 	// File Uploads
 	api.Post("/upload/payment-proof", UploadPaymentProof)
 	api.Post("/upload/qris", UploadQRIS)
