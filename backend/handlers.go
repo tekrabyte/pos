@@ -968,7 +968,7 @@ func RegenerateTableQR(c *fiber.Ctx) error {
 }
 
 func GetCustomers(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, name, email, phone, address, points, created_at FROM customers ORDER BY created_at DESC LIMIT 100")
+        rows, err := DB.Query("SELECT id, name, email, phone, address, created_at, updated_at FROM customers ORDER BY created_at DESC LIMIT 100")
         if err != nil {
                 return c.JSON(fiber.Map{"success": true, "customers": []interface{}{}})
         }
@@ -977,7 +977,7 @@ func GetCustomers(c *fiber.Ctx) error {
         var customers []Customer
         for rows.Next() {
                 var cust Customer
-                rows.Scan(&cust.ID, &cust.Name, &cust.Email, &cust.Phone, &cust.Address, &cust.Points, &cust.CreatedAt)
+                rows.Scan(&cust.ID, &cust.Name, &cust.Email, &cust.Phone, &cust.Address, &cust.CreatedAt, &cust.UpdatedAt)
                 customers = append(customers, cust)
         }
         
