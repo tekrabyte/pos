@@ -163,8 +163,9 @@ const CustomerMenu = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('customer');
+    localStorage.removeItem('customer_token');
     localStorage.removeItem('cart');
-    toast.success('Logged out successfully');
+    toast.success('Berhasil logout');
     navigate('/customer/login');
   };
 
