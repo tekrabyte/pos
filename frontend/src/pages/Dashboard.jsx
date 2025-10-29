@@ -24,13 +24,13 @@ const Dashboard = () => {
     const user = localStorage.getItem('user');
     
     if (!token || !user) {
-      toast.error('Silakan login terlebih dahulu');
-      navigate('/staff/login');
+      // Don't fetch data if not logged in, let ProtectedRoute handle redirect
+      setLoading(false);
       return;
     }
     
     fetchAnalytics();
-  }, [navigate]);
+  }, []);
 
   const fetchAnalytics = async () => {
     try {
