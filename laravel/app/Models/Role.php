@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Role extends Model
+{
+    use HasFactory;
+
+    protected $table = 'roles';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'name',
+        'max_discount',
+    ];
+
+    protected $casts = [
+        'max_discount' => 'decimal:2',
+        'created_at' => 'datetime',
+    ];
+
+    // Relationships
+    public function users()
+    {
+        return $this->hasMany(User::class, 'role_id');
+    }
+}
