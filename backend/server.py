@@ -42,7 +42,16 @@ async def get_payment_methods():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        query = "SELECT id, name, type, is_active, created_at, updated_at FROM payment_methods ORDER BY created_at DESC"
+        # First, let's check what columns exist
+        cursor.execute("DESCRIBE payment_methods")
+        columns = [row[0] for row in cursor.fetchall()]
+        
+        # Build query based on available columns
+        base_columns = ["id", "name", "type", "is_active"]
+        optional_columns = ["created_at", "updated_at"]
+        
+        available_columns = base_columns + [col for col in optional_columns if col in columns]
+        query = f"SELECT {', '.join(available_columns)} FROM payment_methods ORDER BY id DESC"
         cursor.execute(query)
         
         methods = []
