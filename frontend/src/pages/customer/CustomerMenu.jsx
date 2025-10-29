@@ -93,7 +93,7 @@ const CustomerMenu = () => {
   const fetchCoupons = async () => {
     try {
       const response = await axios.get(`${API_URL}/coupons/available`);
-      setCoupons(response.data);
+      setCoupons(Array.isArray(response.data) ? response.data : (response.data.coupons || []));
     } catch (error) {
       console.error('Error fetching coupons:', error);
     }
