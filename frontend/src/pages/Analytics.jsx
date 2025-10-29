@@ -81,7 +81,9 @@ const Analytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 mb-2">Total Pendapatan</p>
-                <p className="text-4xl font-bold">Rp {analytics.total_revenue.toLocaleString('id-ID')}</p>
+                <p className="text-4xl font-bold">
+                  Rp {(analytics.total_revenue || 0).toLocaleString('id-ID')}
+                </p>
               </div>
               <div className="p-4 bg-white/20 rounded-full">
                 <TrendingUp className="h-10 w-10" />
