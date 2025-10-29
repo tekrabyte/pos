@@ -28,7 +28,7 @@ const TableManagement = () => {
 
   const fetchTables = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/tables`);
+      const response = await axios.get(`${API_URL}/tables`);
       setTables(response.data || []);
     } catch (error) {
       console.error('Error fetching tables:', error);
