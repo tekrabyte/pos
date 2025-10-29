@@ -1304,23 +1304,38 @@ func getMapValue(m map[string]interface{}, key string) interface{} {
 // ========== STORE BANNERS CRUD ==========
 
 func GetStoreBanners(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, title, image_url, link, is_active, `order`, created_at, updated_at FROM store_banners ORDER BY `order` ASC")
+        rows, err := DB.Query("SELECT id, title, subtitle, image_url, link_url, button_text, display_order, is_active, created_at, updated_at FROM store_banners ORDER BY display_order ASC")
         if err != nil {
                 return ErrorResponse(c, "Failed to fetch store banners: "+err.Error(), fiber.StatusInternalServerError)
         }
         defer rows.Close()
 
-        var banners []StoreBanner
+        var banners []map[string]interface{}
         for rows.Next() {
-                var banner StoreBanner
-                if err := rows.Scan(&banner.ID, &banner.Title, &banner.ImageURL, &banner.Link, &banner.IsActive, &banner.Order, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
+                var id, displayOrder int
+                var title, subtitle, imageURL, linkURL, buttonText sql.NullString
+                var isActive bool
+                var createdAt, updatedAt time.Time
+                
+                if err := rows.Scan(&id, &title, &subtitle, &imageURL, &linkURL, &buttonText, &displayOrder, &isActive, &createdAt, &updatedAt); err != nil {
                         continue
                 }
-                banners = append(banners, banner)
+                banners = append(banners, map[string]interface{}{
+                        "id":            id,
+                        "title":         nullStringToString(title),
+                        "subtitle":      nullStringToString(subtitle),
+                        "image_url":     nullStringToString(imageURL),
+                        "link_url":      nullStringToString(linkURL),
+                        "button_text":   nullStringToString(buttonText),
+                        "display_order": displayOrder,
+                        "is_active":     isActive,
+                        "created_at":    createdAt,
+                        "updated_at":    updatedAt,
+                })
         }
 
         if banners == nil {
-                banners = []StoreBanner{}
+                banners = []map[string]interface{}{}
         }
 
         return c.JSON(banners)
@@ -1328,10 +1343,13 @@ func GetStoreBanners(c *fiber.Ctx) error {
 
 func GetStoreBanner(c *fiber.Ctx) error {
         id := c.Params("id")
-        var banner StoreBanner
+        var bannerID, displayOrder int
+        var title, subtitle, imageURL, linkURL, buttonText sql.NullString
+        var isActive bool
+        var createdAt, updatedAt time.Time
 
-        err := DB.QueryRow("SELECT id, title, image_url, link, is_active, `order`, created_at, updated_at FROM store_banners WHERE id = ?", id).
-                Scan(&banner.ID, &banner.Title, &banner.ImageURL, &banner.Link, &banner.IsActive, &banner.Order, &banner.CreatedAt, &banner.UpdatedAt)
+        err := DB.QueryRow("SELECT id, title, subtitle, image_url, link_url, button_text, display_order, is_active, created_at, updated_at FROM store_banners WHERE id = ?", id).
+                Scan(&bannerID, &title, &subtitle, &imageURL, &linkURL, &buttonText, &displayOrder, &isActive, &createdAt, &updatedAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Store banner not found", fiber.StatusNotFound)
@@ -1340,47 +1358,83 @@ func GetStoreBanner(c *fiber.Ctx) error {
                 return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
         }
 
-        return c.JSON(banner)
+        return c.JSON(map[string]interface{}{
+                "id":            bannerID,
+                "title":         nullStringToString(title),
+                "subtitle":      nullStringToString(subtitle),
+                "image_url":     nullStringToString(imageURL),
+                "link_url":      nullStringToString(linkURL),
+                "button_text":   nullStringToString(buttonText),
+                "display_order": displayOrder,
+                "is_active":     isActive,
+                "created_at":    createdAt,
+                "updated_at":    updatedAt,
+        })
 }
 
 func CreateStoreBanner(c *fiber.Ctx) error {
-        var banner StoreBanner
-        if err := c.BodyParser(&banner); err != nil {
+        var input struct {
+                Title        string `json:"title"`
+                Subtitle     string `json:"subtitle"`
+                ImageURL     string `json:"image_url"`
+                LinkURL      string `json:"link_url"`
+                ButtonText   string `json:"button_text"`
+                DisplayOrder int    `json:"display_order"`
+                IsActive     bool   `json:"is_active"`
+        }
+        
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         result, err := DB.Exec(`
-                INSERT INTO store_banners (title, image_url, link, is_active, ` + "`order`" + `, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-        `, banner.Title, banner.ImageURL, banner.Link, banner.IsActive, banner.Order)
+                INSERT INTO store_banners (title, subtitle, image_url, link_url, button_text, display_order, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        `, input.Title, input.Subtitle, input.ImageURL, input.LinkURL, input.ButtonText, input.DisplayOrder, input.IsActive)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to create store banner: "+err.Error(), fiber.StatusInternalServerError)
         }
 
         id, _ := result.LastInsertId()
-        banner.ID = int(id)
 
         return c.Status(fiber.StatusCreated).JSON(fiber.Map{
                 "success": true,
                 "message": "Store banner created successfully",
-                "data":    banner,
+                "data": map[string]interface{}{
+                        "id":            id,
+                        "title":         input.Title,
+                        "subtitle":      input.Subtitle,
+                        "image_url":     input.ImageURL,
+                        "link_url":      input.LinkURL,
+                        "button_text":   input.ButtonText,
+                        "display_order": input.DisplayOrder,
+                        "is_active":     input.IsActive,
+                },
         })
 }
 
 func UpdateStoreBanner(c *fiber.Ctx) error {
         id := c.Params("id")
-        var banner StoreBanner
+        var input struct {
+                Title        string `json:"title"`
+                Subtitle     string `json:"subtitle"`
+                ImageURL     string `json:"image_url"`
+                LinkURL      string `json:"link_url"`
+                ButtonText   string `json:"button_text"`
+                DisplayOrder int    `json:"display_order"`
+                IsActive     bool   `json:"is_active"`
+        }
 
-        if err := c.BodyParser(&banner); err != nil {
+        if err := c.BodyParser(&input); err != nil {
                 return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
         }
 
         _, err := DB.Exec(`
                 UPDATE store_banners 
-                SET title = ?, image_url = ?, link = ?, is_active = ?, ` + "`order`" + ` = ?, updated_at = NOW()
+                SET title = ?, subtitle = ?, image_url = ?, link_url = ?, button_text = ?, display_order = ?, is_active = ?, updated_at = NOW()
                 WHERE id = ?
-        `, banner.Title, banner.ImageURL, banner.Link, banner.IsActive, banner.Order, id)
+        `, input.Title, input.Subtitle, input.ImageURL, input.LinkURL, input.ButtonText, input.DisplayOrder, input.IsActive, id)
 
         if err != nil {
                 return ErrorResponse(c, "Failed to update store banner", fiber.StatusInternalServerError)
