@@ -170,7 +170,7 @@ const CustomerProfileNew = () => {
     
     setLoading(true);
     try {
-      const response = await axios.delete(`${API_URL}/customer/account/${customer.id}`);
+      const response = await axios.delete(`${API_URL}/customers/${customer.id}`);
       
       if (response.data.success) {
         toast.success('Akun berhasil dihapus');
