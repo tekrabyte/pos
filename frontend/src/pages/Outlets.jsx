@@ -34,7 +34,7 @@ const Outlets = () => {
   const fetchOutlets = async () => {
     try {
       const response = await axios.get(`${API}/outlets`);
-      setOutlets(response.data);
+      setOutlets(response.data.outlets || response.data || []);
     } catch (error) {
       console.error('Error fetching outlets:', error);
       toast.error('Gagal mengambil data outlet');
