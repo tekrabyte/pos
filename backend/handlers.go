@@ -1563,7 +1563,33 @@ func DeleteOutlet(c *fiber.Ctx) error {
 }
 
 func GetPaymentMethods(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "payment_methods": []interface{}{}})
+        rows, err := DB.Query("SELECT id, name, type, is_active, created_at, updated_at FROM payment_methods ORDER BY created_at DESC")
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var methods []map[string]interface{}
+        for rows.Next() {
+                var pm PaymentMethod
+                if err := rows.Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive, &pm.CreatedAt, &pm.UpdatedAt); err != nil {
+                        continue
+                }
+                methods = append(methods, map[string]interface{}{
+                        "id":         pm.ID,
+                        "name":       pm.Name,
+                        "type":       pm.Type,
+                        "is_active":  pm.IsActive,
+                        "created_at": getNullTime(pm.CreatedAt),
+                        "updated_at": getNullTime(pm.UpdatedAt),
+                })
+        }
+
+        if methods == nil {
+                methods = []map[string]interface{}{}
+        }
+
+        return c.JSON(fiber.Map{"success": true, "payment_methods": methods})
 }
 
 func GetPaymentMethod(c *fiber.Ctx) error {
