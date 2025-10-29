@@ -1312,8 +1312,301 @@ class CrudErrorTester:
         else:
             print(f"\n✅ EXCELLENT: No validation errors found in CRUD endpoints")
 
+    def test_payment_methods_crud_complete(self):
+        """Test Payment Methods CRUD endpoints as specified in review request"""
+        print("\n🎯 PRIORITY: Testing Payment Methods CRUD - Complete System")
+        print("="*70)
+        
+        # Step 1: Login as admin first
+        if not self.test_staff_login():
+            print("❌ Cannot proceed without admin authentication")
+            return False
+            
+        # Step 2: GET all payment methods (baseline)
+        print("\n--- Step 2: GET all payment methods (baseline) ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/payment-methods")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    baseline_count = len(data)
+                    self.log_test("GET Payment Methods (Baseline)", True, 
+                                f"Retrieved {baseline_count} payment methods (including inactive)")
+                    print(f"   Baseline payment methods: {baseline_count}")
+                else:
+                    self.log_test("GET Payment Methods (Baseline)", False, 
+                                f"Expected list, got: {type(data)}")
+                    return False
+            else:
+                self.log_test("GET Payment Methods (Baseline)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("GET Payment Methods (Baseline)", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 3: POST create new payment method
+        print("\n--- Step 3: POST create new payment method ---")
+        try:
+            new_payment_method = {
+                "name": "Test E-Wallet",
+                "type": "transfer", 
+                "is_active": True
+            }
+            
+            response = self.session.post(f"{API_BASE_URL}/payment-methods", json=new_payment_method)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("id"):
+                    self.payment_method_id = data["id"]
+                    self.log_test("POST Create Payment Method", True, 
+                                f"Payment method created with ID {self.payment_method_id}")
+                    print(f"   Created payment method ID: {self.payment_method_id}")
+                else:
+                    self.log_test("POST Create Payment Method", False, 
+                                f"No ID in response: {data}")
+                    return False
+            else:
+                self.log_test("POST Create Payment Method", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("POST Create Payment Method", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 4: GET single payment method by ID
+        print("\n--- Step 4: GET single payment method by ID ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/payment-methods/{self.payment_method_id}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("id") == self.payment_method_id and data.get("name") == "Test E-Wallet":
+                    self.log_test("GET Payment Method by ID", True, 
+                                f"Retrieved payment method {self.payment_method_id} with correct data")
+                else:
+                    self.log_test("GET Payment Method by ID", False, 
+                                f"Data mismatch: {data}")
+                    return False
+            else:
+                self.log_test("GET Payment Method by ID", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("GET Payment Method by ID", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 4b: Test with non-existent ID (should return 404)
+        print("\n--- Step 4b: GET non-existent payment method (should return 404) ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/payment-methods/99999")
+            
+            if response.status_code == 404:
+                self.log_test("GET Non-existent Payment Method", True, 
+                            "Correctly returned 404 for non-existent payment method")
+            else:
+                self.log_test("GET Non-existent Payment Method", False, 
+                            f"Expected 404, got HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("GET Non-existent Payment Method", False, f"Exception: {str(e)}")
+            
+        # Step 5: PUT update payment method
+        print("\n--- Step 5: PUT update payment method ---")
+        try:
+            updated_payment_method = {
+                "name": "Updated E-Wallet",
+                "type": "qris",
+                "is_active": False
+            }
+            
+            response = self.session.put(f"{API_BASE_URL}/payment-methods/{self.payment_method_id}", 
+                                      json=updated_payment_method)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get("name") == "Updated E-Wallet" and 
+                    data.get("type") == "qris" and 
+                    data.get("is_active") == False):
+                    self.log_test("PUT Update Payment Method", True, 
+                                f"Payment method updated successfully, is_active changed to false")
+                else:
+                    self.log_test("PUT Update Payment Method", False, 
+                                f"Update data mismatch: {data}")
+                    return False
+            else:
+                self.log_test("PUT Update Payment Method", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("PUT Update Payment Method", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 5b: Test update with non-existent ID (should handle gracefully)
+        print("\n--- Step 5b: PUT update non-existent payment method ---")
+        try:
+            response = self.session.put(f"{API_BASE_URL}/payment-methods/99999", 
+                                      json=updated_payment_method)
+            
+            if response.status_code in [404, 400]:
+                self.log_test("PUT Non-existent Payment Method", True, 
+                            f"Gracefully handled non-existent ID with HTTP {response.status_code}")
+            else:
+                self.log_test("PUT Non-existent Payment Method", False, 
+                            f"Expected 404/400, got HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("PUT Non-existent Payment Method", False, f"Exception: {str(e)}")
+            
+        # Step 6: GET verify update
+        print("\n--- Step 6: GET verify update ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/payment-methods/{self.payment_method_id}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get("name") == "Updated E-Wallet" and 
+                    data.get("is_active") == False):
+                    self.log_test("GET Verify Update", True, 
+                                f"Update verified: name='Updated E-Wallet', is_active=false")
+                else:
+                    self.log_test("GET Verify Update", False, 
+                                f"Update not reflected: {data}")
+                    return False
+            else:
+                self.log_test("GET Verify Update", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("GET Verify Update", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 7: DELETE payment method
+        print("\n--- Step 7: DELETE payment method ---")
+        try:
+            response = self.session.delete(f"{API_BASE_URL}/payment-methods/{self.payment_method_id}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("DELETE Payment Method", True, 
+                                f"Payment method deleted successfully: {data.get('message', '')}")
+                else:
+                    self.log_test("DELETE Payment Method", False, 
+                                f"Delete failed: {data}")
+                    return False
+            else:
+                self.log_test("DELETE Payment Method", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("DELETE Payment Method", False, f"Exception: {str(e)}")
+            return False
+            
+        # Step 7b: Test delete with non-existent ID (should handle gracefully)
+        print("\n--- Step 7b: DELETE non-existent payment method ---")
+        try:
+            response = self.session.delete(f"{API_BASE_URL}/payment-methods/99999")
+            
+            if response.status_code in [404, 400]:
+                self.log_test("DELETE Non-existent Payment Method", True, 
+                            f"Gracefully handled non-existent ID with HTTP {response.status_code}")
+            else:
+                self.log_test("DELETE Non-existent Payment Method", False, 
+                            f"Expected 404/400, got HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("DELETE Non-existent Payment Method", False, f"Exception: {str(e)}")
+            
+        # Step 8: GET verify deletion (should not be in list)
+        print("\n--- Step 8: GET verify deletion ---")
+        try:
+            response = self.session.get(f"{API_BASE_URL}/payment-methods")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    final_count = len(data)
+                    # Check if our created payment method is no longer in the list
+                    found_deleted = any(pm.get("id") == self.payment_method_id for pm in data)
+                    
+                    if not found_deleted:
+                        self.log_test("GET Verify Deletion", True, 
+                                    f"Deletion verified: payment method not in list (count: {final_count})")
+                    else:
+                        self.log_test("GET Verify Deletion", False, 
+                                    f"Payment method still found in list after deletion")
+                        return False
+                else:
+                    self.log_test("GET Verify Deletion", False, 
+                                f"Expected list, got: {type(data)}")
+                    return False
+            else:
+                self.log_test("GET Verify Deletion", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+                return False
+        except Exception as e:
+            self.log_test("GET Verify Deletion", False, f"Exception: {str(e)}")
+            return False
+            
+        print("\n✅ Payment Methods CRUD testing completed successfully!")
+        return True
+        
+    def test_response_times(self):
+        """Test response times for all CRUD operations"""
+        print("\n⏱️  Testing Response Times (Success Criteria: < 2 seconds)")
+        
+        response_times = []
+        
+        # Test each endpoint and measure response time
+        endpoints_to_test = [
+            ("GET", f"{API_BASE_URL}/payment-methods", None),
+            ("POST", f"{API_BASE_URL}/payment-methods", {"name": "Speed Test", "type": "test", "is_active": True}),
+        ]
+        
+        for method, url, data in endpoints_to_test:
+            try:
+                start_time = time.time()
+                
+                if method == "GET":
+                    response = self.session.get(url)
+                elif method == "POST":
+                    response = self.session.post(url, json=data)
+                    
+                end_time = time.time()
+                response_time = end_time - start_time
+                response_times.append(response_time)
+                
+                status = "✅" if response_time < 2.0 else "⚠️"
+                print(f"{status} {method} {url}: {response_time:.3f}s")
+                
+            except Exception as e:
+                print(f"❌ {method} {url}: Exception - {str(e)}")
+                
+        if response_times:
+            avg_time = sum(response_times) / len(response_times)
+            max_time = max(response_times)
+            
+            print(f"\n📊 Response Time Summary:")
+            print(f"   Average: {avg_time:.3f}s")
+            print(f"   Maximum: {max_time:.3f}s")
+            print(f"   Success Criteria: {'✅ PASSED' if max_time < 2.0 else '❌ FAILED'} (< 2 seconds)")
+
 if __name__ == "__main__":
     tester = CrudErrorTester()
     
-    # Run the CRUD validation tests as requested
-    tester.run_crud_validation_tests()
+    # Run Payment Methods CRUD testing as specified in review request
+    print("🎯 PAYMENT METHODS CRUD TESTING - Review Request")
+    print("Backend URL: https://complete-admin-crud.preview.emergentagent.com/api")
+    print("="*70)
+    
+    # Initialize payment_method_id attribute
+    tester.payment_method_id = None
+    
+    # Run the complete Payment Methods CRUD test
+    tester.test_payment_methods_crud_complete()
+    
+    # Test response times
+    tester.test_response_times()
+    
+    # Print final summary
+    tester.print_summary()
