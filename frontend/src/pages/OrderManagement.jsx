@@ -328,10 +328,26 @@ const OrderManagement = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="font-bold text-lg">{order.order_number}</h3>
+                            
+                            {/* Order Type Badge */}
+                            {order.order_type === 'dine-in' ? (
+                              <Badge className="bg-purple-100 text-purple-800 border-purple-300">
+                                <UtensilsCrossed className="h-3 w-3 mr-1" />
+                                Dine-in
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-teal-100 text-teal-800 border-teal-300">
+                                <ShoppingBag className="h-3 w-3 mr-1" />
+                                Takeaway
+                              </Badge>
+                            )}
+                            
+                            {/* Status Badge */}
                             <Badge className={statusConfig[order.status]?.color}>
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {statusConfig[order.status]?.label}
                             </Badge>
+                            
                             {!order.payment_verified && order.status === 'pending' && (
                               <Badge variant="destructive">Payment Not Verified</Badge>
                             )}
