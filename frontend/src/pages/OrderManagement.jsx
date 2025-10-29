@@ -553,7 +553,7 @@ const OrderManagement = () => {
                     </div>
                     <div className="flex justify-between items-center pt-3 border-t-2 font-bold text-lg">
                       <span>Total</span>
-                      <span>Rp {selectedOrder.total_amount.toLocaleString('id-ID')}</span>
+                      <span>Rp {formatCurrency(selectedOrder.total_amount)}</span>
                     </div>
                   </div>
 
