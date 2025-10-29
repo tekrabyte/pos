@@ -4,34 +4,35 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class Customer extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
 
-    protected $table = 'users';
+    protected $table = 'customers';
     public $timestamps = false;
 
     protected $fillable = [
-        'username',
-        'password',
+        'name',
         'email',
-        'full_name',
-        'role',
-        'role_id',
-        'outlet_id',
-        'is_active',
+        'password',
+        'phone',
+        'address',
+        'email_verified',
+        'password_reset_token',
+        'password_reset_expires',
     ];
 
     protected $hidden = [
         'password',
+        'password_reset_token',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'email_verified' => 'boolean',
         'created_at' => 'datetime',
+        'password_reset_expires' => 'datetime',
     ];
 
     // JWT Methods
@@ -46,18 +47,13 @@ class User extends Authenticatable implements JWTSubject
     }
 
     // Relationships
-    public function roleModel()
-    {
-        return $this->belongsTo(Role::class, 'role_id');
-    }
-
-    public function outlet()
-    {
-        return $this->belongsTo(Outlet::class, 'outlet_id');
-    }
-
     public function orders()
     {
-        return $this->hasMany(Order::class, 'user_id');
+        return $this->hasMany(Order::class, 'customer_id');
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(OrderRating::class, 'customer_id');
     }
 }
