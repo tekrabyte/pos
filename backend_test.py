@@ -846,6 +846,22 @@ class PosApiTester:
             self.log_test("WebSocket Connection", False, f"Exception: {str(e)}")
             return False
     
+    def run_priority_tests(self):
+        """Run PRIORITY tests from review request"""
+        print("🎯 Starting PRIORITY Backend API Tests - Email & Password Reset Features")
+        print("=" * 70)
+        
+        # PRIORITY TESTS (from review request)
+        print("\n🔥 PRIORITY TESTS - Email & Password Reset Features")
+        self.test_customer_register()  # Test 1: Customer Registration with Email (FIXED)
+        self.test_admin_reset_password_auto_generate()  # Test 2: Admin Reset - Auto Generate
+        self.test_admin_reset_password_custom()  # Test 3: Admin Reset - Custom Password  
+        self.test_admin_reset_password_validation()  # Test 4: Validation - Password Too Short
+        self.test_customer_login_after_reset()  # Test 5: Customer Login After Reset
+        
+        # Print summary
+        self.print_summary()
+        
     def run_all_tests(self):
         """Run all tests in priority order"""
         print("🚀 Starting Backend API Tests for QR Scan & Dine POS System")
@@ -855,6 +871,13 @@ class PosApiTester:
         self.test_staff_login()
         self.test_customer_register()
         self.test_customer_login()
+        
+        # PRIORITY TESTS (from review request)
+        print("\n🔥 PRIORITY TESTS - Email & Password Reset Features")
+        self.test_admin_reset_password_auto_generate()
+        self.test_admin_reset_password_custom()
+        self.test_admin_reset_password_validation()
+        self.test_customer_login_after_reset()
         
         # Priority 2: Table Management
         self.test_create_table()
