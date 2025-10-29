@@ -25,7 +25,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       const response = await axios.get(`${API}/orders`);
-      setOrders(response.data);
+      setOrders(response.data.orders || response.data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Gagal mengambil data pesanan');
