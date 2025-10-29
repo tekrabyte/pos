@@ -34,7 +34,7 @@ const Customers = () => {
       const response = await axios.get(`${API}/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCustomers(response.data || []);
+      setCustomers(response.data.customers || response.data || []);
     } catch (error) {
       console.error('Error fetching customers:', error);
       toast.error('Gagal mengambil data customer');
