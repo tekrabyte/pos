@@ -1600,9 +1600,8 @@ func GetPaymentMethod(c *fiber.Ctx) error {
         id := c.Params("id")
         var pm PaymentMethod
 
-        query := "SELECT id, name, type, is_active, created_at, updated_at FROM payment_methods WHERE id = ?"
-        err := DB.QueryRow(query, id).Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive,
-                &pm.CreatedAt, &pm.UpdatedAt)
+        query := "SELECT id, name, type, is_active, created_at FROM payment_methods WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&pm.ID, &pm.Name, &pm.Type, &pm.IsActive, &pm.CreatedAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Payment method not found", fiber.StatusNotFound)
