@@ -1305,19 +1305,105 @@ func GetOutlets(c *fiber.Ctx) error {
 }
 
 func GetOutlet(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Get outlet - to be implemented"})
+        id := c.Params("id")
+        var outlet Outlet
+
+        query := "SELECT id, name, address, phone, is_active, created_at, updated_at FROM outlets WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&outlet.ID, &outlet.Name, &outlet.Address, &outlet.Phone,
+                &outlet.IsActive, &outlet.CreatedAt, &outlet.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Outlet not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{"success": true, "outlet": outlet})
 }
 
 func CreateOutlet(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create outlet - to be implemented"})
+        var req struct {
+                Name     string `json:"name"`
+                Address  string `json:"address"`
+                Phone    string `json:"phone"`
+                IsActive bool   `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Outlet name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO outlets (name, address, phone, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, NOW(), NOW())
+        `, req.Name, req.Address, req.Phone, req.IsActive)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create outlet: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Outlet created successfully",
+                "outlet": fiber.Map{
+                        "id":        id,
+                        "name":      req.Name,
+                        "address":   req.Address,
+                        "phone":     req.Phone,
+                        "is_active": req.IsActive,
+                },
+        })
 }
 
 func UpdateOutlet(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Update outlet - to be implemented"})
+        id := c.Params("id")
+        
+        var req struct {
+                Name     string `json:"name"`
+                Address  string `json:"address"`
+                Phone    string `json:"phone"`
+                IsActive bool   `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE outlets 
+                SET name = ?, address = ?, phone = ?, is_active = ?, updated_at = NOW()
+                WHERE id = ?
+        `, req.Name, req.Address, req.Phone, req.IsActive, id)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to update outlet: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Outlet updated successfully",
+        })
 }
 
 func DeleteOutlet(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Delete outlet - to be implemented"})
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM outlets WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete outlet: %v", err), fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Outlet deleted successfully",
+        })
 }
 
 func GetPaymentMethods(c *fiber.Ctx) error {
