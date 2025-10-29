@@ -276,7 +276,7 @@ curl http://localhost:8001/api/dashboard/stats
 ### Access Points
 - **API Base URL**: `http://localhost:8001/api/`
 - **Health Check**: `http://localhost:8001/api/health`
-- **Production URL**: `https://crud-flow-optimize.preview.emergentagent.com/api/`
+- **Production URL**: `https://laravel-api-sync.preview.emergentagent.com/api/`
 
 ---
 

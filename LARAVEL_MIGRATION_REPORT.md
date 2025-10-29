@@ -326,7 +326,7 @@ curl http://localhost:8002/api/products
 ```env
 APP_NAME="POS System"
 APP_ENV=production
-APP_URL=https://crud-flow-optimize.preview.emergentagent.com
+APP_URL=https://laravel-api-sync.preview.emergentagent.com
 
 DB_CONNECTION=mysql
 DB_HOST=srv1412.hstgr.io
