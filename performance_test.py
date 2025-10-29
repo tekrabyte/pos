@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv('/app/backend/.env')
 
 # Use the backend URL from frontend .env
-API_BASE_URL = "https://speedy-app-fix.preview.emergentagent.com/api"
+API_BASE_URL = "https://complete-admin-crud.preview.emergentagent.com/api"
 
 print(f"🎯 BACKEND CRUD PERFORMANCE & ERROR HANDLING TEST")
 print(f"Testing backend at: {API_BASE_URL}")
