@@ -76,8 +76,15 @@ const PaymentSettingsDetail = () => {
   const fetchPaymentMethods = async () => {
     try {
       const response = await axios.get(`${API}/payment-methods`);
-      // Extract payment_methods array from response
-      const methods = response.data?.payment_methods || response.data || [];
+      // Handle both wrapped and unwrapped response formats
+      let methods = [];
+      if (response.data?.payment_methods) {
+        methods = response.data.payment_methods;
+      } else if (Array.isArray(response.data)) {
+        methods = response.data;
+      } else if (response.data) {
+        methods = [response.data];
+      }
       setPaymentMethods(Array.isArray(methods) ? methods : []);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
