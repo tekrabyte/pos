@@ -39,7 +39,8 @@ const Layout = ({ children }) => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
-    navigate('/');
+    localStorage.removeItem('token');
+    navigate('/staff/login');
   };
 
   const isActive = (path) => location.pathname === path;
