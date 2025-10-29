@@ -1639,8 +1639,8 @@ func CustomerRegister(c *fiber.Ctx) error {
 
         // Insert customer
         result, err := DB.Exec(`
-                INSERT INTO customers (name, email, phone, password, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
+                INSERT INTO customers (name, email, phone, password, created_at)
+                VALUES (?, ?, ?, ?, NOW())
         `, input.Name, input.Email, input.Phone, string(hashedPassword))
 
         if err != nil {
