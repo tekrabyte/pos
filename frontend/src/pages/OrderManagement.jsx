@@ -31,25 +31,40 @@ const OrderManagement = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const wsRef = useRef(null);
   const audioRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
   useEffect(() => {
     // Check authentication
     const user = localStorage.getItem('user');
     if (!user) {
-      toast.error('Please login first');
+      toast.error('Silakan login terlebih dahulu');
       navigate('/staff/login');
       return;
     }
 
     fetchOrders();
-    connectWebSocket();
-
+    
     // Create audio element for notification sound
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0RUqfn77BhGAg+ltrzxnMpBSh+zPLaizsIGGS57OihUhELTKXh8bllHAU2jdXzzn0vBSF1xe/glUQME1mu5O+rWBYKQ5zd8sFuJAUuhM/z1YU2Bhxqvu7mnEoODk+k5vCzZBsHO5HU8sp3LgUme8rx3I4+CRZiturqpVYTC0mi4POzaB8GM4nR88p1KwUme8nw3I1ACRdhtuvsp1kVDEyn5O+wYxsIO5TU8sx4LgUleMnw24w/CRZftO3so1YVDE2o5PC0ZhwFOI/U88t2LQUmd8jw24s+CRZetuzrpVgVDEyl4/CyZBoGOpHU88p3LwUles7y24w+CRVftOzsplkUDEqm5PC0ZhsGOZDU88p2LwUme8vx241ACRVetOzrpVcTDEuo4/GxYhgFNozT8sl2LAUidsjv24k+CRRctOvrpFYTDEuk4/CxYhgFNo3T88p4LgUme8rx3I4/CRVbtOvqpVYTC0qj4fCyYxkFNo3T88t5LwUle8vx3I4+CRVatuzqpFUSDEuh4PCxYRcFNIzS88l2LAUiesjv24k+CRRbtOvrpFYTDEqk4/CxYRcFNIvS88l2KwUhe8fw24g+CRRbtOvqo1UTDEyk4/CxYRgGNozT8sl2LQUjeMfu24k+CRRbtOvqo1QTDE2o5PC0ZxwGOZHV88p3LwUme8rx3I4/CRZftuzsp1oWDU6p5fGzaBwHO5LW88t5MAUmfcrx3Y9BCRZS');
+    if (!audioRef.current) {
+      audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZRQ0RUqfn77BhGAg+ltrzxnMpBSh+zPLaizsIGGS57OihUhELTKXh8bllHAU2jdXzzn0vBSF1xe/glUQME1mu5O+rWBYKQ5zd8sFuJAUuhM/z1YU2Bhxqvu7mnEoODk+k5vCzZBsHO5HU8sp3LgUme8rx3I4+CRZiturqpVYTC0mi4POzaB8GM4nR88p1KwUme8nw3I1ACRdhtuvsp1kVDEyn5O+wYxsIO5TU8sx4LgUleMnw24w/CRZftO3so1YVDE2o5PC0ZhwFOI/U88t2LQUmd8jw24s+CRZetuzrpVgVDEyl4/CyZBoGOpHU88p3LwUles7y24w+CRVftOzsplkUDEqm5PC0ZhsGOZDU88p2LwUme8vx241ACRVetOzrpVcTDEuo4/GxYhgFNozT8sl2LAUidsjv24k+CRRctOvrpFYTDEuk4/CxYhgFNo3T88p4LgUme8rx3I4/CRVbtOvqpVYTC0qj4fCyYxkFNo3T88t5LwUle8vx3I4+CRVatuzqpFUSDEuh4PCxYRcFNIzS88l2LAUiesjv24k+CRRbtOvrpFYTDEqk4/CxYRcFNIvS88l2KwUhe8fw24g+CRRbtOvqo1UTDEyk4/CxYRgGNozT8sl2LQUjeMfu24k+CRRbtOvqo1QTDE2o5PC0ZxwGOZHV88p3LwUme8rx3I4/CRZftuzsp1oWDU6p5fGzaBwHO5LW88t5MAUmfcrx3Y9BCRZS');
+    }
+    
+    // Connect WebSocket only if not already connected
+    if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+      connectWebSocket();
+    }
 
     return () => {
-      if (wsRef.current) {
+      // Clear reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      
+      // Close WebSocket connection
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.close();
+        wsRef.current = null;
       }
     };
   }, [navigate]);
