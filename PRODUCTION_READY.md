@@ -58,7 +58,7 @@ Migrasi dari FastAPI + React ke **Laravel Full Stack** telah selesai dan siap pr
 APP_NAME="POS System"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://laravel-migration-3.preview.emergentagent.com
+APP_URL=https://crud-flow-optimize.preview.emergentagent.com
 
 DB_CONNECTION=mysql
 DB_HOST=srv1412.hstgr.io
@@ -74,7 +74,7 @@ JWT_REFRESH_TTL=20160
 
 ### 2. Frontend .env
 ```env
-REACT_APP_BACKEND_URL=https://laravel-migration-3.preview.emergentagent.com
+REACT_APP_BACKEND_URL=https://crud-flow-optimize.preview.emergentagent.com
 ```
 
 ### 3. Supervisor Config
@@ -99,7 +99,7 @@ environment=PORT=3000,BROWSER=none
 ## 📋 Complete API Documentation
 
 ### Base URL
-- **Production**: `https://laravel-migration-3.preview.emergentagent.com/api`
+- **Production**: `https://crud-flow-optimize.preview.emergentagent.com/api`
 - **Local**: `http://localhost:8001/api`
 
 ### Authentication Endpoints
@@ -489,9 +489,9 @@ python server.py
 ✅ All endpoints tested and verified
 
 ### Access URLs:
-- **Backend API**: `https://laravel-migration-3.preview.emergentagent.com/api`
-- **Frontend**: `https://laravel-migration-3.preview.emergentagent.com`
-- **Health Check**: `https://laravel-migration-3.preview.emergentagent.com/api/health`
+- **Backend API**: `https://crud-flow-optimize.preview.emergentagent.com/api`
+- **Frontend**: `https://crud-flow-optimize.preview.emergentagent.com`
+- **Health Check**: `https://crud-flow-optimize.preview.emergentagent.com/api/health`
 
 ### Next Steps (Optional):
 1. Setup nginx reverse proxy untuk production URL
