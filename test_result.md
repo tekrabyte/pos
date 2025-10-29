@@ -22,15 +22,16 @@ The application was experiencing multiple React rendering errors and API endpoin
 - `/app/backend/routes.go` (lines 76-81, removed lines 128-129)
 
 ### Issue 2: User Object SQL Null Fields Serialization
-**Problem**: The `GetCurrentUser` handler was returning raw Go structs with `sql.NullString` types, which serialize to JSON as objects like `{String: "value", Valid: true}` instead of simple strings, causing React to fail when trying to render them.
+**Problem**: The `GetCurrentUser` and `StaffLogin` handlers were returning raw Go structs with `sql.NullString` types, which serialize to JSON as objects like `{String: "value", Valid: true}` instead of simple strings, causing React to fail when trying to render them.
 
 **Fix Applied**:
 - Updated `GetCurrentUser` handler to properly serialize null fields using helper functions
+- Updated `StaffLogin` handler to properly serialize null fields using helper functions (lines 185-196)
 - Added `getNullBool` helper function for handling `sql.NullBool` types
 - All user fields now properly serialized to JSON
 
 **Files Modified**:
-- `/app/backend/handlers.go` (added `getNullBool` function, updated `GetCurrentUser` function lines 192-231)
+- `/app/backend/handlers.go` (added `getNullBool` function, updated `GetCurrentUser` function lines 192-231, updated `StaffLogin` function lines 185-196)
 
 ### Issue 3: Frontend Products and Categories Array Handling
 **Problem**: The backend APIs return wrapped responses like `{success: true, products: [...]}` and `{categories: [...]}`, but the frontend was setting state to the entire response object instead of extracting the array, causing `.filter()` and `.map()` errors.
