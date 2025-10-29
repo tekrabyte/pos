@@ -272,6 +272,69 @@ async def startup():
                 )
             ''')
             
+            # Outlets
+            await cursor.execute('''
+                CREATE TABLE IF NOT EXISTS outlets (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    address TEXT,
+                    city VARCHAR(100),
+                    country VARCHAR(100),
+                    postal_code VARCHAR(20),
+                    is_main BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Roles
+            await cursor.execute('''
+                CREATE TABLE IF NOT EXISTS roles (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    max_discount DECIMAL(5,2) DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Payment Methods
+            await cursor.execute('''
+                CREATE TABLE IF NOT EXISTS payment_methods (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    type VARCHAR(50) NOT NULL,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    config JSON,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Brands
+            await cursor.execute('''
+                CREATE TABLE IF NOT EXISTS brands (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    logo_url VARCHAR(500),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Coupons
+            await cursor.execute('''
+                CREATE TABLE IF NOT EXISTS coupons (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    code VARCHAR(50) UNIQUE NOT NULL,
+                    discount_type VARCHAR(20) NOT NULL,
+                    discount_value DECIMAL(10,2) NOT NULL,
+                    min_purchase DECIMAL(12,2) DEFAULT 0,
+                    max_discount DECIMAL(12,2),
+                    valid_from DATETIME,
+                    valid_until DATETIME,
+                    is_active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
             await conn.commit()
             
             # Insert default admin
