@@ -399,17 +399,23 @@ func GetCategories(c *fiber.Ctx) error {
         }
         defer rows.Close()
 
-        var categories []Category
+        var categories []map[string]interface{}
         for rows.Next() {
                 var cat Category
                 if err := rows.Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt); err != nil {
                         continue
                 }
-                categories = append(categories, cat)
+                categories = append(categories, map[string]interface{}{
+                        "id":          cat.ID,
+                        "name":        cat.Name,
+                        "description": getNullString(cat.Description),
+                        "parent_id":   getNullInt(cat.ParentID),
+                        "created_at":  cat.CreatedAt,
+                })
         }
 
         if categories == nil {
-                categories = []Category{}
+                categories = []map[string]interface{}{}
         }
 
         return c.JSON(fiber.Map{
