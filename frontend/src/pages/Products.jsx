@@ -1,33 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Products = () => {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [deleteId, setDeleteId] = useState(null);
-  const navigate = useNavigate();
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined || isNaN(value)) {
@@ -40,25 +25,19 @@ const Products = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    if (searchTerm) {
-      setFilteredProducts(
-        products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    } else {
-      setFilteredProducts(products);
-    }
+  const filteredProducts = useMemo(() => {
+    if (!searchTerm) return products;
+    return products.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [searchTerm, products]);
 
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${API}/products`);
-      setProducts(response.data);
-      setFilteredProducts(response.data);
+      setProducts(response.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Gagal mengambil data produk');
@@ -67,23 +46,11 @@ const Products = () => {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await axios.delete(`${API}/products/${deleteId}`);
-      toast.success('Produk berhasil dihapus');
-      fetchProducts();
-      setDeleteId(null);
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast.error('Gagal menghapus produk');
-    }
-  };
-
   if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">Memuat data...</p>
+          <div className="animate-pulse text-gray-500">Memuat data...</div>
         </div>
       </Layout>
     );
@@ -91,18 +58,13 @@ const Products = () => {
 
   return (
     <Layout>
-      <div className="space-y-6" data-testid="products-page">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">Semua Produk</h1>
-          <Button
-            onClick={() => navigate('/products/add')}
-            className="bg-blue-600 hover:bg-blue-700"
-            data-testid="add-product-btn"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Produk
-          </Button>
+          <div className="text-sm text-gray-500">
+            Total: {filteredProducts.length} produk
+          </div>
         </div>
 
         {/* Search */}
@@ -113,7 +75,6 @@ const Products = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
-            data-testid="search-product-input"
           />
         </div>
 
@@ -121,32 +82,24 @@ const Products = () => {
         {filteredProducts.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-gray-500 mb-4">Belum ada produk</p>
-              <Button
-                onClick={() => navigate('/products/add')}
-                variant="outline"
-                data-testid="empty-add-product-btn"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Produk Pertama
-              </Button>
+              <p className="text-gray-500">Tidak ada produk ditemukan</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <Card
                 key={product.id}
                 className="hover:shadow-lg transition-shadow"
-                data-testid={`product-card-${product.id}`}
               >
                 <CardContent className="p-4">
-                  <div className="aspect-square bg-gray-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                  <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="text-gray-400 text-4xl">📦</div>
@@ -178,26 +131,6 @@ const Products = () => {
                     {product.brand_name && (
                       <p className="text-xs text-gray-600">Brand: {product.brand_name}</p>
                     )}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => navigate(`/products/edit/${product.id}`)}
-                        data-testid={`edit-product-${product.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => setDeleteId(product.id)}
-                        data-testid={`delete-product-${product.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -205,28 +138,6 @@ const Products = () => {
           </div>
         )}
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Produk?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Produk akan dihapus secara permanen.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="cancel-delete-btn">Batal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-              data-testid="confirm-delete-btn"
-            >
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Layout>
   );
 };
