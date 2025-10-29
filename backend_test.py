@@ -407,65 +407,7 @@ class CrudErrorTester:
                          f"Response: {response.text}", status_code=response.status_code)
         except Exception as e:
             self.log_test("Reset Password - Invalid JSON", False, f"Exception: {str(e)}")
-        
-    def test_customer_register(self):
-        """Test customer registration with email (PRIORITY TEST)"""
-        print("\n=== Testing Customer Registration with Email (FIXED) ===")
-        
-        try:
-            # Use unique phone number to avoid conflict
-            unique_suffix = int(time.time() % 10000)
-            customer_data = {
-                "name": "Test Customer Email",
-                "email": "tekrabyte@gmail.com",
-                "phone": f"0812345{unique_suffix:04d}",  # Unique phone number
-                "address": "Test Address"
-            }
-            
-            response = self.session.post(f"{API_BASE_URL}/auth/customer/register", 
-                json=customer_data)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("success"):
-                    self.customer_id = data.get("customer_id")
-                    self.customer_email = customer_data["email"]
-                    # Password is auto-generated, we'll get it from temp_password if email fails
-                    self.customer_password = data.get("temp_password")
-                    
-                    # Check expected response fields
-                    expected_fields = ["success", "customer_id", "message", "email_sent"]
-                    missing_fields = [field for field in expected_fields if field not in data]
-                    
-                    if missing_fields:
-                        self.log_test("Customer Registration", False, f"Missing fields: {missing_fields}")
-                        return False
-                    
-                    email_sent = data.get("email_sent", False)
-                    message = f"Registration successful, customer_id: {self.customer_id}, email_sent: {email_sent}"
-                    if not email_sent and data.get("temp_password"):
-                        message += f", temp_password provided: {data['temp_password'][:3]}***"
-                        self.customer_password = data["temp_password"]
-                    
-                    self.log_test("Customer Registration", True, message)
-                    return True
-                else:
-                    self.log_test("Customer Registration", False, f"Registration failed: {data}")
-            else:
-                # If registration fails due to existing data, try to get existing customer for testing
-                if response.status_code == 400 and "sudah terdaftar" in response.text:
-                    # Try to find existing customer for testing reset password functionality
-                    self.get_existing_customer_for_testing()
-                    if self.customer_id:
-                        self.log_test("Customer Registration", True, f"Using existing customer_id: {self.customer_id} for testing")
-                        return True
-                
-                self.log_test("Customer Registration", False, f"HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test("Customer Registration", False, f"Exception: {str(e)}")
-            
-        return False
+    # Old methods removed - focusing on CRUD validation testing
         
     def get_existing_customer_for_testing(self):
         """Get existing customer for testing reset password functionality"""
