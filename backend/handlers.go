@@ -403,9 +403,40 @@ func GetCategory(c *fiber.Ctx) error {
 
 // Create Category
 func CreateCategory(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{
+        var req struct {
+                Name        string `json:"name"`
+                Description string `json:"description"`
+                ParentID    *int   `json:"parent_id"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Category name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO categories (name, description, parent_id, created_at)
+                VALUES (?, ?, ?, NOW())
+        `, req.Name, req.Description, req.ParentID)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create category: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
                 "success": true,
-                "message": "Create category endpoint - to be implemented",
+                "message": "Category created successfully",
+                "category": fiber.Map{
+                        "id":          id,
+                        "name":        req.Name,
+                        "description": req.Description,
+                        "parent_id":   req.ParentID,
+                },
         })
 }
 
