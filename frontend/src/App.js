@@ -18,6 +18,7 @@ const PageLoader = () => (
 import StaffLogin from '@/pages/auth/StaffLogin';
 import CustomerLogin from '@/pages/auth/CustomerLogin';
 import CustomerRegister from '@/pages/auth/CustomerRegister';
+import CustomerAuthCart from '@/pages/auth/CustomerAuthCart';
 
 // Customer Pages - Lazy load
 const CustomerMenu = lazy(() => import('@/pages/customer/CustomerMenu'));
