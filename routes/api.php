@@ -18,6 +18,9 @@ use App\Http\Controllers\Api\BankAccountController;
 use App\Http\Controllers\Api\StoreSettingController;
 use App\Http\Controllers\Api\StoreBannerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\QrisController;
+use App\Http\Controllers\Api\UploadController;
+use App\Http\Controllers\Api\PaymentSettingController;
 
 /*
 |--------------------------------------------------------------------------
