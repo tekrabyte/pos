@@ -8,8 +8,8 @@ import requests
 import json
 import time
 
-# Use the backend URL from review request
-API_BASE_URL = "https://qrscan-dine-1.preview.emergentagent.com/api"
+# Use the correct backend URL from frontend .env
+API_BASE_URL = "https://admin-panel-fix-35.preview.emergentagent.com/api"
 
 print(f"🎯 PRIORITY TESTING: CRUD Endpoints for 422 Errors")
 print(f"Testing backend at: {API_BASE_URL}")
