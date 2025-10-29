@@ -707,6 +707,66 @@ async def get_bank_accounts():
             accounts = await cursor.fetchall()
             return rows_to_dict(accounts, cursor)
 
+# Analytics Endpoint
+@api_router.get("/analytics/overview")
+async def get_analytics_overview():
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            # Get total revenue
+            await cursor.execute('SELECT COALESCE(SUM(total_amount), 0) as total_revenue FROM orders WHERE status IN ("completed", "ready")')
+            total_revenue_row = await cursor.fetchone()
+            total_revenue = total_revenue_row[0] if total_revenue_row else 0
+            
+            # Get total orders
+            await cursor.execute('SELECT COUNT(*) as total_orders FROM orders')
+            total_orders_row = await cursor.fetchone()
+            total_orders = total_orders_row[0] if total_orders_row else 0
+            
+            # Get total products
+            await cursor.execute('SELECT COUNT(*) as total_products FROM products WHERE status = "active"')
+            total_products_row = await cursor.fetchone()
+            total_products = total_products_row[0] if total_products_row else 0
+            
+            # Get total customers
+            await cursor.execute('SELECT COUNT(*) as total_customers FROM customers')
+            total_customers_row = await cursor.fetchone()
+            total_customers = total_customers_row[0] if total_customers_row else 0
+            
+            # Get recent orders (last 10)
+            await cursor.execute('''
+                SELECT o.id, o.order_number, o.total_amount, o.status, o.order_type, 
+                       o.customer_name, o.created_at,
+                       t.table_number
+                FROM orders o
+                LEFT JOIN tables t ON o.table_id = t.id
+                ORDER BY o.created_at DESC
+                LIMIT 10
+            ''')
+            recent_orders = await cursor.fetchall()
+            recent_orders_list = rows_to_dict(recent_orders, cursor)
+            
+            # Get top products (best sellers)
+            await cursor.execute('''
+                SELECT p.id, p.name, p.price, SUM(oi.quantity) as total_sold
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.id
+                GROUP BY p.id, p.name, p.price
+                ORDER BY total_sold DESC
+                LIMIT 5
+            ''')
+            top_products = await cursor.fetchall()
+            top_products_list = rows_to_dict(top_products, cursor)
+            
+            return {
+                "total_revenue": float(total_revenue),
+                "total_orders": total_orders,
+                "total_products": total_products,
+                "total_customers": total_customers,
+                "recent_orders": recent_orders_list,
+                "top_products": top_products_list
+            }
+
 # QRIS Generation
 
 @api_router.post("/qris/generate")
