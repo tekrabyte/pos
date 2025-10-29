@@ -132,6 +132,19 @@ def rows_to_dict(rows, cursor):
     columns = [column[0] for column in cursor.description]
     return [dict(zip(columns, row)) for row in rows]
 
+# WebSocket helper functions
+async def broadcast_order_notification(message: dict):
+    """Broadcast order notification to all connected WebSocket clients"""
+    disconnected = set()
+    for websocket in websocket_connections:
+        try:
+            await websocket.send_json(message)
+        except:
+            disconnected.add(websocket)
+    
+    # Remove disconnected clients
+    websocket_connections.difference_update(disconnected)
+
 # Initialize database
 @app.on_event("startup")
 async def startup():
