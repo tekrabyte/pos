@@ -109,46 +109,47 @@ function App() {
                 <PaymentSettingsDetail />
               </ProtectedRoute>
             } />
-          <Route path="/products" element={
-            <ProtectedRoute requiredAuth="staff">
-              <Products />
-            </ProtectedRoute>
-          } />
-          <Route path="/products/add" element={
-            <ProtectedRoute requiredAuth="staff">
-              <AddProduct />
-            </ProtectedRoute>
-          } />
-          <Route path="/brands" element={
-            <ProtectedRoute requiredAuth="staff">
-              <Brands />
-            </ProtectedRoute>
-          } />
-          <Route path="/categories" element={
-            <ProtectedRoute requiredAuth="staff">
-              <Categories />
-            </ProtectedRoute>
-          } />
-          <Route path="/pos" element={
-            <ProtectedRoute requiredAuth="staff">
-              <POSCashier />
-            </ProtectedRoute>
-          } />
-          <Route path="/kiosk" element={<Kiosk />} />
-          <Route path="/tables" element={
-            <ProtectedRoute requiredAuth="staff">
-              <TableManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/orders" element={
-            <ProtectedRoute requiredAuth="staff">
-              <OrderManagement />
-            </ProtectedRoute>
-          } />
-          
-          {/* 404 Not Found */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="/products" element={
+              <ProtectedRoute requiredAuth="staff">
+                <Products />
+              </ProtectedRoute>
+            } />
+            <Route path="/products/add" element={
+              <ProtectedRoute requiredAuth="staff">
+                <AddProduct />
+              </ProtectedRoute>
+            } />
+            <Route path="/brands" element={
+              <ProtectedRoute requiredAuth="staff">
+                <Brands />
+              </ProtectedRoute>
+            } />
+            <Route path="/categories" element={
+              <ProtectedRoute requiredAuth="staff">
+                <Categories />
+              </ProtectedRoute>
+            } />
+            <Route path="/pos" element={
+              <ProtectedRoute requiredAuth="staff">
+                <POSCashier />
+              </ProtectedRoute>
+            } />
+            <Route path="/kiosk" element={<Kiosk />} />
+            <Route path="/tables" element={
+              <ProtectedRoute requiredAuth="staff">
+                <TableManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute requiredAuth="staff">
+                <OrderManagement />
+              </ProtectedRoute>
+            } />
+            
+            {/* 404 Not Found */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
       <Toaster position="top-right" />
     </div>
