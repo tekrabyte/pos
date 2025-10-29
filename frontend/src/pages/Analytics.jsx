@@ -33,10 +33,28 @@ const Analytics = () => {
   const fetchAnalytics = async () => {
     try {
       const response = await axiosInstance.get('/analytics');
-      setAnalytics(response.data);
+      // Safely extract analytics data with defaults
+      const data = response.data || {};
+      setAnalytics({
+        total_revenue: data.total_revenue || 0,
+        total_orders: data.total_orders || 0,
+        total_products: data.total_products || 0,
+        total_customers: data.total_customers || 0,
+        recent_orders: data.recent_orders || [],
+        top_products: data.top_products || [],
+      });
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error('Gagal mengambil data analytics');
+      // Set default values on error
+      setAnalytics({
+        total_revenue: 0,
+        total_orders: 0,
+        total_products: 0,
+        total_customers: 0,
+        recent_orders: [],
+        top_products: [],
+      });
     } finally {
       setLoading(false);
     }
