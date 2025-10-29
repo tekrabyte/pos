@@ -1,686 +1,1401 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"os"
-	"strings"
-	"time"
+        "database/sql"
+        "fmt"
+        "os"
+        "strings"
+        "time"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
+        "github.com/gofiber/fiber/v2"
+        "github.com/golang-jwt/jwt/v5"
+        "golang.org/x/crypto/bcrypt"
 )
 
 // Response helpers
 func SuccessResponse(c *fiber.Ctx, data interface{}) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"data":    data,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "data":    data,
+        })
 }
 
 func ErrorResponse(c *fiber.Ctx, message string, statusCode int) error {
-	return c.Status(statusCode).JSON(fiber.Map{
-		"success": false,
-		"message": message,
-	})
+        return c.Status(statusCode).JSON(fiber.Map{
+                "success": false,
+                "message": message,
+        })
 }
 
 // Health Check
 func HealthCheck(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"status":    "OK",
-		"message":   "Laravel POS API is running",
-		"timestamp": time.Now().Format("2006-01-02 15:04:05"),
-		"version":   "1.0.0",
-	})
+        return c.JSON(fiber.Map{
+                "status":    "OK",
+                "message":   "Laravel POS API is running",
+                "timestamp": time.Now().Format("2006-01-02 15:04:05"),
+                "version":   "1.0.0",
+        })
 }
 
 // JWT Claims
 type Claims struct {
-	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	jwt.RegisteredClaims
+        UserID   int    `json:"user_id"`
+        Username string `json:"username"`
+        Role     string `json:"role"`
+        jwt.RegisteredClaims
 }
 
 // Generate JWT token
 func GenerateToken(user *User) (string, error) {
-	expirationTime := time.Now().Add(24 * time.Hour)
-	
-	roleStr := ""
-	if user.Role.Valid {
-		roleStr = user.Role.String
-	}
-	
-	claims := &Claims{
-		UserID:   user.ID,
-		Username: user.Username,
-		Role:     roleStr,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
-	}
+        expirationTime := time.Now().Add(24 * time.Hour)
+        
+        roleStr := ""
+        if user.Role.Valid {
+                roleStr = user.Role.String
+        }
+        
+        claims := &Claims{
+                UserID:   user.ID,
+                Username: user.Username,
+                Role:     roleStr,
+                RegisteredClaims: jwt.RegisteredClaims{
+                        ExpiresAt: jwt.NewNumericDate(expirationTime),
+                },
+        }
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "default_secret"
-	}
-	return token.SignedString([]byte(jwtSecret))
+        token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+        jwtSecret := os.Getenv("JWT_SECRET")
+        if jwtSecret == "" {
+                jwtSecret = "default_secret"
+        }
+        return token.SignedString([]byte(jwtSecret))
 }
 
 // Auth Middleware
 func AuthMiddleware(c *fiber.Ctx) error {
-	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		return ErrorResponse(c, "Authorization header required", fiber.StatusUnauthorized)
-	}
+        authHeader := c.Get("Authorization")
+        if authHeader == "" {
+                return ErrorResponse(c, "Authorization header required", fiber.StatusUnauthorized)
+        }
 
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	if tokenString == authHeader {
-		return ErrorResponse(c, "Invalid authorization format", fiber.StatusUnauthorized)
-	}
+        tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+        if tokenString == authHeader {
+                return ErrorResponse(c, "Invalid authorization format", fiber.StatusUnauthorized)
+        }
 
-	claims := &Claims{}
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "default_secret"
-	}
+        claims := &Claims{}
+        jwtSecret := os.Getenv("JWT_SECRET")
+        if jwtSecret == "" {
+                jwtSecret = "default_secret"
+        }
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwtSecret), nil
-	})
+        token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+                return []byte(jwtSecret), nil
+        })
 
-	if err != nil || !token.Valid {
-		return ErrorResponse(c, "Invalid or expired token", fiber.StatusUnauthorized)
-	}
+        if err != nil || !token.Valid {
+                return ErrorResponse(c, "Invalid or expired token", fiber.StatusUnauthorized)
+        }
 
-	c.Locals("user_id", claims.UserID)
-	c.Locals("username", claims.Username)
-	c.Locals("role", claims.Role)
-	return c.Next()
+        c.Locals("user_id", claims.UserID)
+        c.Locals("username", claims.Username)
+        c.Locals("role", claims.Role)
+        return c.Next()
 }
 
 // Staff Login
 func StaffLogin(c *fiber.Ctx) error {
-	var loginReq struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+        var loginReq struct {
+                Username string `json:"username"`
+                Password string `json:"password"`
+        }
 
-	if err := c.BodyParser(&loginReq); err != nil {
-		return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
-	}
+        if err := c.BodyParser(&loginReq); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
 
-	var user User
-	query := "SELECT id, full_name, username, email, password, role, role_id, outlet_id, is_active, created_at FROM users WHERE username = ? LIMIT 1"
-	err := DB.QueryRow(query, loginReq.Username).Scan(
-		&user.ID, &user.FullName, &user.Username, &user.Email, &user.Password,
-		&user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
-	)
+        var user User
+        query := "SELECT id, full_name, username, email, password, role, role_id, outlet_id, is_active, created_at FROM users WHERE username = ? LIMIT 1"
+        err := DB.QueryRow(query, loginReq.Username).Scan(
+                &user.ID, &user.FullName, &user.Username, &user.Email, &user.Password,
+                &user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
+        )
 
-	if err == sql.ErrNoRows {
-		return ErrorResponse(c, "Invalid credentials", fiber.StatusUnauthorized)
-	}
-	if err != nil {
-		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
-	}
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Invalid credentials", fiber.StatusUnauthorized)
+        }
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
 
-	// Check password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password)); err != nil {
-		return ErrorResponse(c, "Invalid credentials", fiber.StatusUnauthorized)
-	}
+        // Check password
+        if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password)); err != nil {
+                return ErrorResponse(c, "Invalid credentials", fiber.StatusUnauthorized)
+        }
 
-	// Generate token
-	token, err := GenerateToken(&user)
-	if err != nil {
-		return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
-	}
+        // Generate token
+        token, err := GenerateToken(&user)
+        if err != nil {
+                return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
+        }
 
-	roleStr := ""
-	if user.Role.Valid {
-		roleStr = user.Role.String
-	}
+        roleStr := ""
+        if user.Role.Valid {
+                roleStr = user.Role.String
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"token":   token,
-		"user": fiber.Map{
-			"id":        user.ID,
-			"full_name": user.FullName,
-			"username":  user.Username,
-			"email":     user.Email,
-			"role":      roleStr,
-		},
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "token":   token,
+                "user": fiber.Map{
+                        "id":        user.ID,
+                        "full_name": user.FullName,
+                        "username":  user.Username,
+                        "email":     user.Email,
+                        "role":      roleStr,
+                },
+        })
 }
 
 // Get Current User
 func GetCurrentUser(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(int)
+        userID := c.Locals("user_id").(int)
 
-	var user User
-	query := "SELECT id, full_name, username, email, role, role_id, outlet_id, is_active, created_at FROM users WHERE id = ? LIMIT 1"
-	err := DB.QueryRow(query, userID).Scan(
-		&user.ID, &user.FullName, &user.Username, &user.Email,
-		&user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
-	)
+        var user User
+        query := "SELECT id, full_name, username, email, role, role_id, outlet_id, is_active, created_at FROM users WHERE id = ? LIMIT 1"
+        err := DB.QueryRow(query, userID).Scan(
+                &user.ID, &user.FullName, &user.Username, &user.Email,
+                &user.Role, &user.RoleID, &user.OutletID, &user.IsActive, &user.CreatedAt,
+        )
 
-	if err == sql.ErrNoRows {
-		return ErrorResponse(c, "User not found", fiber.StatusNotFound)
-	}
-	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
-	}
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "User not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"user":    user,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "user":    user,
+        })
 }
 
 // Logout
 func Logout(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Logged out successfully",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Logged out successfully",
+        })
 }
 
 // Get Products
 func GetProducts(c *fiber.Ctx) error {
-	rows, err := DB.Query(`
-		SELECT id, name, sku, price, stock, category_id, brand_id, 
-		       description, image_url, status, created_at, updated_at 
-		FROM products 
-		ORDER BY created_at DESC
-	`)
-	if err != nil {
-		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
-	}
-	defer rows.Close()
+        rows, err := DB.Query(`
+                SELECT id, name, sku, price, stock, category_id, brand_id, 
+                       description, image_url, status, created_at, updated_at 
+                FROM products 
+                ORDER BY created_at DESC
+        `)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
 
-	var products []Product
-	for rows.Next() {
-		var p Product
-		err := rows.Scan(&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
-			&p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
-			&p.CreatedAt, &p.UpdatedAt)
-		if err != nil {
-			continue
-		}
-		products = append(products, p)
-	}
+        var products []Product
+        for rows.Next() {
+                var p Product
+                err := rows.Scan(&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
+                        &p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
+                        &p.CreatedAt, &p.UpdatedAt)
+                if err != nil {
+                        continue
+                }
+                products = append(products, p)
+        }
 
-	if products == nil {
-		products = []Product{}
-	}
+        if products == nil {
+                products = []Product{}
+        }
 
-	return c.JSON(fiber.Map{
-		"success":  true,
-		"products": products,
-	})
+        return c.JSON(fiber.Map{
+                "success":  true,
+                "products": products,
+        })
 }
 
 // Get Single Product
 func GetProduct(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var p Product
+        id := c.Params("id")
+        var p Product
 
-	query := `SELECT id, name, sku, price, stock, category_id, brand_id, 
-	          description, image_url, status, created_at, updated_at FROM products WHERE id = ?`
-	err := DB.QueryRow(query, id).Scan(
-		&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
-		&p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
-		&p.CreatedAt, &p.UpdatedAt,
-	)
+        query := `SELECT id, name, sku, price, stock, category_id, brand_id, 
+                  description, image_url, status, created_at, updated_at FROM products WHERE id = ?`
+        err := DB.QueryRow(query, id).Scan(
+                &p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
+                &p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
+                &p.CreatedAt, &p.UpdatedAt,
+        )
 
-	if err == sql.ErrNoRows {
-		return ErrorResponse(c, "Product not found", fiber.StatusNotFound)
-	}
-	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
-	}
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Product not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"product": p,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "product": p,
+        })
 }
 
 // Create Product - simplified
 func CreateProduct(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Create product endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Create product endpoint - to be implemented",
+        })
 }
 
 // Update Product - simplified
 func UpdateProduct(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Update product endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Update product endpoint - to be implemented",
+        })
 }
 
 // Delete Product - simplified
 func DeleteProduct(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Delete product endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Delete product endpoint - to be implemented",
+        })
 }
 
 // Get Categories
 func GetCategories(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, description, parent_id, created_at FROM categories ORDER BY name")
-	if err != nil {
-		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
-	}
-	defer rows.Close()
+        rows, err := DB.Query("SELECT id, name, description, parent_id, created_at FROM categories ORDER BY name")
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
 
-	var categories []Category
-	for rows.Next() {
-		var cat Category
-		if err := rows.Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt); err != nil {
-			continue
-		}
-		categories = append(categories, cat)
-	}
+        var categories []Category
+        for rows.Next() {
+                var cat Category
+                if err := rows.Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt); err != nil {
+                        continue
+                }
+                categories = append(categories, cat)
+        }
 
-	if categories == nil {
-		categories = []Category{}
-	}
+        if categories == nil {
+                categories = []Category{}
+        }
 
-	return c.JSON(fiber.Map{
-		"success":    true,
-		"categories": categories,
-	})
+        return c.JSON(fiber.Map{
+                "success":    true,
+                "categories": categories,
+        })
 }
 
 // Get Single Category
 func GetCategory(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var cat Category
-	err := DB.QueryRow("SELECT id, name, description, parent_id, created_at FROM categories WHERE id=?", id).
-		Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt)
+        id := c.Params("id")
+        var cat Category
+        err := DB.QueryRow("SELECT id, name, description, parent_id, created_at FROM categories WHERE id=?", id).
+                Scan(&cat.ID, &cat.Name, &cat.Description, &cat.ParentID, &cat.CreatedAt)
 
-	if err == sql.ErrNoRows {
-		return ErrorResponse(c, "Category not found", fiber.StatusNotFound)
-	}
-	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
-	}
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Category not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
 
-	return c.JSON(fiber.Map{
-		"success":  true,
-		"category": cat,
-	})
+        return c.JSON(fiber.Map{
+                "success":  true,
+                "category": cat,
+        })
 }
 
 // Create Category
 func CreateCategory(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Create category endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Create category endpoint - to be implemented",
+        })
 }
 
 // Update Category
 func UpdateCategory(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Update category endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Update category endpoint - to be implemented",
+        })
 }
 
 // Delete Category
 func DeleteCategory(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{
-		"success": true,
-		"message": "Delete category endpoint - to be implemented",
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Delete category endpoint - to be implemented",
+        })
 }
 
 // Get Brands
 func GetBrands(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, description, logo_url, created_at FROM brands ORDER BY name")
-	if err != nil {
-		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
-	}
-	defer rows.Close()
+        rows, err := DB.Query("SELECT id, name, description, logo_url, created_at FROM brands ORDER BY name")
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
 
-	var brands []Brand
-	for rows.Next() {
-		var b Brand
-		if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt); err != nil {
-			continue
-		}
-		brands = append(brands, b)
-	}
+        var brands []Brand
+        for rows.Next() {
+                var b Brand
+                if err := rows.Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt); err != nil {
+                        continue
+                }
+                brands = append(brands, b)
+        }
 
-	if brands == nil {
-		brands = []Brand{}
-	}
+        if brands == nil {
+                brands = []Brand{}
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"brands":  brands,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "brands":  brands,
+        })
 }
 
 // Get Single Brand
 func GetBrand(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var b Brand
-	err := DB.QueryRow("SELECT id, name, description, logo_url, created_at FROM brands WHERE id=?", id).
-		Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt)
+        id := c.Params("id")
+        var b Brand
+        err := DB.QueryRow("SELECT id, name, description, logo_url, created_at FROM brands WHERE id=?", id).
+                Scan(&b.ID, &b.Name, &b.Description, &b.LogoURL, &b.CreatedAt)
 
-	if err == sql.ErrNoRows {
-		return ErrorResponse(c, "Brand not found", fiber.StatusNotFound)
-	}
-	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
-	}
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Brand not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"brand":   b,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "brand":   b,
+        })
 }
 
 // Simplified CRUD operations for other entities
 func CreateBrand(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create brand - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create brand - to be implemented"})
 }
 
 func UpdateBrand(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update brand - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update brand - to be implemented"})
 }
 
 func DeleteBrand(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete brand - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete brand - to be implemented"})
 }
 
 // Get Orders
 func GetOrders(c *fiber.Ctx) error {
-	rows, err := DB.Query(`
-		SELECT id, order_number, customer_id, table_id, order_type, customer_name,
-		       customer_phone, outlet_id, user_id, total_amount, payment_method,
-		       payment_proof, payment_verified, status, created_at, coupon_id,
-		       coupon_code, discount_amount, original_amount, estimated_time, completed_at
-		FROM orders ORDER BY created_at DESC
-	`)
-	if err != nil {
-		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
-	}
-	defer rows.Close()
+        rows, err := DB.Query(`
+                SELECT id, order_number, customer_id, table_id, order_type, customer_name,
+                       customer_phone, outlet_id, user_id, total_amount, payment_method,
+                       payment_proof, payment_verified, status, created_at, coupon_id,
+                       coupon_code, discount_amount, original_amount, estimated_time, completed_at
+                FROM orders ORDER BY created_at DESC
+        `)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
 
-	var orders []Order
-	for rows.Next() {
-		var o Order
-		err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.OrderType,
-			&o.CustomerName, &o.CustomerPhone, &o.OutletID, &o.UserID, &o.TotalAmount,
-			&o.PaymentMethod, &o.PaymentProof, &o.PaymentVerified, &o.Status, &o.CreatedAt,
-			&o.CouponID, &o.CouponCode, &o.DiscountAmount, &o.OriginalAmount,
-			&o.EstimatedTime, &o.CompletedAt)
-		if err != nil {
-			continue
-		}
-		orders = append(orders, o)
-	}
+        var orders []Order
+        for rows.Next() {
+                var o Order
+                err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.OrderType,
+                        &o.CustomerName, &o.CustomerPhone, &o.OutletID, &o.UserID, &o.TotalAmount,
+                        &o.PaymentMethod, &o.PaymentProof, &o.PaymentVerified, &o.Status, &o.CreatedAt,
+                        &o.CouponID, &o.CouponCode, &o.DiscountAmount, &o.OriginalAmount,
+                        &o.EstimatedTime, &o.CompletedAt)
+                if err != nil {
+                        continue
+                }
+                orders = append(orders, o)
+        }
 
-	if orders == nil {
-		orders = []Order{}
-	}
+        if orders == nil {
+                orders = []Order{}
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"orders":  orders,
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "orders":  orders,
+        })
 }
 
 // Simplified CRUD for Orders
 func GetOrder(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get order - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get order - to be implemented"})
 }
 
 func CreateOrder(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create order - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create order - to be implemented"})
 }
 
 func UpdateOrder(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update order - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update order - to be implemented"})
 }
 
 func DeleteOrder(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete order - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete order - to be implemented"})
 }
 
 func UpdateOrderStatus(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update order status - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update order status - to be implemented"})
 }
 
 // Simplified handlers for other entities
 func GetTables(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY name")
-	if err != nil {
-		return c.JSON(fiber.Map{"success": true, "tables": []interface{}{}})
-	}
-	defer rows.Close()
-	
-	var tables []Table
-	for rows.Next() {
-		var t Table
-		rows.Scan(&t.ID, &t.Name, &t.Token, &t.QRCode, &t.Status, &t.OutletID, &t.CreatedAt, &t.UpdatedAt)
-		tables = append(tables, t)
-	}
-	
-	if tables == nil {
-		tables = []Table{}
-	}
-	
-	return c.JSON(fiber.Map{"success": true, "tables": tables})
+        rows, err := DB.Query("SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY name")
+        if err != nil {
+                return c.JSON(fiber.Map{"success": true, "tables": []interface{}{}})
+        }
+        defer rows.Close()
+        
+        var tables []Table
+        for rows.Next() {
+                var t Table
+                rows.Scan(&t.ID, &t.Name, &t.Token, &t.QRCode, &t.Status, &t.OutletID, &t.CreatedAt, &t.UpdatedAt)
+                tables = append(tables, t)
+        }
+        
+        if tables == nil {
+                tables = []Table{}
+        }
+        
+        return c.JSON(fiber.Map{"success": true, "tables": tables})
 }
 
 func GetTable(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get table - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get table - to be implemented"})
 }
 
 func GetTableByToken(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get table by token - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get table by token - to be implemented"})
 }
 
 func CreateTable(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create table - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create table - to be implemented"})
 }
 
 func UpdateTable(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update table - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update table - to be implemented"})
 }
 
 func DeleteTable(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete table - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete table - to be implemented"})
 }
 
 func RegenerateTableQR(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Regenerate QR - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Regenerate QR - to be implemented"})
 }
 
 func GetCustomers(c *fiber.Ctx) error {
-	rows, err := DB.Query("SELECT id, name, email, phone, address, points, created_at FROM customers ORDER BY created_at DESC LIMIT 100")
-	if err != nil {
-		return c.JSON(fiber.Map{"success": true, "customers": []interface{}{}})
-	}
-	defer rows.Close()
-	
-	var customers []Customer
-	for rows.Next() {
-		var cust Customer
-		rows.Scan(&cust.ID, &cust.Name, &cust.Email, &cust.Phone, &cust.Address, &cust.Points, &cust.CreatedAt)
-		customers = append(customers, cust)
-	}
-	
-	if customers == nil {
-		customers = []Customer{}
-	}
-	
-	return c.JSON(fiber.Map{"success": true, "customers": customers})
+        rows, err := DB.Query("SELECT id, name, email, phone, address, points, created_at FROM customers ORDER BY created_at DESC LIMIT 100")
+        if err != nil {
+                return c.JSON(fiber.Map{"success": true, "customers": []interface{}{}})
+        }
+        defer rows.Close()
+        
+        var customers []Customer
+        for rows.Next() {
+                var cust Customer
+                rows.Scan(&cust.ID, &cust.Name, &cust.Email, &cust.Phone, &cust.Address, &cust.Points, &cust.CreatedAt)
+                customers = append(customers, cust)
+        }
+        
+        if customers == nil {
+                customers = []Customer{}
+        }
+        
+        return c.JSON(fiber.Map{"success": true, "customers": customers})
 }
 
 func GetCustomer(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get customer - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get customer - to be implemented"})
 }
 
 func CreateCustomer(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create customer - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create customer - to be implemented"})
 }
 
 func UpdateCustomer(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update customer - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update customer - to be implemented"})
 }
 
 func DeleteCustomer(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete customer - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete customer - to be implemented"})
 }
 
 func GetCoupons(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "coupons": []interface{}{}})
+        return c.JSON(fiber.Map{"success": true, "coupons": []interface{}{}})
 }
 
 func GetCoupon(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get coupon - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get coupon - to be implemented"})
 }
 
 func CreateCoupon(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create coupon - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create coupon - to be implemented"})
 }
 
 func UpdateCoupon(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update coupon - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update coupon - to be implemented"})
 }
 
 func DeleteCoupon(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete coupon - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete coupon - to be implemented"})
 }
 
 func GetOutlets(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "outlets": []interface{}{}})
+        return c.JSON(fiber.Map{"success": true, "outlets": []interface{}{}})
 }
 
 func GetOutlet(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get outlet - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get outlet - to be implemented"})
 }
 
 func CreateOutlet(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create outlet - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create outlet - to be implemented"})
 }
 
 func UpdateOutlet(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update outlet - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update outlet - to be implemented"})
 }
 
 func DeleteOutlet(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete outlet - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete outlet - to be implemented"})
 }
 
 func GetPaymentMethods(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "payment_methods": []interface{}{}})
+        return c.JSON(fiber.Map{"success": true, "payment_methods": []interface{}{}})
 }
 
 func GetPaymentMethod(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Get payment method - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Get payment method - to be implemented"})
 }
 
 func CreatePaymentMethod(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Create payment method - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Create payment method - to be implemented"})
 }
 
 func UpdatePaymentMethod(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Update payment method - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Update payment method - to be implemented"})
 }
 
 func DeletePaymentMethod(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"success": true, "message": "Delete payment method - to be implemented"})
+        return c.JSON(fiber.Map{"success": true, "message": "Delete payment method - to be implemented"})
 }
 
 // Get Dashboard Stats
 func GetDashboardStats(c *fiber.Ctx) error {
-	var todayRevenue, monthRevenue, totalRevenue float64
-	var todayOrders, monthOrders, totalOrders int
+        var todayRevenue, monthRevenue, totalRevenue float64
+        var todayOrders, monthOrders, totalOrders int
 
-	// Today stats
-	DB.QueryRow(`
-		SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
-		FROM orders
-		WHERE DATE(created_at) = CURDATE() AND status = 'completed'
-	`).Scan(&todayRevenue, &todayOrders)
+        // Today stats
+        DB.QueryRow(`
+                SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
+                FROM orders
+                WHERE DATE(created_at) = CURDATE() AND status = 'completed'
+        `).Scan(&todayRevenue, &todayOrders)
 
-	// Month stats
-	DB.QueryRow(`
-		SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
-		FROM orders
-		WHERE YEAR(created_at) = YEAR(CURDATE()) 
-		AND MONTH(created_at) = MONTH(CURDATE())
-		AND status = 'completed'
-	`).Scan(&monthRevenue, &monthOrders)
+        // Month stats
+        DB.QueryRow(`
+                SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
+                FROM orders
+                WHERE YEAR(created_at) = YEAR(CURDATE()) 
+                AND MONTH(created_at) = MONTH(CURDATE())
+                AND status = 'completed'
+        `).Scan(&monthRevenue, &monthOrders)
 
-	// Total stats
-	DB.QueryRow(`
-		SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
-		FROM orders
-		WHERE status = 'completed'
-	`).Scan(&totalRevenue, &totalOrders)
+        // Total stats
+        DB.QueryRow(`
+                SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
+                FROM orders
+                WHERE status = 'completed'
+        `).Scan(&totalRevenue, &totalOrders)
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"stats": fiber.Map{
-			"today": fiber.Map{
-				"revenue": todayRevenue,
-				"orders":  todayOrders,
-			},
-			"month": fiber.Map{
-				"revenue": monthRevenue,
-				"orders":  monthOrders,
-			},
-			"total": fiber.Map{
-				"revenue": totalRevenue,
-				"orders":  totalOrders,
-			},
-		},
-		"recent_orders": []interface{}{},
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "stats": fiber.Map{
+                        "today": fiber.Map{
+                                "revenue": todayRevenue,
+                                "orders":  todayOrders,
+                        },
+                        "month": fiber.Map{
+                                "revenue": monthRevenue,
+                                "orders":  monthOrders,
+                        },
+                        "total": fiber.Map{
+                                "revenue": totalRevenue,
+                                "orders":  totalOrders,
+                        },
+                },
+                "recent_orders": []interface{}{},
+        })
 }
 
 // Get Analytics
 func GetAnalytics(c *fiber.Ctx) error {
-	var totalRevenue, avgOrderValue float64
-	var totalOrders int
+        var totalRevenue, avgOrderValue float64
+        var totalOrders int
 
-	// Revenue and orders
-	DB.QueryRow(`
-		SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
-		FROM orders
-		WHERE status = 'completed'
-	`).Scan(&totalRevenue, &totalOrders)
+        // Revenue and orders
+        DB.QueryRow(`
+                SELECT COALESCE(SUM(total_amount), 0), COUNT(*)
+                FROM orders
+                WHERE status = 'completed'
+        `).Scan(&totalRevenue, &totalOrders)
 
-	// Average order value
-	if totalOrders > 0 {
-		avgOrderValue = totalRevenue / float64(totalOrders)
-	}
+        // Average order value
+        if totalOrders > 0 {
+                avgOrderValue = totalRevenue / float64(totalOrders)
+        }
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"analytics": fiber.Map{
-			"revenue":             totalRevenue,
-			"orders":              totalOrders,
-			"average_order_value": avgOrderValue,
-			"new_customers":       0,
-			"returning_customers": 0,
-			"products_sold":       0,
-		},
-	})
+        return c.JSON(fiber.Map{
+                "success": true,
+                "analytics": fiber.Map{
+                        "revenue":             totalRevenue,
+                        "orders":              totalOrders,
+                        "average_order_value": avgOrderValue,
+                        "new_customers":       0,
+                        "returning_customers": 0,
+                        "products_sold":       0,
+                },
+        })
 }
+
+
+// ========== CUSTOMER AUTHENTICATION ==========
+
+func CustomerRegister(c *fiber.Ctx) error {
+        var input struct {
+                Name     string `json:"name"`
+                Email    string `json:"email"`
+                Phone    string `json:"phone"`
+                Password string `json:"password"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Validate required fields
+        if input.Name == "" || input.Email == "" || input.Password == "" {
+                return ErrorResponse(c, "Name, email, and password are required", fiber.StatusBadRequest)
+        }
+
+        // Check if email already exists
+        var exists int
+        DB.QueryRow("SELECT COUNT(*) FROM customers WHERE email = ?", input.Email).Scan(&exists)
+        if exists > 0 {
+                return ErrorResponse(c, "Email already registered", fiber.StatusConflict)
+        }
+
+        // Hash password
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+        if err != nil {
+                return ErrorResponse(c, "Failed to hash password", fiber.StatusInternalServerError)
+        }
+
+        // Insert customer
+        result, err := DB.Exec(`
+                INSERT INTO customers (name, email, phone, password, points, created_at, updated_at)
+                VALUES (?, ?, ?, ?, 0, NOW(), NOW())
+        `, input.Name, input.Email, input.Phone, string(hashedPassword))
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create customer: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        customerID, _ := result.LastInsertId()
+
+        // Generate token
+        token, err := GenerateToken(&User{
+                ID:       int(customerID),
+                Username: input.Email,
+                FullName: sql.NullString{String: input.Name, Valid: true},
+        })
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Customer registered successfully",
+                "token":   token,
+                "customer": fiber.Map{
+                        "id":    customerID,
+                        "name":  input.Name,
+                        "email": input.Email,
+                        "phone": input.Phone,
+                },
+        })
+}
+
+func CustomerLogin(c *fiber.Ctx) error {
+        var input struct {
+                Email    string `json:"email"`
+                Password string `json:"password"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Get customer by email
+        var customer struct {
+                ID       int
+                Name     string
+                Email    string
+                Phone    sql.NullString
+                Password string
+                Points   int
+        }
+
+        err := DB.QueryRow(`
+                SELECT id, name, email, phone, password, points
+                FROM customers
+                WHERE email = ?
+        `, input.Email).Scan(&customer.ID, &customer.Name, &customer.Email, &customer.Phone, &customer.Password, &customer.Points)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Invalid email or password", fiber.StatusUnauthorized)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        // Compare password
+        if err := bcrypt.CompareHashAndPassword([]byte(customer.Password), []byte(input.Password)); err != nil {
+                return ErrorResponse(c, "Invalid email or password", fiber.StatusUnauthorized)
+        }
+
+        // Generate token
+        token, err := GenerateToken(&User{
+                ID:       customer.ID,
+                Username: customer.Email,
+                FullName: sql.NullString{String: customer.Name, Valid: true},
+        })
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to generate token", fiber.StatusInternalServerError)
+        }
+
+        phone := ""
+        if customer.Phone.Valid {
+                phone = customer.Phone.String
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Login successful",
+                "token":   token,
+                "customer": fiber.Map{
+                        "id":     customer.ID,
+                        "name":   customer.Name,
+                        "email":  customer.Email,
+                        "phone":  phone,
+                        "points": customer.Points,
+                },
+        })
+}
+
+func CustomerChangePassword(c *fiber.Ctx) error {
+        userID := c.Locals("userID")
+        if userID == nil {
+                return ErrorResponse(c, "Unauthorized", fiber.StatusUnauthorized)
+        }
+
+        var input struct {
+                OldPassword string `json:"old_password"`
+                NewPassword string `json:"new_password"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Get current password
+        var currentPassword string
+        err := DB.QueryRow("SELECT password FROM customers WHERE id = ?", userID).Scan(&currentPassword)
+        if err != nil {
+                return ErrorResponse(c, "Customer not found", fiber.StatusNotFound)
+        }
+
+        // Verify old password
+        if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(input.OldPassword)); err != nil {
+                return ErrorResponse(c, "Invalid old password", fiber.StatusBadRequest)
+        }
+
+        // Hash new password
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+        if err != nil {
+                return ErrorResponse(c, "Failed to hash password", fiber.StatusInternalServerError)
+        }
+
+        // Update password
+        _, err = DB.Exec("UPDATE customers SET password = ?, updated_at = NOW() WHERE id = ?", string(hashedPassword), userID)
+        if err != nil {
+                return ErrorResponse(c, "Failed to update password", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Password changed successfully",
+        })
+}
+
+// ========== ROLES CRUD ==========
+
+func GetRoles(c *fiber.Ctx) error {
+        rows, err := DB.Query("SELECT id, name, max_discount, created_at, updated_at FROM roles ORDER BY created_at DESC")
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch roles: "+err.Error(), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var roles []Role
+        for rows.Next() {
+                var role Role
+                if err := rows.Scan(&role.ID, &role.Name, &role.MaxDiscount, &role.CreatedAt, &role.UpdatedAt); err != nil {
+                        continue
+                }
+                roles = append(roles, role)
+        }
+
+        if roles == nil {
+                roles = []Role{}
+        }
+
+        return c.JSON(roles)
+}
+
+func GetRole(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var role Role
+
+        err := DB.QueryRow("SELECT id, name, max_discount, created_at, updated_at FROM roles WHERE id = ?", id).
+                Scan(&role.ID, &role.Name, &role.MaxDiscount, &role.CreatedAt, &role.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Role not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(role)
+}
+
+func CreateRole(c *fiber.Ctx) error {
+        var role Role
+        if err := c.BodyParser(&role); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO roles (name, max_discount, created_at, updated_at)
+                VALUES (?, ?, NOW(), NOW())
+        `, role.Name, role.MaxDiscount)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create role: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+        role.ID = int(id)
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Role created successfully",
+                "data":    role,
+        })
+}
+
+func UpdateRole(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var role Role
+
+        if err := c.BodyParser(&role); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE roles 
+                SET name = ?, max_discount = ?, updated_at = NOW()
+                WHERE id = ?
+        `, role.Name, role.MaxDiscount, id)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to update role", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Role updated successfully",
+        })
+}
+
+func DeleteRole(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM roles WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, "Failed to delete role", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Role deleted successfully",
+        })
+}
+
+// ========== BANK ACCOUNTS CRUD ==========
+
+func GetBankAccounts(c *fiber.Ctx) error {
+        rows, err := DB.Query("SELECT id, bank_name, account_number, account_name, is_active, created_at, updated_at FROM bank_accounts ORDER BY created_at DESC")
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch bank accounts: "+err.Error(), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var accounts []BankAccount
+        for rows.Next() {
+                var account BankAccount
+                if err := rows.Scan(&account.ID, &account.BankName, &account.AccountNumber, &account.AccountName, &account.IsActive, &account.CreatedAt, &account.UpdatedAt); err != nil {
+                        continue
+                }
+                accounts = append(accounts, account)
+        }
+
+        if accounts == nil {
+                accounts = []BankAccount{}
+        }
+
+        return c.JSON(accounts)
+}
+
+func GetBankAccount(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var account BankAccount
+
+        err := DB.QueryRow("SELECT id, bank_name, account_number, account_name, is_active, created_at, updated_at FROM bank_accounts WHERE id = ?", id).
+                Scan(&account.ID, &account.BankName, &account.AccountNumber, &account.AccountName, &account.IsActive, &account.CreatedAt, &account.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Bank account not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(account)
+}
+
+func CreateBankAccount(c *fiber.Ctx) error {
+        var account BankAccount
+        if err := c.BodyParser(&account); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO bank_accounts (bank_name, account_number, account_name, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, NOW(), NOW())
+        `, account.BankName, account.AccountNumber, account.AccountName, account.IsActive)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create bank account: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+        account.ID = int(id)
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Bank account created successfully",
+                "data":    account,
+        })
+}
+
+func UpdateBankAccount(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var account BankAccount
+
+        if err := c.BodyParser(&account); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE bank_accounts 
+                SET bank_name = ?, account_number = ?, account_name = ?, is_active = ?, updated_at = NOW()
+                WHERE id = ?
+        `, account.BankName, account.AccountNumber, account.AccountName, account.IsActive, id)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to update bank account", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Bank account updated successfully",
+        })
+}
+
+func DeleteBankAccount(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM bank_accounts WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, "Failed to delete bank account", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Bank account deleted successfully",
+        })
+}
+
+// ========== STORE SETTINGS ==========
+
+func GetStoreSettings(c *fiber.Ctx) error {
+        rows, err := DB.Query("SELECT id, `key`, value, updated_at FROM store_settings")
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch store settings: "+err.Error(), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        settings := make(map[string]interface{})
+        for rows.Next() {
+                var id int
+                var key string
+                var value sql.NullString
+                var updatedAt time.Time
+                if err := rows.Scan(&id, &key, &value, &updatedAt); err != nil {
+                        continue
+                }
+                if value.Valid {
+                        settings[key] = value.String
+                } else {
+                        settings[key] = nil
+                }
+        }
+
+        return c.JSON(settings)
+}
+
+func UpdateStoreSettings(c *fiber.Ctx) error {
+        var settings map[string]string
+        if err := c.BodyParser(&settings); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        for key, value := range settings {
+                _, err := DB.Exec(`
+                        INSERT INTO store_settings (` + "`key`" + `, value, updated_at)
+                        VALUES (?, ?, NOW())
+                        ON DUPLICATE KEY UPDATE value = ?, updated_at = NOW()
+                `, key, value, value)
+
+                if err != nil {
+                        return ErrorResponse(c, "Failed to update setting: "+key, fiber.StatusInternalServerError)
+                }
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Store settings updated successfully",
+        })
+}
+
+// ========== STORE BANNERS CRUD ==========
+
+func GetStoreBanners(c *fiber.Ctx) error {
+        rows, err := DB.Query("SELECT id, title, image_url, link, is_active, `order`, created_at, updated_at FROM store_banners ORDER BY `order` ASC")
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch store banners: "+err.Error(), fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var banners []StoreBanner
+        for rows.Next() {
+                var banner StoreBanner
+                if err := rows.Scan(&banner.ID, &banner.Title, &banner.ImageURL, &banner.Link, &banner.IsActive, &banner.Order, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
+                        continue
+                }
+                banners = append(banners, banner)
+        }
+
+        if banners == nil {
+                banners = []StoreBanner{}
+        }
+
+        return c.JSON(banners)
+}
+
+func GetStoreBanner(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var banner StoreBanner
+
+        err := DB.QueryRow("SELECT id, title, image_url, link, is_active, `order`, created_at, updated_at FROM store_banners WHERE id = ?", id).
+                Scan(&banner.ID, &banner.Title, &banner.ImageURL, &banner.Link, &banner.IsActive, &banner.Order, &banner.CreatedAt, &banner.UpdatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "Store banner not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(banner)
+}
+
+func CreateStoreBanner(c *fiber.Ctx) error {
+        var banner StoreBanner
+        if err := c.BodyParser(&banner); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO store_banners (title, image_url, link, is_active, ` + "`order`" + `, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+        `, banner.Title, banner.ImageURL, banner.Link, banner.IsActive, banner.Order)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create store banner: "+err.Error(), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+        banner.ID = int(id)
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Store banner created successfully",
+                "data":    banner,
+        })
+}
+
+func UpdateStoreBanner(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var banner StoreBanner
+
+        if err := c.BodyParser(&banner); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                UPDATE store_banners 
+                SET title = ?, image_url = ?, link = ?, is_active = ?, ` + "`order`" + ` = ?, updated_at = NOW()
+                WHERE id = ?
+        `, banner.Title, banner.ImageURL, banner.Link, banner.IsActive, banner.Order, id)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to update store banner", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Store banner updated successfully",
+        })
+}
+
+func DeleteStoreBanner(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM store_banners WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, "Failed to delete store banner", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Store banner deleted successfully",
+        })
+}
+
+// ========== COUPONS AVAILABLE ==========
+
+func GetAvailableCoupons(c *fiber.Ctx) error {
+        rows, err := DB.Query(`
+                SELECT id, code, type, value, min_purchase, max_discount, start_date, end_date, 
+                       usage_limit, usage_count, is_active, created_at, updated_at
+                FROM coupons
+                WHERE is_active = 1
+                AND (start_date IS NULL OR start_date <= NOW())
+                AND (end_date IS NULL OR end_date >= NOW())
+                AND (usage_limit IS NULL OR usage_count < usage_limit)
+                ORDER BY created_at DESC
+        `)
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch available coupons", fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        var coupons []Coupon
+        for rows.Next() {
+                var coupon Coupon
+                if err := rows.Scan(&coupon.ID, &coupon.Code, &coupon.Type, &coupon.Value, &coupon.MinPurchase,
+                        &coupon.MaxDiscount, &coupon.StartDate, &coupon.EndDate, &coupon.UsageLimit,
+                        &coupon.UsageCount, &coupon.IsActive, &coupon.CreatedAt, &coupon.UpdatedAt); err != nil {
+                        continue
+                }
+                coupons = append(coupons, coupon)
+        }
+
+        if coupons == nil {
+                coupons = []Coupon{}
+        }
+
+        return c.JSON(coupons)
+}
+
+// ========== FILE UPLOAD HANDLERS ==========
+
+func UploadPaymentProof(c *fiber.Ctx) error {
+        file, err := c.FormFile("file")
+        if err != nil {
+                return ErrorResponse(c, "No file uploaded", fiber.StatusBadRequest)
+        }
+
+        // Create upload directory if not exists
+        uploadDir := "./uploads/payment-proofs"
+        os.MkdirAll(uploadDir, 0755)
+
+        // Generate unique filename
+        filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
+        filepath := fmt.Sprintf("%s/%s", uploadDir, filename)
+
+        // Save file
+        if err := c.SaveFile(file, filepath); err != nil {
+                return ErrorResponse(c, "Failed to save file", fiber.StatusInternalServerError)
+        }
+
+        // Return file URL
+        fileURL := fmt.Sprintf("/uploads/payment-proofs/%s", filename)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "File uploaded successfully",
+                "url":     fileURL,
+        })
+}
+
+func UploadQRIS(c *fiber.Ctx) error {
+        file, err := c.FormFile("file")
+        if err != nil {
+                return ErrorResponse(c, "No file uploaded", fiber.StatusBadRequest)
+        }
+
+        // Create upload directory if not exists
+        uploadDir := "./uploads/qris"
+        os.MkdirAll(uploadDir, 0755)
+
+        // Generate unique filename
+        filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
+        filepath := fmt.Sprintf("%s/%s", uploadDir, filename)
+
+        // Save file
+        if err := c.SaveFile(file, filepath); err != nil {
+                return ErrorResponse(c, "Failed to save file", fiber.StatusInternalServerError)
+        }
+
+        // Return file URL
+        fileURL := fmt.Sprintf("/uploads/qris/%s", filename)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "QRIS file uploaded successfully",
+                "url":     fileURL,
+        })
+}
+
+// ========== QRIS & PAYMENT SETTINGS ==========
+
+func GetQRISSettings(c *fiber.Ctx) error {
+        var qrisURL sql.NullString
+        err := DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_image_url'").Scan(&qrisURL)
+
+        if err == sql.ErrNoRows {
+                return c.JSON(fiber.Map{
+                        "qris_image_url": "",
+                })
+        }
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch QRIS settings", fiber.StatusInternalServerError)
+        }
+
+        url := ""
+        if qrisURL.Valid {
+                url = qrisURL.String
+        }
+
+        return c.JSON(fiber.Map{
+                "qris_image_url": url,
+        })
+}
+
+func UpdateQRISSettings(c *fiber.Ctx) error {
+        var input struct {
+                QRISImageURL string `json:"qris_image_url"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        _, err := DB.Exec(`
+                INSERT INTO store_settings (` + "`key`" + `, value, updated_at)
+                VALUES ('qris_image_url', ?, NOW())
+                ON DUPLICATE KEY UPDATE value = ?, updated_at = NOW()
+        `, input.QRISImageURL, input.QRISImageURL)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to update QRIS settings", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "QRIS settings updated successfully",
+        })
+}
+
+func GenerateQRIS(c *fiber.Ctx) error {
+        var input struct {
+                Amount float64 `json:"amount"`
+                OrderID string `json:"order_id"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // For now, return a simple response
+        // In production, integrate with actual QRIS provider
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "QRIS generated successfully",
+                "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                "amount":  input.Amount,
+                "order_id": input.OrderID,
+        })
+}
+
