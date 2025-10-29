@@ -250,11 +250,54 @@ func GetProduct(c *fiber.Ctx) error {
         })
 }
 
-// Create Product - simplified
+// Create Product
 func CreateProduct(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{
+        var req struct {
+                Name        string  `json:"name"`
+                SKU         string  `json:"sku"`
+                Price       float64 `json:"price"`
+                Stock       int     `json:"stock"`
+                CategoryID  *int    `json:"category_id"`
+                BrandID     *int    `json:"brand_id"`
+                Description string  `json:"description"`
+                ImageURL    string  `json:"image_url"`
+                Status      string  `json:"status"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Product name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO products (name, sku, price, stock, category_id, brand_id, description, image_url, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        `, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, req.Description, req.ImageURL, req.Status)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create product: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
                 "success": true,
-                "message": "Create product endpoint - to be implemented",
+                "message": "Product created successfully",
+                "product": fiber.Map{
+                        "id":          id,
+                        "name":        req.Name,
+                        "sku":         req.SKU,
+                        "price":       req.Price,
+                        "stock":       req.Stock,
+                        "category_id": req.CategoryID,
+                        "brand_id":    req.BrandID,
+                        "description": req.Description,
+                        "image_url":   req.ImageURL,
+                        "status":      req.Status,
+                },
         })
 }
 
