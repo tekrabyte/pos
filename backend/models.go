@@ -7,14 +7,15 @@ import (
 
 type User struct {
 	ID        int            `json:"id"`
-	Name      string         `json:"name"`
+	FullName  sql.NullString `json:"full_name"`
 	Username  string         `json:"username"`
 	Email     sql.NullString `json:"email"`
 	Password  string         `json:"-"`
-	Role      string         `json:"role"`
+	Role      sql.NullString `json:"role"`
+	RoleID    sql.NullInt64  `json:"role_id"`
 	OutletID  sql.NullInt64  `json:"outlet_id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
+	IsActive  sql.NullBool   `json:"is_active"`
+	CreatedAt sql.NullTime   `json:"created_at"`
 }
 
 type Product struct {
