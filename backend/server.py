@@ -45,6 +45,7 @@ async def get_payment_methods():
         # First, let's check what columns exist
         cursor.execute("DESCRIBE payment_methods")
         columns = [row[0] for row in cursor.fetchall()]
+        print(f"Available columns: {columns}")
         
         # Build query based on available columns
         base_columns = ["id", "name", "type", "is_active"]
@@ -52,6 +53,7 @@ async def get_payment_methods():
         
         available_columns = base_columns + [col for col in optional_columns if col in columns]
         query = f"SELECT {', '.join(available_columns)} FROM payment_methods ORDER BY id DESC"
+        print(f"Query: {query}")
         cursor.execute(query)
         
         methods = []
