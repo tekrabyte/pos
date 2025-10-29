@@ -1,0 +1,92 @@
+package main
+
+import (
+	"github.com/gofiber/fiber/v2"
+)
+
+func SetupRoutes(app *fiber.App) {
+	// API group
+	api := app.Group("/api")
+
+	// Health check
+	api.Get("/health", HealthCheck)
+
+	// Authentication routes
+	auth := api.Group("/auth")
+	
+	// Staff authentication
+	staff := auth.Group("/staff")
+	staff.Post("/login", StaffLogin)
+	staff.Get("/me", AuthMiddleware, GetCurrentUser)
+	staff.Post("/logout", AuthMiddleware, Logout)
+
+	// Product management
+	api.Get("/products", GetProducts)
+	api.Get("/products/:id", GetProduct)
+	api.Post("/products", AuthMiddleware, CreateProduct)
+	api.Put("/products/:id", AuthMiddleware, UpdateProduct)
+	api.Delete("/products/:id", AuthMiddleware, DeleteProduct)
+
+	// Categories
+	api.Get("/categories", GetCategories)
+	api.Get("/categories/:id", GetCategory)
+	api.Post("/categories", AuthMiddleware, CreateCategory)
+	api.Put("/categories/:id", AuthMiddleware, UpdateCategory)
+	api.Delete("/categories/:id", AuthMiddleware, DeleteCategory)
+
+	// Brands
+	api.Get("/brands", GetBrands)
+	api.Get("/brands/:id", GetBrand)
+	api.Post("/brands", AuthMiddleware, CreateBrand)
+	api.Put("/brands/:id", AuthMiddleware, UpdateBrand)
+	api.Delete("/brands/:id", AuthMiddleware, DeleteBrand)
+
+	// Orders
+	api.Get("/orders", GetOrders)
+	api.Get("/orders/:id", GetOrder)
+	api.Post("/orders", AuthMiddleware, CreateOrder)
+	api.Put("/orders/:id", AuthMiddleware, UpdateOrder)
+	api.Delete("/orders/:id", AuthMiddleware, DeleteOrder)
+	api.Put("/orders/:id/status", AuthMiddleware, UpdateOrderStatus)
+
+	// Tables
+	api.Get("/tables", GetTables)
+	api.Get("/tables/:id", GetTable)
+	api.Get("/tables/token/:token", GetTableByToken)
+	api.Post("/tables", AuthMiddleware, CreateTable)
+	api.Put("/tables/:id", AuthMiddleware, UpdateTable)
+	api.Delete("/tables/:id", AuthMiddleware, DeleteTable)
+	api.Post("/tables/:id/regenerate-qr", AuthMiddleware, RegenerateTableQR)
+
+	// Customers
+	api.Get("/customers", GetCustomers)
+	api.Get("/customers/:id", GetCustomer)
+	api.Post("/customers", AuthMiddleware, CreateCustomer)
+	api.Put("/customers/:id", AuthMiddleware, UpdateCustomer)
+	api.Delete("/customers/:id", AuthMiddleware, DeleteCustomer)
+
+	// Coupons
+	api.Get("/coupons", GetCoupons)
+	api.Get("/coupons/:id", GetCoupon)
+	api.Post("/coupons", AuthMiddleware, CreateCoupon)
+	api.Put("/coupons/:id", AuthMiddleware, UpdateCoupon)
+	api.Delete("/coupons/:id", AuthMiddleware, DeleteCoupon)
+
+	// Outlets
+	api.Get("/outlets", GetOutlets)
+	api.Get("/outlets/:id", GetOutlet)
+	api.Post("/outlets", AuthMiddleware, CreateOutlet)
+	api.Put("/outlets/:id", AuthMiddleware, UpdateOutlet)
+	api.Delete("/outlets/:id", AuthMiddleware, DeleteOutlet)
+
+	// Payment Methods
+	api.Get("/payment-methods", GetPaymentMethods)
+	api.Get("/payment-methods/:id", GetPaymentMethod)
+	api.Post("/payment-methods", AuthMiddleware, CreatePaymentMethod)
+	api.Put("/payment-methods/:id", AuthMiddleware, UpdatePaymentMethod)
+	api.Delete("/payment-methods/:id", AuthMiddleware, DeletePaymentMethod)
+
+	// Dashboard & Analytics
+	api.Get("/dashboard/stats", AuthMiddleware, GetDashboardStats)
+	api.Get("/analytics", AuthMiddleware, GetAnalytics)
+}
