@@ -29,15 +29,19 @@ const StaffLogin = () => {
 
       if (response.data.success) {
         const user = response.data.user;
-        localStorage.setItem('staff_user', JSON.stringify(user));
-        localStorage.setItem('staff_token', response.data.token);
+        // Save to 'user' key to match Layout.jsx expectations
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', response.data.token);
         toast.success('Login berhasil!');
         
-        if (user.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/pos');
-        }
+        // Small delay to ensure localStorage is set before navigation
+        setTimeout(() => {
+          if (user.role === 'admin') {
+            navigate('/dashboard');
+          } else {
+            navigate('/pos');
+          }
+        }, 100);
       } else {
         toast.error(response.data.message || 'Login gagal');
       }
