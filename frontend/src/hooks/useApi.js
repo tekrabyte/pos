@@ -38,7 +38,32 @@ export const useFetch = (url, options = {}) => {
     setError(null);
 
     try {
-      const result = await api.get(url);
+      const response = await api.get(url);
+      
+      // Extract actual data from response based on API structure
+      // Backend returns: {success: true, products: [...]} or {success: true, categories: [...]}
+      let result = response;
+      
+      if (response && typeof response === 'object') {
+        // Extract the array/data from wrapped response
+        if (response.products) {
+          result = response.products;
+        } else if (response.categories) {
+          result = response.categories;
+        } else if (response.brands) {
+          result = response.brands;
+        } else if (response.payment_methods) {
+          result = response.payment_methods;
+        } else if (response.orders) {
+          result = response.orders;
+        } else if (response.coupons) {
+          result = response.coupons;
+        } else if (response.analytics) {
+          result = response.analytics;
+        } else if (response.data) {
+          result = response.data;
+        }
+      }
       
       if (mountedRef.current) {
         setData(result);
