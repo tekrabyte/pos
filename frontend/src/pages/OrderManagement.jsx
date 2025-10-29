@@ -194,6 +194,8 @@ const OrderManagement = () => {
 
   const getFilteredOrders = () => {
     if (selectedTab === 'all') return orders;
+    if (selectedTab === 'dine-in') return orders.filter(order => order.order_type === 'dine-in');
+    if (selectedTab === 'takeaway') return orders.filter(order => order.order_type === 'takeaway');
     return orders.filter(order => order.status === selectedTab);
   };
 
