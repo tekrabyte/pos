@@ -115,7 +115,7 @@ user_problem_statement: |
 backend:
   - task: "Staff/Admin Authentication"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -127,6 +127,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL: Database schema mismatch. Users table has role_id column but code expects role column. Authentication endpoints returning HTTP 500 errors. Database initialization not matching code expectations."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED: Removed is_active column check from staff login query. Staff authentication now working correctly. POST /api/auth/staff/login returns 200 with valid token for admin/admin123 credentials."
 
   - task: "Customer Authentication (Register & Login)"
     implemented: true
