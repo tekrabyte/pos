@@ -308,7 +308,7 @@ backend:
 frontend:
   - task: "Staff Login Page"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/pages/auth/StaffLogin.jsx"
     stuck_count: 1
     priority: "high"
@@ -323,6 +323,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "ISSUE IDENTIFIED: localStorage key mismatch. StaffLogin.jsx saves to 'staff_user' but Layout.jsx reads from 'user'. Also needs to check if similar issue exists for customer login. Will fix both authentication flows."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Changed localStorage keys from 'staff_user'/'staff_token' to 'user'/'token' to match Layout.jsx expectations. Added 100ms setTimeout before navigation to ensure localStorage is properly set. Updated logout to clear correct keys and redirect to /staff/login."
 
   - task: "Customer Login Page"
     implemented: true
