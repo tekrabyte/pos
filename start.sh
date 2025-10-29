@@ -2,7 +2,7 @@
 
 # Laravel POS System Startup Script
 
-cd /app/laravel
+cd /app
 
 # Clear caches
 php artisan config:clear
