@@ -66,7 +66,7 @@ class LaravelPOSAPITester:
             return response, response_time
             
         except requests.exceptions.RequestException as e:
-            return None, 0, str(e)
+            return None, 0
     
     def test_health_check(self):
         """Test API health check endpoint"""
