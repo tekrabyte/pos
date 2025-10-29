@@ -346,7 +346,7 @@ async def customer_login(request: LoginRequest):
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
             await cursor.execute(
-                'SELECT id, name, email, phone, address FROM customers WHERE email = %s AND password = %s AND is_active = TRUE',
+                'SELECT id, name, email, phone, address FROM customers WHERE email = %s AND password = %s',
                 (request.email, request.password)
             )
             customer = await cursor.fetchone()
