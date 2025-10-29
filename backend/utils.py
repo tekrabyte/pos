@@ -6,17 +6,10 @@ from datetime import datetime, timedelta
 
 def generate_password(length: int = 8) -> str:
     """
-    Generate a secure random password
-    Format: XXXX-XXXX (8 characters, easy to read)
+    Generate default password for new customer registration
+    Default: 12345678
     """
-    # Use only uppercase letters and digits, avoid ambiguous characters (0, O, I, 1)
-    characters = string.ascii_uppercase.replace('O', '').replace('I', '') + string.digits.replace('0', '').replace('1', '')
-    
-    # Generate 8 characters
-    password = ''.join(secrets.choice(characters) for _ in range(8))
-    
-    # Format as XXXX-XXXX for readability
-    return f"{password[:4]}-{password[4:]}"
+    return "12345678"
 
 def hash_password(password: str) -> str:
     """Hash password using SHA-256"""
