@@ -339,11 +339,18 @@ func UpdateProduct(c *fiber.Ctx) error {
         })
 }
 
-// Delete Product - simplified
+// Delete Product
 func DeleteProduct(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        _, err := DB.Exec("DELETE FROM products WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to delete product: %v", err), fiber.StatusInternalServerError)
+        }
+
         return c.JSON(fiber.Map{
                 "success": true,
-                "message": "Delete product endpoint - to be implemented",
+                "message": "Product deleted successfully",
         })
 }
 
