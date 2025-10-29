@@ -1076,6 +1076,18 @@ backend:
         agent: "testing"
         comment: "✅ ALL CRUD OPERATIONS WORKING PERFECTLY: 14/14 tests passed (100% success). Product CRUD (GET 0.172s, POST 1.21s, GET/{id} 0.068s, PUT 0.178s, DELETE 0.077s) and Category CRUD (GET 0.073s, POST 0.193s, PUT 0.075s, DELETE 0.072s) all working with good performance. Error handling proper (404 for non-existent, 422 for validation). Database stable under concurrent load (12/12 successful). Average response time 1.266s, most operations <1s. Staff auth 5.72s (initial connection overhead - acceptable). All requests completed well within 30s axios timeout. No 500 errors. System ready for production."
 
+  - task: "Payment Methods CRUD - Complete System"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED: Added missing PUT and DELETE endpoints for payment-methods. Backend now has full CRUD: GET /api/payment-methods (all methods), GET /api/payment-methods/{id} (single method), POST /api/payment-methods (create), PUT /api/payment-methods/{id} (update), DELETE /api/payment-methods/{id} (delete). Changed GET endpoint to return all payment methods including inactive ones for admin management."
+
 frontend:
   - task: "Axios Configuration & Error Handling"
     implemented: true
