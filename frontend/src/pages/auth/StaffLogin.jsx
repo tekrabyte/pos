@@ -5,11 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { Shield } from 'lucide-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}`;
 
 const StaffLogin = () => {
   const [username, setUsername] = useState('');
@@ -22,7 +19,7 @@ const StaffLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/staff/login`, {
+      const response = await axiosInstance.post('/auth/staff/login', {
         username,
         password,
       });
