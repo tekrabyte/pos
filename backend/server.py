@@ -1031,17 +1031,63 @@ async def create_order(order_req: CreateOrderRequest):
     pool = await get_db()
     async with pool.acquire() as conn:
         async with conn.cursor() as cursor:
-            # Generate order number
-            order_number = f"ORD-{datetime.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(2).upper()}"
+            # Generate order number using utility
+            order_number = generate_order_number()
+            
+            original_amount = order_req.total_amount
+            discount_amount = 0
+            coupon_id = None
+            
+            # Handle coupon if provided
+            if order_req.coupon_code:
+                await cursor.execute(
+                    '''SELECT * FROM coupons 
+                       WHERE code = %s 
+                       AND is_active = TRUE
+                       AND (start_date IS NULL OR start_date <= NOW())
+                       AND (end_date IS NULL OR end_date >= NOW())
+                       AND (usage_limit = 0 OR used_count < usage_limit)''',
+                    (order_req.coupon_code.upper(),)
+                )
+                coupon = await cursor.fetchone()
+                
+                if coupon:
+                    coupon_dict = row_to_dict(coupon, cursor)
+                    coupon_id = coupon_dict['id']
+                    
+                    # Calculate discount
+                    discount_result = calculate_discount(
+                        total=original_amount,
+                        discount_type=coupon_dict['discount_type'],
+                        discount_value=float(coupon_dict['discount_value']),
+                        min_purchase=float(coupon_dict['min_purchase']) if coupon_dict['min_purchase'] else 0
+                    )
+                    
+                    if not discount_result['error']:
+                        discount_amount = discount_result['discount_amount']
+                        
+                        # Apply max discount if set
+                        if coupon_dict['max_discount'] and discount_amount > float(coupon_dict['max_discount']):
+                            discount_amount = float(coupon_dict['max_discount'])
+                        
+                        # Update coupon usage count
+                        await cursor.execute(
+                            'UPDATE coupons SET used_count = used_count + 1 WHERE id = %s',
+                            (coupon_id,)
+                        )
+            
+            final_amount = original_amount - discount_amount
             
             try:
                 await cursor.execute('''
                     INSERT INTO orders (order_number, customer_id, table_id, order_type, customer_name, customer_phone, 
-                                       total_amount, payment_method, payment_proof, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                       original_amount, discount_amount, total_amount, coupon_id, coupon_code,
+                                       payment_method, payment_proof, status, estimated_time)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ''', (order_number, order_req.customer_id, order_req.table_id, order_req.order_type, 
-                      order_req.customer_name, order_req.customer_phone, order_req.total_amount, 
-                      order_req.payment_method, order_req.payment_proof, 'pending'))
+                      order_req.customer_name, order_req.customer_phone, original_amount, discount_amount,
+                      final_amount, coupon_id, order_req.coupon_code, order_req.payment_method, 
+                      order_req.payment_proof, 'pending', 30))
                 
                 order_id = cursor.lastrowid
                 
@@ -1070,7 +1116,8 @@ async def create_order(order_req: CreateOrderRequest):
                     "order_id": order_id,
                     "order_number": order_number,
                     "order_type": order_req.order_type,
-                    "total_amount": float(order_req.total_amount),
+                    "total_amount": float(final_amount),
+                    "discount_amount": float(discount_amount),
                     "created_at": datetime.now().isoformat()
                 })
                 
