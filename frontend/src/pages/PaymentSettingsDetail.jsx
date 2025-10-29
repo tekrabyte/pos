@@ -37,6 +37,7 @@ const PaymentSettingsDetail = () => {
   useEffect(() => {
     fetchBankAccounts();
     fetchQrisSettings();
+    fetchPaymentMethods();
   }, []);
 
   const fetchBankAccounts = async () => {
