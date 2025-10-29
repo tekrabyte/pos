@@ -326,15 +326,21 @@ frontend:
 
   - task: "Customer Login Page"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/auth/CustomerLogin.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Customer login page already exists from previous implementation"
+      - working: false
+        agent: "user"
+        comment: "User reported: Login berhasil tapi balik lagi ke login page (Login successful but redirects back to login page)"
+      - working: "NA"
+        agent: "main"
+        comment: "ISSUE IDENTIFIED: Potential timing issue with localStorage and useEffect in CustomerMenu.jsx. The authentication check might run before localStorage is fully set. Will optimize the login flow."
 
   - task: "Customer Register Page"
     implemented: true
