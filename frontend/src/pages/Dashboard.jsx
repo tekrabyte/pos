@@ -25,8 +25,18 @@ const Dashboard = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await axios.get(`${API}/analytics/overview`);
-      setAnalytics(response.data);
+      const response = await axios.get(`${API}/dashboard/stats`);
+      const data = response.data;
+      
+      // Transform data to match component structure
+      setAnalytics({
+        total_revenue: data.stats?.total?.revenue || 0,
+        total_orders: data.stats?.total?.orders || 0,
+        total_products: data.stats?.total?.products || 0,
+        total_customers: data.stats?.total?.customers || 0,
+        recent_orders: data.recent_orders || [],
+        top_products: data.top_products || [],
+      });
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error('Gagal mengambil data analytics');
