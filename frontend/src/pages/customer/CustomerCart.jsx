@@ -71,7 +71,7 @@ const CustomerCart = () => {
 
   const fetchBankAccounts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/bank-accounts`);
+      const response = await axios.get(`${API_URL}/bank-accounts`);
       setBankAccounts(response.data);
     } catch (error) {
       console.error('Error fetching bank accounts:', error);
@@ -81,7 +81,7 @@ const CustomerCart = () => {
   const generateQRIS = async () => {
     try {
       const total = calculateTotal();
-      const response = await axios.post(`${API_URL}/api/qris/generate`, {
+      const response = await axios.post(`${API_URL}/qris/generate`, {
         amount: total,
         order_number: `TEMP-${Date.now()}`,
         merchant_id: 'POSMERCHANT001'
@@ -111,7 +111,7 @@ const CustomerCart = () => {
       formData.append('file', file);
 
       try {
-        const response = await axios.post(`${API_URL}/api/upload/payment-proof`, formData, {
+        const response = await axios.post(`${API_URL}/upload/payment-proof`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setPaymentProofUrl(response.data.url);
@@ -157,7 +157,7 @@ const CustomerCart = () => {
         total_amount: calculateTotal()
       };
 
-      const response = await axios.post(`${API_URL}/api/orders`, orderData);
+      const response = await axios.post(`${API_URL}/orders`, orderData);
       
       // Clear cart and order info
       localStorage.removeItem('cart');
