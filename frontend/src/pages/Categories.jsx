@@ -16,9 +16,11 @@ const Categories = () => {
   });
 
   const filteredCategories = useMemo(() => {
-    if (!debouncedSearch) return categories;
+    // Ensure categories is always an array
+    const categoriesList = Array.isArray(categories) ? categories : [];
+    if (!debouncedSearch) return categoriesList;
     const search = debouncedSearch.toLowerCase();
-    return categories.filter((c) =>
+    return categoriesList.filter((c) =>
       c.name?.toLowerCase().includes(search)
     );
   }, [debouncedSearch, categories]);
