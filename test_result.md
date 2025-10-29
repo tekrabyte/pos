@@ -765,3 +765,90 @@ agent_communication:
       **VERIFICATION COMPLETE:**
       All endpoints mentioned in the review request have been tested and are working perfectly. The routing repair has been successful with no impact on backend functionality.
 
+  - agent: "main"
+    message: |
+      🎯 GUEST BROWSING & CHECKOUT FLOW IMPROVEMENT - COMPLETE
+      
+      **User Requirements Implemented:**
+      1. ✅ Halaman utama (/) sekarang adalah e-commerce menu
+      2. ✅ Login customer hanya diperlukan saat checkout untuk takeaway
+      3. ✅ Browse dan add to cart tidak perlu login
+      
+      **Changes Applied:**
+      
+      **1. App.js - Route Configuration:**
+      - Changed main route "/" from StaffLogin to CustomerMenu
+      - Staff login now accessible via "/staff/login" only
+      - Main page now shows e-commerce product menu directly
+      
+      **2. CustomerMenu.jsx - Guest Browsing Enabled:**
+      - ✅ Removed mandatory authentication check
+      - ✅ Allow guest users to browse all products
+      - ✅ Allow adding to cart without login
+      - ✅ Cart saved in localStorage (works for both guests and logged-in users)
+      - ✅ Added Login button in header for guests
+      - ✅ Show user welcome message when logged in
+      - ✅ Dine-in via QR scan still works (no login required)
+      - ✅ Improved UI with Indonesian language
+      
+      **3. CustomerCart.jsx - Checkout Authentication:**
+      - ✅ Authentication check ONLY for takeaway orders
+      - ✅ Dine-in orders don't require login (guest checkout)
+      - ✅ Takeaway without login → redirect to login page
+      - ✅ Save redirect path to return to cart after login
+      - ✅ Cart data preserved during login redirect
+      - ✅ Guest dine-in users redirected to menu after order (no order history)
+      - ✅ Improved Indonesian language for all messages
+      
+      **4. CustomerLogin.jsx - Smart Redirect:**
+      - ✅ Check for 'redirectAfterLogin' in localStorage
+      - ✅ Redirect back to checkout if coming from cart
+      - ✅ Default redirect to main menu if no redirect path
+      - ✅ Clear redirect path after successful redirect
+      
+      **New User Flow:**
+      
+      **Flow 1: Guest Browsing + Takeaway (requires login):**
+      1. Visit "/" → See e-commerce menu (no login required)
+      2. Browse products → Add to cart (no login required)
+      3. Click checkout → Select takeaway
+      4. System detects no login → Redirect to /customer/login
+      5. User logs in → Auto-redirect back to /customer/cart
+      6. Cart data intact → Complete checkout
+      
+      **Flow 2: Guest Dine-in via QR (no login required):**
+      1. Scan QR code → /?table=TOKEN
+      2. Browse products → Add to cart
+      3. Click checkout → Dine-in mode (no login needed)
+      4. Upload payment proof → Place order
+      5. Order created successfully
+      
+      **Flow 3: Logged-in User:**
+      1. Visit "/" → See menu with welcome message
+      2. Browse products → Add to cart
+      3. Access to order history and profile
+      4. Click checkout → Proceed directly (already logged in)
+      5. Complete order → View in order history
+      
+      **Technical Details:**
+      - Cart persistence: localStorage ('cart' key)
+      - Order type: localStorage ('orderType' key: 'takeaway' | 'dine-in')
+      - Table info: localStorage ('tableInfo' key for dine-in)
+      - Redirect path: localStorage ('redirectAfterLogin' key)
+      - Customer data: localStorage ('customer' key)
+      
+      **UI/UX Improvements:**
+      - All messages in Indonesian language
+      - Login button visible for guests in header
+      - Clear indication of order type (takeaway vs dine-in)
+      - Guest dine-in labeled clearly at checkout
+      - Improved navigation flow
+      
+      **System Status:**
+      🟢 Frontend compiled successfully (webpack with 23 minor warnings)
+      🟢 Backend running stable
+      🟢 Hot reload active - changes are live
+      🟢 All authentication flows updated
+      🟢 Guest browsing fully functional
+      🟢 Ready for testing
+
