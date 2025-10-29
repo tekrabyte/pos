@@ -1780,6 +1780,31 @@ async def create_outlet(outlet: dict):
             result = await cursor.fetchone()
             return row_to_dict(result, cursor)
 
+@api_router.put("/outlets/{outlet_id}")
+async def update_outlet(outlet_id: int, outlet: dict):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE outlets SET name = %s, address = %s, city = %s, country = %s, postal_code = %s, is_main = %s WHERE id = %s',
+                (outlet.get('name'), outlet.get('address'), outlet.get('city'), 
+                 outlet.get('country'), outlet.get('postal_code'), outlet.get('is_main', False), outlet_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM outlets WHERE id = %s', (outlet_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/outlets/{outlet_id}")
+async def delete_outlet(outlet_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM outlets WHERE id = %s', (outlet_id,))
+            await conn.commit()
+            return {"success": True, "message": "Outlet deleted"}
+
 # ROLES
 
 @api_router.get("/roles")
