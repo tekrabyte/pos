@@ -222,7 +222,7 @@ const AddProduct = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Tidak ada kategori</SelectItem>
-                      {categories.map((cat) => (
+                      {Array.isArray(categories) && categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id.toString()}>
                           {cat.name}
                         </SelectItem>
