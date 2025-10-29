@@ -534,7 +534,41 @@ func GetBrand(c *fiber.Ctx) error {
 
 // Simplified CRUD operations for other entities
 func CreateBrand(c *fiber.Ctx) error {
-        return c.JSON(fiber.Map{"success": true, "message": "Create brand - to be implemented"})
+        var req struct {
+                Name        string `json:"name"`
+                Description string `json:"description"`
+                LogoURL     string `json:"logo_url"`
+        }
+
+        if err := c.BodyParser(&req); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        if req.Name == "" {
+                return ErrorResponse(c, "Brand name is required", fiber.StatusBadRequest)
+        }
+
+        result, err := DB.Exec(`
+                INSERT INTO brands (name, description, logo_url, created_at)
+                VALUES (?, ?, ?, NOW())
+        `, req.Name, req.Description, req.LogoURL)
+
+        if err != nil {
+                return ErrorResponse(c, fmt.Sprintf("Failed to create brand: %v", err), fiber.StatusInternalServerError)
+        }
+
+        id, _ := result.LastInsertId()
+
+        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+                "success": true,
+                "message": "Brand created successfully",
+                "brand": fiber.Map{
+                        "id":          id,
+                        "name":        req.Name,
+                        "description": req.Description,
+                        "logo_url":    req.LogoURL,
+                },
+        })
 }
 
 func UpdateBrand(c *fiber.Ctx) error {
