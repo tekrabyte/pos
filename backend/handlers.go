@@ -192,21 +192,21 @@ func Logout(c *fiber.Ctx) error {
 // Get Products
 func GetProducts(c *fiber.Ctx) error {
 	rows, err := DB.Query(`
-		SELECT id, name, sku, description, price, cost, stock, category_id, brand_id, 
-		       image, is_active, created_at, updated_at 
+		SELECT id, name, sku, price, stock, category_id, brand_id, 
+		       description, image_url, status, created_at, updated_at 
 		FROM products 
 		ORDER BY created_at DESC
 	`)
 	if err != nil {
-		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+		return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
 	}
 	defer rows.Close()
 
 	var products []Product
 	for rows.Next() {
 		var p Product
-		err := rows.Scan(&p.ID, &p.Name, &p.SKU, &p.Description, &p.Price, &p.Cost,
-			&p.Stock, &p.CategoryID, &p.BrandID, &p.Image, &p.IsActive,
+		err := rows.Scan(&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
+			&p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
 			&p.CreatedAt, &p.UpdatedAt)
 		if err != nil {
 			continue
