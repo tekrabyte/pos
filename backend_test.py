@@ -446,8 +446,8 @@ class POSAPITester:
 
 def main():
     """Main test execution"""
-    # Use the external URL from frontend/.env
-    base_url = "https://just-run-1.preview.emergentagent.com/api"
+    # Use the external URL from frontend/.env - no /api suffix needed as it's added in routes
+    base_url = "https://just-run-1.preview.emergentagent.com"
     
     print(f"Testing POS API at: {base_url}")
     
