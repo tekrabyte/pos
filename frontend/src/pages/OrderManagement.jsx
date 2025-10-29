@@ -92,7 +92,7 @@ const OrderManagement = () => {
           
           // Show toast notification
           toast.success('Pesanan Baru Masuk!', {
-            description: `Order #${data.order_number} - Rp ${data.total_amount.toLocaleString('id-ID')}`,
+            description: `Order #${data.order_number} - Rp ${formatCurrency(data.total_amount)}`,
             duration: 5000,
           });
           
