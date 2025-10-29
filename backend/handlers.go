@@ -1000,11 +1000,14 @@ func GetCustomers(c *fiber.Ctx) error {
 
 func GetCustomer(c *fiber.Ctx) error {
         id := c.Params("id")
-        var customer Customer
+        
+        var cid int
+        var name string
+        var email, phone, address sql.NullString
+        var createdAt sql.NullTime
 
-        query := "SELECT id, name, email, phone, address, created_at, updated_at FROM customers WHERE id = ?"
-        err := DB.QueryRow(query, id).Scan(&customer.ID, &customer.Name, &customer.Email, &customer.Phone,
-                &customer.Address, &customer.CreatedAt, &customer.UpdatedAt)
+        query := "SELECT id, name, email, phone, address, created_at FROM customers WHERE id = ?"
+        err := DB.QueryRow(query, id).Scan(&cid, &name, &email, &phone, &address, &createdAt)
 
         if err == sql.ErrNoRows {
                 return ErrorResponse(c, "Customer not found", fiber.StatusNotFound)
@@ -1013,7 +1016,14 @@ func GetCustomer(c *fiber.Ctx) error {
                 return ErrorResponse(c, fmt.Sprintf("Database error: %v", err), fiber.StatusInternalServerError)
         }
 
-        return c.JSON(fiber.Map{"success": true, "customer": customer})
+        return c.JSON(fiber.Map{"success": true, "customer": map[string]interface{}{
+                "id":         cid,
+                "name":       name,
+                "email":      email,
+                "phone":      phone,
+                "address":    address,
+                "created_at": createdAt,
+        }})
 }
 
 func CreateCustomer(c *fiber.Ctx) error {
@@ -1033,8 +1043,8 @@ func CreateCustomer(c *fiber.Ctx) error {
         }
 
         result, err := DB.Exec(`
-                INSERT INTO customers (name, email, phone, address, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
+                INSERT INTO customers (name, email, phone, address, created_at)
+                VALUES (?, ?, ?, ?, NOW())
         `, req.Name, req.Email, req.Phone, req.Address)
 
         if err != nil {
@@ -1072,7 +1082,7 @@ func UpdateCustomer(c *fiber.Ctx) error {
 
         _, err := DB.Exec(`
                 UPDATE customers 
-                SET name = ?, email = ?, phone = ?, address = ?, updated_at = NOW()
+                SET name = ?, email = ?, phone = ?, address = ?
                 WHERE id = ?
         `, req.Name, req.Email, req.Phone, req.Address, id)
 
