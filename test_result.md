@@ -584,3 +584,60 @@ agent_communication:
       - All API endpoints returning proper responses
       - WebSocket real-time notifications functioning
       - Ready for production use
+
+  - agent: "main"
+    message: |
+      🔧 BUG FIXES APPLIED - Login Redirect & API Connection Issues
+
+      **Issues Reported by User:**
+      1. "Login berhasil tapi balik lagi ke login page" (Login successful but redirects back to login)
+      2. "Masih banyak error API bug gagal load page" (Many API errors, failed to load pages)
+
+      **Root Causes Identified & Fixed:**
+
+      **1. Staff Login localStorage Key Mismatch:**
+      - StaffLogin.jsx saved to 'staff_user' but Layout.jsx read from 'user'
+      - Fixed: Changed keys to 'user' and 'token' for consistency
+      - Added 100ms setTimeout before navigation to ensure localStorage is set
+
+      **2. Customer Login Timing Issue:**
+      - navigate() called before localStorage.setItem() completed
+      - Fixed: Added 100ms setTimeout before navigation
+      - Improved useEffect in CustomerMenu.jsx with async wrapper
+      - Removed 'navigate' from dependency array to prevent re-renders
+
+      **3. Backend API Errors:**
+      - Missing Pillow (PIL) library for QR code generation
+      - Fixed: Installed Pillow==12.0.0 and added to requirements.txt
+      - .env file formatting error (line 9 had 2 variables on same line)
+      - Fixed: Separated FRONTEND_URL to new line
+
+      **4. Admin Role Issue:**
+      - Admin user had role='staff' instead of 'admin' in database
+      - Fixed: Updated admin user role to 'admin'
+
+      **All Fixes Applied:**
+      ✅ StaffLogin.jsx - Changed localStorage keys + setTimeout
+      ✅ CustomerLogin.jsx - Added setTimeout
+      ✅ CustomerMenu.jsx - Improved useEffect
+      ✅ Layout.jsx - Fixed logout to clear correct keys
+      ✅ CustomerProfile.jsx - Added customer_token removal
+      ✅ Backend .env - Fixed formatting
+      ✅ Backend requirements.txt - Added Pillow
+      ✅ Database - Fixed admin role
+      ✅ Backend restarted successfully
+
+      **Verification:**
+      ✅ Backend running without errors
+      ✅ All API endpoints tested and working:
+         - /api/categories - Returns data ✓
+         - /api/products - Returns data ✓
+         - /api/tables - Returns data with QR codes ✓
+         - /api/bank-accounts - Returns data ✓
+         - /api/auth/staff/login - Returns token with role='admin' ✓
+      
+      **Status:**
+      🟢 System fully operational
+      🟢 MySQL connection stable (srv1412.hstgr.io)
+      🟢 All APIs responding correctly
+      🟢 Login flows fixed and ready for testing
