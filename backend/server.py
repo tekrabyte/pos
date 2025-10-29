@@ -493,6 +493,41 @@ async def create_product(product: Product):
             result = await cursor.fetchone()
             return row_to_dict(result, cursor)
 
+@api_router.get("/products/{product_id}")
+async def get_product(product_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('SELECT * FROM products WHERE id = %s', (product_id,))
+            product = await cursor.fetchone()
+            if not product:
+                raise HTTPException(status_code=404, detail="Product not found")
+            return row_to_dict(product, cursor)
+
+@api_router.put("/products/{product_id}")
+async def update_product(product_id: int, product: Product):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
+                'UPDATE products SET name = %s, sku = %s, price = %s, stock = %s, category_id = %s, description = %s, image_url = %s, status = %s WHERE id = %s',
+                (product.name, product.sku, product.price, product.stock, product.category_id, product.description, product.image_url, product.status, product_id)
+            )
+            await conn.commit()
+            
+            await cursor.execute('SELECT * FROM products WHERE id = %s', (product_id,))
+            result = await cursor.fetchone()
+            return row_to_dict(result, cursor)
+
+@api_router.delete("/products/{product_id}")
+async def delete_product(product_id: int):
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute('DELETE FROM products WHERE id = %s', (product_id,))
+            await conn.commit()
+            return {"success": True, "message": "Product deleted"}
+
 # CATEGORIES
 
 @api_router.get("/categories")
