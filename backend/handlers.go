@@ -809,21 +809,35 @@ func UpdateOrderStatus(c *fiber.Ctx) error {
 
 // Simplified handlers for other entities
 func GetTables(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, name, token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY name")
+        rows, err := DB.Query("SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY table_number")
         if err != nil {
                 return c.JSON(fiber.Map{"success": true, "tables": []interface{}{}})
         }
         defer rows.Close()
         
-        var tables []Table
+        var tables []map[string]interface{}
         for rows.Next() {
-                var t Table
-                rows.Scan(&t.ID, &t.Name, &t.Token, &t.QRCode, &t.Status, &t.OutletID, &t.CreatedAt, &t.UpdatedAt)
-                tables = append(tables, t)
+                var id int
+                var tableNumber string
+                var token string
+                var qrCode, status sql.NullString
+                var outletID sql.NullInt64
+                var createdAt, updatedAt sql.NullTime
+                rows.Scan(&id, &tableNumber, &token, &qrCode, &status, &outletID, &createdAt, &updatedAt)
+                tables = append(tables, map[string]interface{}{
+                        "id":           id,
+                        "table_number": tableNumber,
+                        "token":        token,
+                        "qr_code":      qrCode,
+                        "status":       status,
+                        "outlet_id":    outletID,
+                        "created_at":   createdAt,
+                        "updated_at":   updatedAt,
+                })
         }
         
         if tables == nil {
-                tables = []Table{}
+                tables = []map[string]interface{}{}
         }
         
         return c.JSON(fiber.Map{"success": true, "tables": tables})
