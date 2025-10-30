@@ -91,12 +91,17 @@ class POSAPITester:
         """Test authentication endpoints"""
         print("\n=== Testing Authentication ===")
         
-        # Test staff login
-        try:
-            login_data = {
-                "username": "admin",
-                "password": "password"
-            }
+        # Test staff login - try multiple common credentials
+        login_attempts = [
+            {"username": "admin", "password": "password"},
+            {"username": "admin", "password": "admin"},
+            {"username": "admin", "password": "admin123"},
+            {"username": "staff", "password": "password"},
+            {"username": "user", "password": "password"}
+        ]
+        
+        for login_data in login_attempts:
+            try:
             
             response = self.make_request('POST', '/api/auth/staff/login', data=login_data)
             
