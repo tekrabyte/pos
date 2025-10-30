@@ -22,7 +22,7 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Beranda', path: '/dashboard' },
-    { icon: ShoppingCart, label: 'Pesanan', path: '/orders' },
+    { icon: ShoppingCart, label: 'Data Penjualan', path: '/orders' },
     { icon: QrCode, label: 'Meja / Tables', path: '/tables' },
     { icon: Users, label: 'Pelanggan', path: '/customers' },
     { icon: UsersIcon, label: 'Users & Staff', path: '/users' },
