@@ -1,5 +1,48 @@
 # Test Results and Issue Tracking
 
+## 🚀 LATEST UPDATE - 30 Oct 2025 (Session 2)
+
+### ✅ COMPLETED IN THIS SESSION:
+
+**PHASE 1: Store Settings** ✅ FULLY IMPLEMENTED
+- Backend: Generic image upload endpoint `/api/upload/image?type=logos|banners`
+- Frontend: ThemeContext with full custom theme (Light/Dark/System mode, HSL color pickers)
+- StoreSettings page (`/store-settings`) with 3 tabs: Basic Settings, Theme & Colors, Banner Management
+- Banner carousel in CustomerMenu with active filtering
+- Theme applies globally to all pages
+- Menu added to Layout sidebar
+
+**PHASE 5: Users/Staff Management** ✅ FULLY IMPLEMENTED
+- UsersManagement page (`/users`) with full CRUD
+- Role-based badges (Admin/Cashier/Staff)
+- Search & filter by role
+- Add/Edit user dialog with password management
+- Delete with confirmation
+- Menu added to Layout sidebar
+
+**PHASE 4: Dine-in Customer Flow** ✅ FULLY IMPLEMENTED
+- Table token detection from URL (?table=TOKEN)
+- Auto-load table info without login requirement
+- Optional guest info dialog (name & phone - can skip)
+- Guest info persisted through checkout
+- CustomerCart enhanced to display guest information
+- Payment proof upload working
+- Order submission working for both logged-in and guest users
+
+### 🚧 REMAINING WORK:
+
+**PHASE 3: Order Management Split** (Next Priority)
+- POS Cashier: Active Orders tab with payment verification
+- Admin Panel: Rename to "Data Penjualan" with analytics
+
+**PHASE 2: Payment Settings & Xendit Integration** (Final Priority)
+- Comprehensive payment settings page
+- QRIS static image management
+- Bank transfer settings
+- Xendit integration (API keys provided)
+
+---
+
 ## Current Development Task - POS System Enhancement (30 Oct 2025)
 
 ### User Requirements (Indonesian)
