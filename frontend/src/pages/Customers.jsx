@@ -3,7 +3,7 @@ import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, Mail, Phone, MapPin } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -31,7 +31,7 @@ const Customers = () => {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/customers`, {
+      const response = await axiosInstance.get(`${API}/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCustomers(response.data.customers || response.data || []);
