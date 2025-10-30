@@ -2727,6 +2727,38 @@ func UploadQRIS(c *fiber.Ctx) error {
         })
 }
 
+// Generic image upload for logos, banners, etc
+func UploadImage(c *fiber.Ctx) error {
+        file, err := c.FormFile("file")
+        if err != nil {
+                return ErrorResponse(c, "No file uploaded", fiber.StatusBadRequest)
+        }
+
+        // Get upload type from query param (default: general)
+        uploadType := c.Query("type", "general")
+        
+        // Create upload directory based on type
+        uploadDir := fmt.Sprintf("./uploads/%s", uploadType)
+        os.MkdirAll(uploadDir, 0755)
+
+        // Generate unique filename
+        filename := fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename)
+        filepath := fmt.Sprintf("%s/%s", uploadDir, filename)
+
+        // Save file
+        if err := c.SaveFile(file, filepath); err != nil {
+                return ErrorResponse(c, "Failed to save file", fiber.StatusInternalServerError)
+        }
+
+        // Return file URL
+        fileURL := fmt.Sprintf("/uploads/%s/%s", uploadType, filename)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Image uploaded successfully",
+                "url":     fileURL,
+        })
+}
+
 // ========== QRIS & PAYMENT SETTINGS ==========
 
 func GetQRISSettings(c *fiber.Ctx) error {
