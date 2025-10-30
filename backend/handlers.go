@@ -1089,7 +1089,7 @@ func CreateTable(c *fiber.Ctx) error {
         token := fmt.Sprintf("TBL-%d", time.Now().Unix())
 
         result, err := DB.Exec(`
-                INSERT INTO tables (table_number, token, status, outlet_id, created_at, updated_at)
+                INSERT INTO tables (table_number, qr_token, status, outlet_id, created_at, updated_at)
                 VALUES (?, ?, ?, ?, NOW(), NOW())
         `, req.TableNumber, token, req.Status, req.OutletID)
 
@@ -1105,7 +1105,7 @@ func CreateTable(c *fiber.Ctx) error {
                 "table": fiber.Map{
                         "id":           id,
                         "table_number": req.TableNumber,
-                        "token":        token,
+                        "qr_token":        token,
                         "status":       req.Status,
                 },
         })
