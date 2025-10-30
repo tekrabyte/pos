@@ -103,24 +103,28 @@ class POSAPITester:
         for login_data in login_attempts:
             try:
             
-            response = self.make_request('POST', '/api/auth/staff/login', data=login_data)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('success') and 'token' in data:
-                    self.token = data['token']
-                    user_info = data.get('user', {})
-                    self.log_test('/api/auth/staff/login', 'POST', 'PASS', 
-                                f"Token received, User: {user_info.get('username')}")
-                else:
-                    self.log_test('/api/auth/staff/login', 'POST', 'FAIL', 
-                                f"Login failed: {data}")
-            else:
-                self.log_test('/api/auth/staff/login', 'POST', 'FAIL', 
-                            f"Status code: {response.status_code}, Response: {response.text}")
+                response = self.make_request('POST', '/api/auth/staff/login', data=login_data)
                 
-        except Exception as e:
-            self.log_test('/api/auth/staff/login', 'POST', 'FAIL', f"Exception: {str(e)}")
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success') and 'token' in data:
+                        self.token = data['token']
+                        user_info = data.get('user', {})
+                        self.log_test('/api/auth/staff/login', 'POST', 'PASS', 
+                                    f"Token received with {login_data['username']}/{login_data['password']}, User: {user_info.get('username')}")
+                        break  # Success, stop trying other credentials
+                    else:
+                        continue  # Try next credentials
+                else:
+                    continue  # Try next credentials
+                    
+            except Exception as e:
+                continue  # Try next credentials
+        
+        # If no credentials worked, log the failure
+        if not self.token:
+            self.log_test('/api/auth/staff/login', 'POST', 'FAIL', 
+                        f"All login attempts failed. Tried: {[f\"{cred['username']}/{cred['password']}\" for cred in login_attempts]}")
         
         # Test get current user (requires token)
         if self.token:
