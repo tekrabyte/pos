@@ -403,27 +403,26 @@ class POSAPITester:
             self.log_test('/api/payment-methods', 'GET', 'FAIL', f"Exception: {str(e)}")
     
     def run_all_tests(self):
-        """Run all test suites"""
-        print("🚀 Starting Comprehensive POS API Testing")
-        print("=" * 50)
+        """Run all test suites as specified in review request"""
+        print("🚀 Starting POS API Testing - Review Request Scenarios")
+        print("=" * 60)
         
-        # Test basic endpoints first
-        self.test_health_check()
-        
-        # Test authentication (this sets the token for protected endpoints)
+        # Test authentication first (this sets the token for protected endpoints)
         self.test_authentication()
         
-        # Test data endpoints
-        self.test_products()
-        self.test_categories()
-        self.test_brands()
-        self.test_orders()
-        self.test_tables()
-        self.test_customers()
-        self.test_payment_methods()
+        if not self.token:
+            print("❌ Authentication failed - cannot proceed with protected endpoint tests")
+            self.print_summary()
+            return
         
-        # Test protected endpoints
-        self.test_dashboard_analytics()
+        # Test protected endpoints with authentication
+        self.test_brands_crud()
+        self.test_roles_crud()
+        self.test_outlets_crud()
+        self.test_payment_methods_crud()
+        self.test_coupons_crud()
+        self.test_orders_operations()
+        self.test_customers_operations()
         
         # Print summary
         self.print_summary()
