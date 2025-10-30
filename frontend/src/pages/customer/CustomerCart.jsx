@@ -147,7 +147,7 @@ const CustomerCart = () => {
 
     try {
       const orderData = {
-        customer_id: customer?.id || null,
+        customer_id: (customer && !customer.isGuest) ? customer.id : null,
         table_id: tableInfo?.id || null,
         order_type: orderType,
         customer_name: customer?.name || null,
