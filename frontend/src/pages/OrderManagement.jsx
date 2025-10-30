@@ -73,7 +73,6 @@ const OrderManagement = () => {
   const connectWebSocket = () => {
     // Prevent multiple connections
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
       return;
     }
 
@@ -81,7 +80,7 @@ const OrderManagement = () => {
       const ws = new WebSocket(`${WS_URL}/api/ws/orders`);
       
       ws.onopen = () => {
-        console.log('WebSocket connected successfully');
+        // Silently connected
       };
 
       ws.onmessage = (event) => {
