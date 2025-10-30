@@ -29,6 +29,8 @@ const CustomerMenu = () => {
   const [banners, setBanners] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [showGuestInfoDialog, setShowGuestInfoDialog] = useState(false);
+  const [guestInfo, setGuestInfo] = useState({ name: '', phone: '' });
 
   useEffect(() => {
     // Check if customer is logged in (optional)
