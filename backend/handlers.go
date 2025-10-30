@@ -2054,7 +2054,10 @@ func GetRole(c *fiber.Ctx) error {
                 "created_at":   createdAt,
         }
 
-        return c.JSON(role)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "role":    role,
+        })
 }
 
 func CreateRole(c *fiber.Ctx) error {
