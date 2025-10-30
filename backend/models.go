@@ -19,18 +19,23 @@ type User struct {
 }
 
 type Product struct {
-	ID          int            `json:"id"`
-	Name        string         `json:"name"`
-	SKU         sql.NullString `json:"sku"`
-	Price       float64        `json:"price"`
-	Stock       int            `json:"stock"`
-	CategoryID  sql.NullInt64  `json:"category_id"`
-	BrandID     sql.NullInt64  `json:"brand_id"`
-	Description sql.NullString `json:"description"`
-	ImageURL    sql.NullString `json:"image_url"`
-	Status      sql.NullString `json:"status"`
-	CreatedAt   sql.NullTime   `json:"created_at"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
+	ID           int            `json:"id"`
+	Name         string         `json:"name"`
+	SKU          sql.NullString `json:"sku"`
+	Price        float64        `json:"price"`
+	Stock        int            `json:"stock"`
+	CategoryID   sql.NullInt64  `json:"category_id"`
+	BrandID      sql.NullInt64  `json:"brand_id"`
+	Description  sql.NullString `json:"description"`
+	ImageURL     sql.NullString `json:"image_url"`
+	Status       sql.NullString `json:"status"`
+	IsBundle     sql.NullBool   `json:"is_bundle"`
+	BundleItems  sql.NullString `json:"bundle_items"` // JSON string
+	HasPortions  sql.NullBool   `json:"has_portions"`
+	Unit         sql.NullString `json:"unit"`
+	PortionSize  sql.NullFloat64 `json:"portion_size"`
+	CreatedAt    sql.NullTime   `json:"created_at"`
+	UpdatedAt    sql.NullTime   `json:"updated_at"`
 }
 
 type Category struct {
