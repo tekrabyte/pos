@@ -1,19 +1,50 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFetch, useDebounce } from '@/hooks/useApi';
+import axiosInstance from '@/config/axios';
+import { toast } from 'sonner';
 
 const Products = () => {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const { data: products = [], loading, refetch } = useFetch('/products', {
-    initialData: [],
-    cacheKey: 'products-list',
-  });
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get('/products');
+      const productsData = response.data.products || response.data || [];
+      setProducts(Array.isArray(productsData) ? productsData : []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Gagal mengambil data produk');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id, productName) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus produk "${productName}"?`)) {
+      try {
+        await axiosInstance.delete(`/products/${id}`);
+        toast.success('Produk berhasil dihapus');
+        fetchProducts();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        toast.error('Gagal menghapus produk');
+      }
+    }
+  };
 
   const formatCurrency = (value) => {
     if (value === null || value === undefined || isNaN(value)) {
@@ -23,16 +54,16 @@ const Products = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    // Ensure products is always an array
-    const productsList = Array.isArray(products) ? products : [];
-    if (!debouncedSearch) return productsList;
-    const search = debouncedSearch.toLowerCase();
-    return productsList.filter(
+    if (!searchTerm) return products;
+    const search = searchTerm.toLowerCase();
+    return products.filter(
       (p) =>
         p.name?.toLowerCase().includes(search) ||
-        p.sku?.toLowerCase().includes(search)
+        p.sku?.toLowerCase().includes(search) ||
+        p.category_name?.toLowerCase().includes(search) ||
+        p.brand_name?.toLowerCase().includes(search)
     );
-  }, [debouncedSearch, products]);
+  }, [searchTerm, products]);
 
   if (loading) {
     return (
@@ -58,11 +89,18 @@ const Products = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => refetch()}
+              onClick={fetchProducts}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Refresh
+            </Button>
+            <Button
+              onClick={() => navigate('/products/add')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Produk
             </Button>
           </div>
         </div>
@@ -71,7 +109,7 @@ const Products = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Cari produk berdasarkan nama atau SKU..."
+            placeholder="Cari produk berdasarkan nama, SKU, kategori, atau brand..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -87,7 +125,16 @@ const Products = () => {
         {filteredProducts.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-gray-500">Tidak ada produk ditemukan</p>
+              <p className="text-gray-500 mb-4">Tidak ada produk ditemukan</p>
+              {products.length === 0 && (
+                <Button
+                  onClick={() => navigate('/products/add')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Produk Pertama
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -111,7 +158,9 @@ const Products = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-gray-800 truncate">{product.name}</h3>
+                    <h3 className="font-semibold text-gray-800 truncate" title={product.name}>
+                      {product.name}
+                    </h3>
                     <p className="text-xs text-gray-500">SKU: {product.sku}</p>
                     <div className="flex items-center justify-between">
                       <div>
@@ -136,6 +185,32 @@ const Products = () => {
                     {product.brand_name && (
                       <p className="text-xs text-gray-600">Brand: {product.brand_name}</p>
                     )}
+                    {product.is_bundle && (
+                      <span className="inline-block text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                        Bundle/Paket
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 mt-4 pt-3 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => navigate(`/products/edit/${product.id}`)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDelete(product.id, product.name)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
