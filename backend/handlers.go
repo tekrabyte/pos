@@ -301,28 +301,48 @@ func GetProducts(c *fiber.Ctx) error {
 
 // Get Single Product
 func GetProduct(c *fiber.Ctx) error {
-        id := c.Params("id")
-        var p Product
+	id := c.Params("id")
+	var p Product
 
-        query := `SELECT id, name, sku, price, stock, category_id, brand_id, 
-                  description, image_url, status, created_at, updated_at FROM products WHERE id = ?`
-        err := DB.QueryRow(query, id).Scan(
-                &p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
-                &p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
-                &p.CreatedAt, &p.UpdatedAt,
-        )
+	query := `SELECT id, name, sku, price, stock, category_id, brand_id, 
+	          description, image_url, status, is_bundle, bundle_items,
+	          has_portions, unit, portion_size, created_at, updated_at FROM products WHERE id = ?`
+	err := DB.QueryRow(query, id).Scan(
+		&p.ID, &p.Name, &p.SKU, &p.Price, &p.Stock,
+		&p.CategoryID, &p.BrandID, &p.Description, &p.ImageURL, &p.Status,
+		&p.IsBundle, &p.BundleItems, &p.HasPortions, &p.Unit, &p.PortionSize,
+		&p.CreatedAt, &p.UpdatedAt,
+	)
 
-        if err == sql.ErrNoRows {
-                return ErrorResponse(c, "Product not found", fiber.StatusNotFound)
-        }
-        if err != nil {
-                return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
-        }
+	if err == sql.ErrNoRows {
+		return ErrorResponse(c, "Product not found", fiber.StatusNotFound)
+	}
+	if err != nil {
+		return ErrorResponse(c, "Database error", fiber.StatusInternalServerError)
+	}
 
-        return c.JSON(fiber.Map{
-                "success": true,
-                "product": p,
-        })
+	return c.JSON(fiber.Map{
+		"success": true,
+		"product": map[string]interface{}{
+			"id":           p.ID,
+			"name":         p.Name,
+			"sku":          getNullString(p.SKU),
+			"price":        p.Price,
+			"stock":        p.Stock,
+			"category_id":  getNullInt(p.CategoryID),
+			"brand_id":     getNullInt(p.BrandID),
+			"description":  getNullString(p.Description),
+			"image_url":    getNullString(p.ImageURL),
+			"status":       getNullString(p.Status),
+			"is_bundle":    getNullBool(p.IsBundle),
+			"bundle_items": getNullString(p.BundleItems),
+			"has_portions": getNullBool(p.HasPortions),
+			"unit":         getNullString(p.Unit),
+			"portion_size": getNullFloat(p.PortionSize),
+			"created_at":   getNullTime(p.CreatedAt),
+			"updated_at":   getNullTime(p.UpdatedAt),
+		},
+	})
 }
 
 // Create Product
