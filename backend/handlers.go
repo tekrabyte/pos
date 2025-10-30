@@ -2808,3 +2808,316 @@ func GenerateQRIS(c *fiber.Ctx) error {
         })
 }
 
+
+// ========== USERS/STAFF MANAGEMENT ==========
+
+func GetUsers(c *fiber.Ctx) error {
+        rows, err := DB.Query(`
+                SELECT id, full_name, username, email, role, role_id, outlet_id, is_active, created_at
+                FROM users
+                ORDER BY created_at DESC
+        `)
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch users", fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        users := []fiber.Map{}
+        for rows.Next() {
+                var u User
+                if err := rows.Scan(&u.ID, &u.FullName, &u.Username, &u.Email, &u.Role, &u.RoleID, &u.OutletID, &u.IsActive, &u.CreatedAt); err != nil {
+                        continue
+                }
+                users = append(users, fiber.Map{
+                        "id":         u.ID,
+                        "full_name":  getNullString(u.FullName),
+                        "username":   u.Username,
+                        "email":      getNullString(u.Email),
+                        "role":       getNullString(u.Role),
+                        "role_id":    getNullInt(u.RoleID),
+                        "outlet_id":  getNullInt(u.OutletID),
+                        "is_active":  getNullBool(u.IsActive),
+                        "created_at": getNullTime(u.CreatedAt),
+                })
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "users":   users,
+        })
+}
+
+func GetUser(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var u User
+        err := DB.QueryRow(`
+                SELECT id, full_name, username, email, role, role_id, outlet_id, is_active, created_at
+                FROM users WHERE id = ?
+        `, id).Scan(&u.ID, &u.FullName, &u.Username, &u.Email, &u.Role, &u.RoleID, &u.OutletID, &u.IsActive, &u.CreatedAt)
+
+        if err == sql.ErrNoRows {
+                return ErrorResponse(c, "User not found", fiber.StatusNotFound)
+        }
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch user", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "user": fiber.Map{
+                        "id":         u.ID,
+                        "full_name":  getNullString(u.FullName),
+                        "username":   u.Username,
+                        "email":      getNullString(u.Email),
+                        "role":       getNullString(u.Role),
+                        "role_id":    getNullInt(u.RoleID),
+                        "outlet_id":  getNullInt(u.OutletID),
+                        "is_active":  getNullBool(u.IsActive),
+                        "created_at": getNullTime(u.CreatedAt),
+                },
+        })
+}
+
+func CreateUser(c *fiber.Ctx) error {
+        var input struct {
+                FullName string  `json:"full_name"`
+                Username string  `json:"username"`
+                Email    string  `json:"email"`
+                Password string  `json:"password"`
+                Role     string  `json:"role"`
+                RoleID   *int    `json:"role_id"`
+                OutletID *int    `json:"outlet_id"`
+                IsActive bool    `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Validate required fields
+        if input.Username == "" || input.Password == "" {
+                return ErrorResponse(c, "Username and password are required", fiber.StatusBadRequest)
+        }
+
+        // Hash password
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+        if err != nil {
+                return ErrorResponse(c, "Failed to hash password", fiber.StatusInternalServerError)
+        }
+
+        // Check if username already exists
+        var exists int
+        err = DB.QueryRow("SELECT COUNT(*) FROM users WHERE username = ?", input.Username).Scan(&exists)
+        if err != nil {
+                return ErrorResponse(c, "Failed to check username", fiber.StatusInternalServerError)
+        }
+        if exists > 0 {
+                return ErrorResponse(c, "Username already exists", fiber.StatusConflict)
+        }
+
+        // Insert user
+        result, err := DB.Exec(`
+                INSERT INTO users (full_name, username, email, password, role, role_id, outlet_id, is_active, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `, input.FullName, input.Username, input.Email, string(hashedPassword), input.Role, input.RoleID, input.OutletID, input.IsActive)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to create user", fiber.StatusInternalServerError)
+        }
+
+        userID, _ := result.LastInsertId()
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "User created successfully",
+                "user_id": userID,
+        })
+}
+
+func UpdateUser(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var input struct {
+                FullName string  `json:"full_name"`
+                Username string  `json:"username"`
+                Email    string  `json:"email"`
+                Password string  `json:"password"`
+                Role     string  `json:"role"`
+                RoleID   *int    `json:"role_id"`
+                OutletID *int    `json:"outlet_id"`
+                IsActive *bool   `json:"is_active"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Check if user exists
+        var exists int
+        err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", id).Scan(&exists)
+        if err != nil || exists == 0 {
+                return ErrorResponse(c, "User not found", fiber.StatusNotFound)
+        }
+
+        // Build update query
+        query := "UPDATE users SET full_name = ?, username = ?, email = ?, role = ?, role_id = ?, outlet_id = ?, is_active = ?"
+        args := []interface{}{input.FullName, input.Username, input.Email, input.Role, input.RoleID, input.OutletID, input.IsActive}
+
+        // Update password if provided
+        if input.Password != "" {
+                hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+                if err != nil {
+                        return ErrorResponse(c, "Failed to hash password", fiber.StatusInternalServerError)
+                }
+                query += ", password = ?"
+                args = append(args, string(hashedPassword))
+        }
+
+        query += " WHERE id = ?"
+        args = append(args, id)
+
+        _, err = DB.Exec(query, args...)
+        if err != nil {
+                return ErrorResponse(c, "Failed to update user", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "User updated successfully",
+        })
+}
+
+func DeleteUser(c *fiber.Ctx) error {
+        id := c.Params("id")
+
+        // Check if user exists
+        var exists int
+        err := DB.QueryRow("SELECT COUNT(*) FROM users WHERE id = ?", id).Scan(&exists)
+        if err != nil || exists == 0 {
+                return ErrorResponse(c, "User not found", fiber.StatusNotFound)
+        }
+
+        // Delete user
+        _, err = DB.Exec("DELETE FROM users WHERE id = ?", id)
+        if err != nil {
+                return ErrorResponse(c, "Failed to delete user", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "User deleted successfully",
+        })
+}
+
+// ========== PAYMENT VERIFICATION ==========
+
+func VerifyPayment(c *fiber.Ctx) error {
+        id := c.Params("id")
+        var input struct {
+                Verified bool   `json:"verified"`
+                Notes    string `json:"notes"`
+        }
+
+        if err := c.BodyParser(&input); err != nil {
+                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+        }
+
+        // Update payment verification status
+        _, err := DB.Exec(`
+                UPDATE orders 
+                SET payment_verified = ?, status = ?
+                WHERE id = ?
+        `, input.Verified, "confirmed", id)
+
+        if err != nil {
+                return ErrorResponse(c, "Failed to verify payment", fiber.StatusInternalServerError)
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "message": "Payment verification updated successfully",
+        })
+}
+
+// ========== ENHANCED ORDERS WITH FILTERING ==========
+
+func GetOrdersByStatus(c *fiber.Ctx) error {
+        status := c.Query("status", "") // pending, processing, preparing, completed, cancelled
+        orderType := c.Query("order_type", "") // dine-in, takeaway, pos
+
+        query := `
+                SELECT id, order_number, customer_id, table_id, order_type, customer_name, 
+                       customer_phone, outlet_id, user_id, total_amount, payment_method, 
+                       payment_proof, payment_verified, status, created_at, coupon_id, 
+                       coupon_code, discount_amount, original_amount, estimated_time, completed_at
+                FROM orders
+                WHERE 1=1
+        `
+        
+        args := []interface{}{}
+        
+        if status != "" {
+                if status == "active" {
+                        // Active orders: pending, processing, preparing
+                        query += " AND status IN ('pending', 'processing', 'preparing')"
+                } else if status == "completed" {
+                        // Completed sales: completed, cancelled
+                        query += " AND status IN ('completed', 'cancelled')"
+                } else {
+                        query += " AND status = ?"
+                        args = append(args, status)
+                }
+        }
+        
+        if orderType != "" {
+                query += " AND order_type = ?"
+                args = append(args, orderType)
+        }
+        
+        query += " ORDER BY created_at DESC"
+
+        rows, err := DB.Query(query, args...)
+        if err != nil {
+                return ErrorResponse(c, "Failed to fetch orders", fiber.StatusInternalServerError)
+        }
+        defer rows.Close()
+
+        orders := []fiber.Map{}
+        for rows.Next() {
+                var o Order
+                if err := rows.Scan(&o.ID, &o.OrderNumber, &o.CustomerID, &o.TableID, &o.OrderType,
+                        &o.CustomerName, &o.CustomerPhone, &o.OutletID, &o.UserID, &o.TotalAmount,
+                        &o.PaymentMethod, &o.PaymentProof, &o.PaymentVerified, &o.Status, &o.CreatedAt,
+                        &o.CouponID, &o.CouponCode, &o.DiscountAmount, &o.OriginalAmount, &o.EstimatedTime, &o.CompletedAt); err != nil {
+                        continue
+                }
+
+                orders = append(orders, fiber.Map{
+                        "id":               o.ID,
+                        "order_number":     o.OrderNumber,
+                        "customer_id":      getNullInt(o.CustomerID),
+                        "table_id":         getNullInt(o.TableID),
+                        "order_type":       getNullString(o.OrderType),
+                        "customer_name":    getNullString(o.CustomerName),
+                        "customer_phone":   getNullString(o.CustomerPhone),
+                        "outlet_id":        getNullInt(o.OutletID),
+                        "user_id":          getNullInt(o.UserID),
+                        "total_amount":     o.TotalAmount,
+                        "payment_method":   getNullString(o.PaymentMethod),
+                        "payment_proof":    getNullString(o.PaymentProof),
+                        "payment_verified": getNullBool(o.PaymentVerified),
+                        "status":           getNullString(o.Status),
+                        "created_at":       getNullTime(o.CreatedAt),
+                        "coupon_id":        getNullInt(o.CouponID),
+                        "coupon_code":      getNullString(o.CouponCode),
+                        "discount_amount":  getNullFloat(o.DiscountAmount),
+                        "original_amount":  getNullFloat(o.OriginalAmount),
+                        "estimated_time":   getNullInt(o.EstimatedTime),
+                        "completed_at":     getNullTime(o.CompletedAt),
+                })
+        }
+
+        return c.JSON(fiber.Map{
+                "success": true,
+                "orders":  orders,
+        })
+}
+
