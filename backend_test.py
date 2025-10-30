@@ -732,10 +732,20 @@ class POSAPITester:
 
 def main():
     """Main test execution"""
-    # Use the external URL from frontend/.env - no /api suffix needed as it's added in routes
+    # Use the external URL as specified in the review request
     base_url = "https://api-error-fix-9.preview.emergentagent.com"
     
     print(f"Testing POS API at: {base_url}")
+    print("Testing endpoints as specified in review request:")
+    print("- Authentication: POST /api/auth/staff/login")
+    print("- Brands CRUD: GET, POST, PUT, DELETE /api/brands")
+    print("- Roles CRUD: GET, POST, PUT, DELETE /api/roles")
+    print("- Outlets: GET, POST /api/outlets")
+    print("- Payment Methods: GET, POST /api/payment-methods")
+    print("- Coupons: GET, POST /api/coupons")
+    print("- Orders: GET /api/orders, PUT /api/orders/{id}/status")
+    print("- Customers: GET /api/customers")
+    print()
     
     tester = POSAPITester(base_url)
     tester.run_all_tests()
