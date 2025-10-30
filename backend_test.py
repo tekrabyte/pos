@@ -158,11 +158,12 @@ class POSAPITester:
             except Exception as e:
                 self.log_test('/api/auth/staff/logout', 'POST', 'FAIL', f"Exception: {str(e)}")
     
-    def test_products(self):
-        """Test product endpoints"""
-        print("\n=== Testing Products ===")
+    def test_products_bundle_portion_support(self):
+        """Test Product API endpoints with new bundle and portion fields as requested"""
+        print("\n=== Testing Products API - Bundle & Portion Support ===")
         
-        # Test get all products
+        # Test Case 1: GET /api/products - Verify all new fields are returned
+        print("\n1. Testing GET /api/products - Verify new fields")
         try:
             response = self.make_request('GET', '/api/products')
             
@@ -171,14 +172,22 @@ class POSAPITester:
                 if data.get('success') and 'products' in data:
                     products = data['products']
                     product_count = len(products)
-                    self.log_test('/api/products', 'GET', 'PASS', 
-                                f"Retrieved {product_count} products")
                     
-                    # Test get single product if products exist
+                    # Check if new fields are present in response
+                    required_fields = ['is_bundle', 'bundle_items', 'has_portions', 'unit', 'portion_size']
                     if products and len(products) > 0:
-                        first_product_id = products[0].get('id')
-                        if first_product_id:
-                            self.test_single_product(first_product_id)
+                        sample_product = products[0]
+                        missing_fields = [field for field in required_fields if field not in sample_product]
+                        
+                        if missing_fields:
+                            self.log_test('/api/products', 'GET', 'FAIL', 
+                                        f"Missing new fields: {missing_fields}")
+                        else:
+                            self.log_test('/api/products', 'GET', 'PASS', 
+                                        f"Retrieved {product_count} products with all new fields: {required_fields}")
+                    else:
+                        self.log_test('/api/products', 'GET', 'PASS', 
+                                    f"Retrieved {product_count} products (empty list)")
                 else:
                     self.log_test('/api/products', 'GET', 'FAIL', 
                                 f"Unexpected response format: {data}")
@@ -188,6 +197,179 @@ class POSAPITester:
                 
         except Exception as e:
             self.log_test('/api/products', 'GET', 'FAIL', f"Exception: {str(e)}")
+        
+        # Test Case 2: POST /api/products - Create regular product with unit
+        print("\n2. Testing POST /api/products - Create regular product")
+        regular_product_id = None
+        try:
+            regular_product_data = {
+                "name": "Beras Premium",
+                "sku": "BERAS001",
+                "price": 15000,
+                "stock": 100,
+                "has_portions": False,
+                "unit": "kg",
+                "portion_size": 1,
+                "category_id": 1,
+                "brand_id": 1
+            }
+            
+            response = self.make_request('POST', '/api/products', data=regular_product_data)
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    product = data.get('product', {})
+                    regular_product_id = product.get('id')
+                    self.log_test('/api/products', 'POST', 'PASS', 
+                                f"Regular product created: {regular_product_data['name']}, ID: {regular_product_id}")
+                else:
+                    self.log_test('/api/products', 'POST', 'FAIL', 
+                                f"Creation failed: {data}")
+            else:
+                self.log_test('/api/products', 'POST', 'FAIL', 
+                            f"Status code: {response.status_code}, Response: {response.text}")
+                
+        except Exception as e:
+            self.log_test('/api/products', 'POST', 'FAIL', f"Exception: {str(e)}")
+        
+        # Test Case 3: POST /api/products - Create bundle product with portions
+        print("\n3. Testing POST /api/products - Create bundle product")
+        bundle_product_id = None
+        try:
+            bundle_product_data = {
+                "name": "Paket Nasi Komplit",
+                "sku": "PAKET001",
+                "price": 25000,
+                "stock": 50,
+                "is_bundle": True,
+                "has_portions": True,
+                "unit": "porsi",
+                "portion_size": 0.25,
+                "bundle_items": [],
+                "category_id": 1,
+                "brand_id": 1
+            }
+            
+            response = self.make_request('POST', '/api/products', data=bundle_product_data)
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    product = data.get('product', {})
+                    bundle_product_id = product.get('id')
+                    self.log_test('/api/products', 'POST', 'PASS', 
+                                f"Bundle product created: {bundle_product_data['name']}, ID: {bundle_product_id}")
+                else:
+                    self.log_test('/api/products', 'POST', 'FAIL', 
+                                f"Bundle creation failed: {data}")
+            else:
+                self.log_test('/api/products', 'POST', 'FAIL', 
+                            f"Status code: {response.status_code}, Response: {response.text}")
+                
+        except Exception as e:
+            self.log_test('/api/products', 'POST', 'FAIL', f"Exception: {str(e)}")
+        
+        # Test Case 4: GET /api/products/:id - Get single product
+        print("\n4. Testing GET /api/products/:id - Get single product")
+        if regular_product_id:
+            self.test_single_product_with_new_fields(regular_product_id)
+        elif bundle_product_id:
+            self.test_single_product_with_new_fields(bundle_product_id)
+        
+        # Test Case 5: PUT /api/products/:id - Update product with new fields
+        print("\n5. Testing PUT /api/products/:id - Update product")
+        if regular_product_id:
+            try:
+                update_data = {
+                    "has_portions": True,
+                    "unit": "gram",
+                    "portion_size": 250
+                }
+                
+                response = self.make_request('PUT', f'/api/products/{regular_product_id}', data=update_data)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log_test(f'/api/products/{regular_product_id}', 'PUT', 'PASS', 
+                                    "Product updated with new fields successfully")
+                        
+                        # Verify the update by getting the product again
+                        verify_response = self.make_request('GET', f'/api/products/{regular_product_id}')
+                        if verify_response.status_code == 200:
+                            verify_data = verify_response.json()
+                            if verify_data.get('success'):
+                                updated_product = verify_data.get('product', {})
+                                if (updated_product.get('has_portions') == True and 
+                                    updated_product.get('unit') == 'gram' and 
+                                    updated_product.get('portion_size') == 250):
+                                    self.log_test(f'/api/products/{regular_product_id}', 'GET', 'PASS', 
+                                                "Update verification successful")
+                                else:
+                                    self.log_test(f'/api/products/{regular_product_id}', 'GET', 'FAIL', 
+                                                f"Update not reflected: {updated_product}")
+                    else:
+                        self.log_test(f'/api/products/{regular_product_id}', 'PUT', 'FAIL', 
+                                    f"Update failed: {data}")
+                else:
+                    self.log_test(f'/api/products/{regular_product_id}', 'PUT', 'FAIL', 
+                                f"Status code: {response.status_code}")
+                    
+            except Exception as e:
+                self.log_test(f'/api/products/{regular_product_id}', 'PUT', 'FAIL', f"Exception: {str(e)}")
+        
+        # Clean up created test products
+        self.cleanup_test_products([regular_product_id, bundle_product_id])
+    
+    def test_single_product_with_new_fields(self, product_id: int):
+        """Test single product endpoint and verify new fields"""
+        try:
+            response = self.make_request('GET', f'/api/products/{product_id}')
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'product' in data:
+                    product = data['product']
+                    required_fields = ['is_bundle', 'bundle_items', 'has_portions', 'unit', 'portion_size']
+                    missing_fields = [field for field in required_fields if field not in product]
+                    
+                    if missing_fields:
+                        self.log_test(f'/api/products/{product_id}', 'GET', 'FAIL', 
+                                    f"Missing fields: {missing_fields}")
+                    else:
+                        self.log_test(f'/api/products/{product_id}', 'GET', 'PASS', 
+                                    f"Product: {product.get('name')}, All new fields present")
+                else:
+                    self.log_test(f'/api/products/{product_id}', 'GET', 'FAIL', 
+                                f"Unexpected response: {data}")
+            else:
+                self.log_test(f'/api/products/{product_id}', 'GET', 'FAIL', 
+                            f"Status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_test(f'/api/products/{product_id}', 'GET', 'FAIL', f"Exception: {str(e)}")
+    
+    def cleanup_test_products(self, product_ids):
+        """Clean up test products created during testing"""
+        print("\n6. Cleaning up test products")
+        for product_id in product_ids:
+            if product_id:
+                try:
+                    response = self.make_request('DELETE', f'/api/products/{product_id}')
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get('success'):
+                            self.log_test(f'/api/products/{product_id}', 'DELETE', 'PASS', 
+                                        "Test product cleaned up successfully")
+                        else:
+                            self.log_test(f'/api/products/{product_id}', 'DELETE', 'FAIL', 
+                                        f"Cleanup failed: {data}")
+                    else:
+                        self.log_test(f'/api/products/{product_id}', 'DELETE', 'FAIL', 
+                                    f"Status code: {response.status_code}")
+                except Exception as e:
+                    self.log_test(f'/api/products/{product_id}', 'DELETE', 'FAIL', f"Exception: {str(e)}")
     
     def test_single_product(self, product_id: int):
         """Test single product endpoint"""
