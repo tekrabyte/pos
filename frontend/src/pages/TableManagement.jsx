@@ -163,7 +163,7 @@ const TableManagement = () => {
   };
 
   const filteredTables = tables.filter(table =>
-    table.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    table.table_number?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status) => {
