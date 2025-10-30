@@ -25,6 +25,7 @@ const Layout = ({ children }) => {
     { icon: ShoppingCart, label: 'Pesanan', path: '/orders' },
     { icon: QrCode, label: 'Meja / Tables', path: '/tables' },
     { icon: Users, label: 'Pelanggan', path: '/customers' },
+    { icon: UsersIcon, label: 'Users & Staff', path: '/users' },
     { icon: Percent, label: 'Kupon', path: '/coupons' },
     { icon: BarChart3, label: 'Analytics', path: '/analytics' },
     { icon: Store, label: 'Outlet', path: '/outlets' },
