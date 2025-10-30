@@ -2023,7 +2023,10 @@ func GetRoles(c *fiber.Ctx) error {
                 roles = []map[string]interface{}{}
         }
 
-        return c.JSON(roles)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "roles":   roles,
+        })
 }
 
 func GetRole(c *fiber.Ctx) error {
