@@ -259,9 +259,10 @@ class POSAPITester:
                 "has_portions": True,
                 "unit": "porsi",
                 "portion_size": 0.25,
-                "bundle_items": [],
-                "category_id": 1,
-                "brand_id": 1
+                "bundle_items": "",
+                "description": "",
+                "image_url": "",
+                "status": "active"
             }
             
             response = self.make_request('POST', '/api/products', data=bundle_product_data)
