@@ -170,11 +170,12 @@ const CustomerCart = () => {
       localStorage.removeItem('cart');
       localStorage.removeItem('orderType');
       localStorage.removeItem('tableInfo');
+      localStorage.removeItem('guestInfo');
       
       toast.success('Pesanan berhasil dibuat!');
       
       // Redirect based on order type
-      if (customer) {
+      if (customer && !customer.isGuest) {
         navigate('/customer/orders');
       } else {
         // For guest dine-in, go back to menu
