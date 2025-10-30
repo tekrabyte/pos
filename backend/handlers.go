@@ -1492,7 +1492,6 @@ func CreateOutlet(c *fiber.Ctx) error {
         var req struct {
                 Name     string `json:"name"`
                 Address  string `json:"address"`
-                Phone    string `json:"phone"`
                 IsActive bool   `json:"is_active"`
         }
 
@@ -1505,9 +1504,9 @@ func CreateOutlet(c *fiber.Ctx) error {
         }
 
         result, err := DB.Exec(`
-                INSERT INTO outlets (name, address, phone, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, ?, NOW(), NOW())
-        `, req.Name, req.Address, req.Phone, req.IsActive)
+                INSERT INTO outlets (name, address, is_main, created_at)
+                VALUES (?, ?, ?, NOW())
+        `, req.Name, req.Address, req.IsActive)
 
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to create outlet: %v", err), fiber.StatusInternalServerError)
@@ -1522,8 +1521,7 @@ func CreateOutlet(c *fiber.Ctx) error {
                         "id":        id,
                         "name":      req.Name,
                         "address":   req.Address,
-                        "phone":     req.Phone,
-                        "is_active": req.IsActive,
+                        "is_main":   req.IsActive,
                 },
         })
 }
