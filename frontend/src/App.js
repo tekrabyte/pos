@@ -121,6 +121,11 @@ function App() {
                   <StoreSettings />
                 </ProtectedRoute>
               } />
+              <Route path="/users" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <UsersManagement />
+                </ProtectedRoute>
+              } />
               <Route path="/products" element={
                 <ProtectedRoute requiredAuth="staff">
                   <Products />
