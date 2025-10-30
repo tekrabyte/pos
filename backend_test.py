@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Comprehensive test suite for Fiber (Golang) POS API backend
-Tests all endpoints as specified in the review request
+Backend API Test Suite for POS System
+Tests specific endpoints as requested in the review request
 """
 
 import requests
@@ -15,6 +15,13 @@ class POSAPITester:
         self.token = None
         self.session = requests.Session()
         self.test_results = []
+        self.created_items = {
+            'brands': [],
+            'roles': [],
+            'outlets': [],
+            'payment_methods': [],
+            'coupons': []
+        }
         
     def log_test(self, endpoint: str, method: str, status: str, details: str = ""):
         """Log test results"""
