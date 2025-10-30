@@ -2732,35 +2732,35 @@ func UploadQRIS(c *fiber.Ctx) error {
 // ========== QRIS & PAYMENT SETTINGS ==========
 
 func GetQRISSettings(c *fiber.Ctx) error {
-        var qrisURL sql.NullString
-        var merchantName, merchantID string
+        // Return default values even if table doesn't exist
+        // This prevents 500 errors when store_settings table is not created yet
+        qrisURL := ""
+        merchantName := "QR Scan & Dine"
+        merchantID := ""
         
-        // Try to get QRIS image URL
-        err := DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_image_url'").Scan(&qrisURL)
-        if err != nil && err != sql.ErrNoRows {
-                // Return default empty values instead of error
-                return c.JSON(fiber.Map{
-                        "merchant_name":   "QR Scan & Dine",
-                        "merchant_id":     "",
-                        "qris_image_url":  "",
-                })
+        // Try to get values but don't fail if table doesn't exist
+        var tempURL sql.NullString
+        err := DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_image_url'").Scan(&tempURL)
+        if err == nil {
+                qrisURL = getNullString(tempURL)
         }
-
-        // Try to get merchant name
-        DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_name'").Scan(&merchantName)
         
-        // Try to get merchant ID
-        DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_id'").Scan(&merchantID)
-
-        url := getNullString(qrisURL)
-        if merchantName == "" {
-                merchantName = "QR Scan & Dine"
+        var tempName string
+        err = DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_name'").Scan(&tempName)
+        if err == nil && tempName != "" {
+                merchantName = tempName
+        }
+        
+        var tempID string  
+        err = DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_id'").Scan(&tempID)
+        if err == nil {
+                merchantID = tempID
         }
 
         return c.JSON(fiber.Map{
                 "merchant_name":   merchantName,
                 "merchant_id":     merchantID,
-                "qris_image_url":  url,
+                "qris_image_url":  qrisURL,
         })
 }
 
