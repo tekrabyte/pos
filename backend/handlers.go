@@ -1048,7 +1048,7 @@ func GetTableByToken(c *fiber.Ctx) error {
         var outletID sql.NullInt64
         var createdAt, updatedAt sql.NullTime
 
-        query := "SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE token = ?"
+        query := "SELECT id, table_number, qr_token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE token = ?"
         err := DB.QueryRow(query, token).Scan(&tid, &tableNumber, &ttoken, &qrCode, &status, &outletID, &createdAt, &updatedAt)
 
         if err == sql.ErrNoRows {
