@@ -1,45 +1,68 @@
 # Test Results and Issue Tracking
 
-## 🚀 LATEST UPDATE - 30 Oct 2025 (Session 2)
+## 🚀 LATEST UPDATE - 30 Oct 2025 (Session 3)
 
 ### ✅ COMPLETED IN THIS SESSION:
 
-**PHASE 1: Store Settings** ✅ FULLY IMPLEMENTED
-- Backend: Generic image upload endpoint `/api/upload/image?type=logos|banners`
-- Frontend: ThemeContext with full custom theme (Light/Dark/System mode, HSL color pickers)
-- StoreSettings page (`/store-settings`) with 3 tabs: Basic Settings, Theme & Colors, Banner Management
-- Banner carousel in CustomerMenu with active filtering
-- Theme applies globally to all pages
-- Menu added to Layout sidebar
+**PHASE 3: Order Management Split** ✅ FULLY IMPLEMENTED
+- POS Cashier Active Orders page (`/pos/orders`) - displays pending, processing, preparing orders
+- Admin Panel Sales Data page (`/orders`) - displays completed/cancelled orders with analytics
+- Date range filtering for sales data (default 30 days)
+- Export to CSV functionality
+- Payment verification buttons (approve/reject) in active orders
+- Auto-refresh every 10 seconds for active orders
+- Menu "Pesanan" renamed to "Data Penjualan"
+- New "Pesanan Aktif" button added to sidebar (orange gradient)
+- Backend endpoints: `/api/orders/filter?status=active` and `/api/orders/filter?status=completed`
 
-**PHASE 5: Users/Staff Management** ✅ FULLY IMPLEMENTED
-- UsersManagement page (`/users`) with full CRUD
-- Role-based badges (Admin/Cashier/Staff)
-- Search & filter by role
-- Add/Edit user dialog with password management
-- Delete with confirmation
-- Menu added to Layout sidebar
+**BUG FIXES** ✅ COMPLETED
+1. **Users Management** - Fixed authentication issue
+   - Changed from `axios` to `axiosInstance` for proper JWT token handling
+   - Fixed data parsing for response handling
+   - File: `/app/frontend/src/pages/UsersManagement.jsx`
 
-**PHASE 4: Dine-in Customer Flow** ✅ FULLY IMPLEMENTED
-- Table token detection from URL (?table=TOKEN)
-- Auto-load table info without login requirement
-- Optional guest info dialog (name & phone - can skip)
-- Guest info persisted through checkout
-- CustomerCart enhanced to display guest information
-- Payment proof upload working
-- Order submission working for both logged-in and guest users
+2. **Table Management** - Fixed "Bad Request: Table number is required"
+   - Changed form field from `name` to `table_number` to match backend API
+   - Updated all references throughout the component
+   - Fixed search filtering to use `table_number`
+   - File: `/app/frontend/src/pages/TableManagement.jsx`
 
-### 🚧 REMAINING WORK:
+3. **Outlets** - View list already exists and working properly
+   - Grid view with cards displaying outlet information
+   - Full CRUD functionality (Add, Edit, Delete)
+   - No changes needed
 
-**PHASE 3: Order Management Split** (Next Priority)
-- POS Cashier: Active Orders tab with payment verification
-- Admin Panel: Rename to "Data Penjualan" with analytics
+### 🚧 PENDING ISSUES (Requires Further Work):
 
-**PHASE 2: Payment Settings & Xendit Integration** (Final Priority)
-- Comprehensive payment settings page
-- QRIS static image management
-- Bank transfer settings
-- Xendit integration (API keys provided)
+**1. Store Settings - Color Palette Issue**
+- Current: Using HSL color picker
+- Required: Change to hex/rgb color palette picker
+- Impact: Theme color selection not user-friendly
+- Estimated fix: 30-45 minutes
+
+**2. Products Page - CRUD Not Working**
+- Issue: Products page CRUD operations failing
+- Likely cause: Using wrong axios instance or endpoint issues
+- Estimated fix: 15-20 minutes (similar to Users Management fix)
+
+**3. Add Product - Bundle/Paket Stock Logic**
+- Current: Bundle/paket doesn't have checkbox for "porsi"
+- Required: Add checkbox for portion-based products
+- Required: Stock should follow satuan (unit) quantity
+- Impact: Inventory management inaccurate for bundle products
+- Estimated fix: 60-90 minutes (complex logic)
+
+### 🎯 PHASE 2 READY TO START:
+
+**Payment Settings & Xendit Integration** (User Provided API Keys)
+- Xendit Secret Key: `xnd_development_I5qPPq8DhcYtuB89vQ1y5biXnxGS4AjSlQ0Bb1fNftFyFsyHVhXKFV43enMIZM`
+- Xendit Public Key: `xnd_public_development__50tT1QCfV2r3XAKAxZlPm6m6Huok3OtqfmcuF9wvbmJOpEJWNHE2JNgCzq9zS4`
+- Integration playbook obtained from expert agent
+- Features to implement:
+  * QRIS Dynamic QR code generation
+  * Virtual Account (Bank Transfer)
+  * E-wallet (OVO, GoPay, Dana, LinkAja, ShopeePay)
+  * Channel toggles (POS/Dine-in/Takeaway)
 
 ---
 
