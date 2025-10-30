@@ -974,7 +974,7 @@ func UpdateOrderStatus(c *fiber.Ctx) error {
 
 // Simplified handlers for other entities
 func GetTables(c *fiber.Ctx) error {
-        rows, err := DB.Query("SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY table_number")
+        rows, err := DB.Query("SELECT id, table_number, qr_token, qr_code, status, outlet_id, created_at, updated_at FROM tables ORDER BY table_number")
         if err != nil {
                 return c.JSON(fiber.Map{"success": true, "tables": []interface{}{}})
         }
@@ -992,7 +992,7 @@ func GetTables(c *fiber.Ctx) error {
                 tables = append(tables, map[string]interface{}{
                         "id":           id,
                         "table_number": tableNumber,
-                        "token":        token,
+                        "qr_token":        token,
                         "qr_code":      qrCode,
                         "status":       status,
                         "outlet_id":    outletID,
@@ -1017,7 +1017,7 @@ func GetTable(c *fiber.Ctx) error {
         var outletID sql.NullInt64
         var createdAt, updatedAt sql.NullTime
 
-        query := "SELECT id, table_number, token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE id = ?"
+        query := "SELECT id, table_number, qr_token, qr_code, status, outlet_id, created_at, updated_at FROM tables WHERE id = ?"
         err := DB.QueryRow(query, id).Scan(&tid, &tableNumber, &token, &qrCode, &status, &outletID, &createdAt, &updatedAt)
 
         if err == sql.ErrNoRows {
@@ -1030,7 +1030,7 @@ func GetTable(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{"success": true, "table": map[string]interface{}{
                 "id":           tid,
                 "table_number": tableNumber,
-                "token":        token,
+                "qr_token":        token,
                 "qr_code":      qrCode,
                 "status":       status,
                 "outlet_id":    outletID,
@@ -1040,7 +1040,7 @@ func GetTable(c *fiber.Ctx) error {
 }
 
 func GetTableByToken(c *fiber.Ctx) error {
-        token := c.Params("token")
+        token := c.Params("qr_token")
         
         var tid int
         var tableNumber, ttoken string
@@ -1160,7 +1160,7 @@ func RegenerateTableQR(c *fiber.Ctx) error {
         // Generate new token
         newToken := fmt.Sprintf("TBL-%d", time.Now().Unix())
 
-        _, err := DB.Exec("UPDATE tables SET token = ?, updated_at = NOW() WHERE id = ?", newToken, id)
+        _, err := DB.Exec("UPDATE tables SET qr_token = ?, updated_at = NOW() WHERE id = ?", newToken, id)
         if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to regenerate QR: %v", err), fiber.StatusInternalServerError)
         }
@@ -1168,7 +1168,7 @@ func RegenerateTableQR(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
                 "success": true,
                 "message": "QR code regenerated successfully",
-                "token":   newToken,
+                "qr_token":   newToken,
         })
 }
 
@@ -1997,7 +1997,7 @@ func CustomerLogin(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{
                 "success": true,
                 "message": "Login successful",
-                "token":   token,
+                "qr_token":   token,
                 "customer": fiber.Map{
                         "id":     customer.ID,
                         "name":   customer.Name,
