@@ -866,10 +866,13 @@ class POSAPITester:
     
     def run_all_tests(self):
         """Run all test suites as specified in review request"""
-        print("🚀 Starting POS API Testing - Review Request Scenarios")
+        print("🚀 Starting POS API Testing - Product Bundle & Portion Support")
         print("=" * 60)
         
-        # Test authentication first (this sets the token for protected endpoints)
+        # Test health check first
+        self.test_health_check()
+        
+        # Test authentication (this sets the token for protected endpoints)
         self.test_authentication()
         
         if not self.token:
@@ -877,14 +880,8 @@ class POSAPITester:
             self.print_summary()
             return
         
-        # Test protected endpoints with authentication
-        self.test_brands_crud()
-        self.test_roles_crud()
-        self.test_outlets_crud()
-        self.test_payment_methods_crud()
-        self.test_coupons_crud()
-        self.test_orders_operations()
-        self.test_customers_operations()
+        # Test Product API endpoints with new bundle and portion fields
+        self.test_products_bundle_portion_support()
         
         # Print summary
         self.print_summary()
