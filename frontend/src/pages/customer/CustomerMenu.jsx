@@ -474,6 +474,46 @@ const CustomerMenu = () => {
           </div>
         </div>
       )}
+
+      {/* Guest Info Dialog for Dine-in */}
+      <Dialog open={showGuestInfoDialog} onOpenChange={setShowGuestInfoDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Informasi Tamu (Opsional)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Anda dapat melewati langkah ini atau mengisi informasi untuk memudahkan pelayanan.
+            </p>
+            <div>
+              <Label htmlFor="guestName">Nama</Label>
+              <Input
+                id="guestName"
+                value={guestInfo.name}
+                onChange={(e) => setGuestInfo({ ...guestInfo, name: e.target.value })}
+                placeholder="Nama Anda (opsional)"
+              />
+            </div>
+            <div>
+              <Label htmlFor="guestPhone">No. HP</Label>
+              <Input
+                id="guestPhone"
+                value={guestInfo.phone}
+                onChange={(e) => setGuestInfo({ ...guestInfo, phone: e.target.value })}
+                placeholder="08xx xxxx xxxx (opsional)"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleSkipGuestInfo} className="w-full sm:w-auto">
+              Lewati
+            </Button>
+            <Button onClick={handleGuestCheckout} className="w-full sm:w-auto">
+              Lanjut ke Pembayaran
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
