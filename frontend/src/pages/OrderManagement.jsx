@@ -137,7 +137,7 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/orders`);
+      const response = await axiosInstance.get(`/orders`);
       // Handle both array and object responses
       const ordersData = Array.isArray(response.data) ? response.data : (response.data.orders || []);
       setOrders(ordersData);
