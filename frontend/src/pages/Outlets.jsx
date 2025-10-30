@@ -33,7 +33,7 @@ const Outlets = () => {
 
   const fetchOutlets = async () => {
     try {
-      const response = await axiosInstance.get(`${API}/outlets`);
+      const response = await axiosInstance.get(`/outlets`);
       setOutlets(response.data.outlets || response.data || []);
     } catch (error) {
       console.error('Error fetching outlets:', error);
@@ -47,10 +47,10 @@ const Outlets = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axiosInstance.put(`${API}/outlets/${editId}`, formData);
+        await axiosInstance.put(`/outlets/${editId}`, formData);
         toast.success('Outlet berhasil diperbarui');
       } else {
-        await axiosInstance.post(`${API}/outlets`, formData);
+        await axiosInstance.post(`/outlets`, formData);
         toast.success('Outlet berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -86,7 +86,7 @@ const Outlets = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus outlet ini?')) {
       try {
-        await axiosInstance.delete(`${API}/outlets/${id}`);
+        await axiosInstance.delete(`/outlets/${id}`);
         toast.success('Outlet berhasil dihapus');
         fetchOutlets();
       } catch (error) {

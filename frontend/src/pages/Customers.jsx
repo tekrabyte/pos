@@ -31,7 +31,7 @@ const Customers = () => {
   const fetchCustomers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axiosInstance.get(`${API}/customers`, {
+      const response = await axiosInstance.get(`/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCustomers(response.data.customers || response.data || []);

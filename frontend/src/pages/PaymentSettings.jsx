@@ -30,7 +30,7 @@ const PaymentSettings = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await axiosInstance.get(`${API}/payment-methods`);
+      const response = await axiosInstance.get(`/payment-methods`);
       setPaymentMethods(response.data);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
@@ -44,10 +44,10 @@ const PaymentSettings = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axiosInstance.put(`${API}/payment-methods/${editId}`, formData);
+        await axiosInstance.put(`/payment-methods/${editId}`, formData);
         toast.success('Metode pembayaran berhasil diperbarui');
       } else {
-        await axiosInstance.post(`${API}/payment-methods`, formData);
+        await axiosInstance.post(`/payment-methods`, formData);
         toast.success('Metode pembayaran berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -77,7 +77,7 @@ const PaymentSettings = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus metode pembayaran ini?')) {
       try {
-        await axiosInstance.delete(`${API}/payment-methods/${id}`);
+        await axiosInstance.delete(`/payment-methods/${id}`);
         toast.success('Metode pembayaran berhasil dihapus');
         fetchPaymentMethods();
       } catch (error) {

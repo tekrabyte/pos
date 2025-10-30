@@ -28,7 +28,7 @@ const Roles = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axiosInstance.get(`${API}/roles`);
+      const response = await axiosInstance.get(`/roles`);
       setRoles(response.data.roles || response.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -46,10 +46,10 @@ const Roles = () => {
         max_discount: parseFloat(formData.max_discount),
       };
       if (editId) {
-        await axiosInstance.put(`${API}/roles/${editId}`, payload);
+        await axiosInstance.put(`/roles/${editId}`, payload);
         toast.success('Role berhasil diperbarui');
       } else {
-        await axiosInstance.post(`${API}/roles`, payload);
+        await axiosInstance.post(`/roles`, payload);
         toast.success('Role berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -77,7 +77,7 @@ const Roles = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus role ini?')) {
       try {
-        await axiosInstance.delete(`${API}/roles/${id}`);
+        await axiosInstance.delete(`/roles/${id}`);
         toast.success('Role berhasil dihapus');
         fetchRoles();
       } catch (error) {

@@ -33,7 +33,7 @@ const Coupons = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await axiosInstance.get(`${API}/coupons`);
+      const response = await axiosInstance.get(`/coupons`);
       setCoupons(response.data.coupons || response.data || []);
     } catch (error) {
       console.error('Error fetching coupons:', error);
@@ -54,10 +54,10 @@ const Coupons = () => {
       };
 
       if (editId) {
-        await axiosInstance.put(`${API}/coupons/${editId}`, payload);
+        await axiosInstance.put(`/coupons/${editId}`, payload);
         toast.success('Kupon berhasil diperbarui');
       } else {
-        await axiosInstance.post(`${API}/coupons`, payload);
+        await axiosInstance.post(`/coupons`, payload);
         toast.success('Kupon berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -93,7 +93,7 @@ const Coupons = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus kupon ini?')) {
       try {
-        await axiosInstance.delete(`${API}/coupons/${id}`);
+        await axiosInstance.delete(`/coupons/${id}`);
         toast.success('Kupon berhasil dihapus');
         fetchCoupons();
       } catch (error) {
