@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Edit, Store, MapPin, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -33,7 +33,7 @@ const Outlets = () => {
 
   const fetchOutlets = async () => {
     try {
-      const response = await axios.get(`${API}/outlets`);
+      const response = await axiosInstance.get(`${API}/outlets`);
       setOutlets(response.data.outlets || response.data || []);
     } catch (error) {
       console.error('Error fetching outlets:', error);
@@ -47,10 +47,10 @@ const Outlets = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`${API}/outlets/${editId}`, formData);
+        await axiosInstance.put(`${API}/outlets/${editId}`, formData);
         toast.success('Outlet berhasil diperbarui');
       } else {
-        await axios.post(`${API}/outlets`, formData);
+        await axiosInstance.post(`${API}/outlets`, formData);
         toast.success('Outlet berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -86,7 +86,7 @@ const Outlets = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus outlet ini?')) {
       try {
-        await axios.delete(`${API}/outlets/${id}`);
+        await axiosInstance.delete(`${API}/outlets/${id}`);
         toast.success('Outlet berhasil dihapus');
         fetchOutlets();
       } catch (error) {

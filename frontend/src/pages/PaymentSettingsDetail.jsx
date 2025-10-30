@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload, Save, X, QrCode, CreditCard, Plus, Settings, Edit, Trash2, Smartphone } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -42,7 +42,7 @@ const PaymentSettingsDetail = () => {
 
   const fetchBankAccounts = async () => {
     try {
-      const response = await axios.get(`${API}/bank-accounts`);
+      const response = await axiosInstance.get(`${API}/bank-accounts`);
       // Handle both wrapped and unwrapped response formats
       let accounts = [];
       if (response.data?.bank_accounts) {
@@ -61,7 +61,7 @@ const PaymentSettingsDetail = () => {
 
   const fetchQrisSettings = async () => {
     try {
-      const response = await axios.get(`${API}/payment-settings/qris`);
+      const response = await axiosInstance.get(`${API}/payment-settings/qris`);
       if (response.data) {
         setQrisSettings(response.data);
         if (response.data.qris_image_url) {
@@ -75,7 +75,7 @@ const PaymentSettingsDetail = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await axios.get(`${API}/payment-methods`);
+      const response = await axiosInstance.get(`${API}/payment-methods`);
       // Handle both wrapped and unwrapped response formats
       let methods = [];
       if (response.data?.payment_methods) {
@@ -97,10 +97,10 @@ const PaymentSettingsDetail = () => {
     e.preventDefault();
     try {
       if (editMethodId) {
-        await axios.put(`${API}/payment-methods/${editMethodId}`, methodFormData);
+        await axiosInstance.put(`${API}/payment-methods/${editMethodId}`, methodFormData);
         toast.success('Metode pembayaran berhasil diperbarui');
       } else {
-        await axios.post(`${API}/payment-methods`, methodFormData);
+        await axiosInstance.post(`${API}/payment-methods`, methodFormData);
         toast.success('Metode pembayaran berhasil ditambahkan');
       }
       setShowMethodDialog(false);
@@ -130,7 +130,7 @@ const PaymentSettingsDetail = () => {
   const handleDeleteMethod = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus metode pembayaran ini?')) {
       try {
-        await axios.delete(`${API}/payment-methods/${id}`);
+        await axiosInstance.delete(`${API}/payment-methods/${id}`);
         toast.success('Metode pembayaran berhasil dihapus');
         fetchPaymentMethods();
       } catch (error) {
@@ -176,7 +176,7 @@ const PaymentSettingsDetail = () => {
         const formData = new FormData();
         formData.append('file', qrisImage);
 
-        const uploadResponse = await axios.post(`${API}/upload/qris`, formData, {
+        const uploadResponse = await axiosInstance.post(`${API}/upload/qris`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -185,7 +185,7 @@ const PaymentSettingsDetail = () => {
       }
 
       // Save QRIS settings
-      await axios.post(`${API}/payment-settings/qris`, {
+      await axiosInstance.post(`${API}/payment-settings/qris`, {
         merchant_name: qrisSettings.merchant_name,
         merchant_id: qrisSettings.merchant_id,
         qris_image_url: qrisImageUrl,
@@ -213,7 +213,7 @@ const PaymentSettingsDetail = () => {
     if (!accountNumber) return;
 
     try {
-      await axios.post(`${API}/bank-accounts`, {
+      await axiosInstance.post(`${API}/bank-accounts`, {
         account_name: accountName,
         bank_name: bankName,
         account_number: accountNumber,
@@ -231,7 +231,7 @@ const PaymentSettingsDetail = () => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus rekening ini?')) return;
 
     try {
-      await axios.delete(`${API}/bank-accounts/${id}`);
+      await axiosInstance.delete(`${API}/bank-accounts/${id}`);
       toast.success('Rekening bank berhasil dihapus');
       fetchBankAccounts();
     } catch (error) {

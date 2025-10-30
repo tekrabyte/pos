@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Edit, Trash2, Ticket } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -33,7 +33,7 @@ const Coupons = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await axios.get(`${API}/coupons`);
+      const response = await axiosInstance.get(`${API}/coupons`);
       setCoupons(response.data.coupons || response.data || []);
     } catch (error) {
       console.error('Error fetching coupons:', error);
@@ -54,10 +54,10 @@ const Coupons = () => {
       };
 
       if (editId) {
-        await axios.put(`${API}/coupons/${editId}`, payload);
+        await axiosInstance.put(`${API}/coupons/${editId}`, payload);
         toast.success('Kupon berhasil diperbarui');
       } else {
-        await axios.post(`${API}/coupons`, payload);
+        await axiosInstance.post(`${API}/coupons`, payload);
         toast.success('Kupon berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -93,7 +93,7 @@ const Coupons = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus kupon ini?')) {
       try {
-        await axios.delete(`${API}/coupons/${id}`);
+        await axiosInstance.delete(`${API}/coupons/${id}`);
         toast.success('Kupon berhasil dihapus');
         fetchCoupons();
       } catch (error) {

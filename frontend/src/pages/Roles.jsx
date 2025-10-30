@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, UserCog, Percent, Edit, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -28,7 +28,7 @@ const Roles = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get(`${API}/roles`);
+      const response = await axiosInstance.get(`${API}/roles`);
       setRoles(response.data.roles || response.data || []);
     } catch (error) {
       console.error('Error fetching roles:', error);
@@ -46,10 +46,10 @@ const Roles = () => {
         max_discount: parseFloat(formData.max_discount),
       };
       if (editId) {
-        await axios.put(`${API}/roles/${editId}`, payload);
+        await axiosInstance.put(`${API}/roles/${editId}`, payload);
         toast.success('Role berhasil diperbarui');
       } else {
-        await axios.post(`${API}/roles`, payload);
+        await axiosInstance.post(`${API}/roles`, payload);
         toast.success('Role berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -77,7 +77,7 @@ const Roles = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus role ini?')) {
       try {
-        await axios.delete(`${API}/roles/${id}`);
+        await axiosInstance.delete(`${API}/roles/${id}`);
         toast.success('Role berhasil dihapus');
         fetchRoles();
       } catch (error) {

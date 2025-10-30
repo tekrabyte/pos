@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { Bell, Clock, CheckCircle, XCircle, ChefHat, Package, Eye, Check, X, UtensilsCrossed, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -139,7 +139,7 @@ const OrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${API_URL}/orders`);
+      const response = await axiosInstance.get(`${API_URL}/orders`);
       // Handle both array and object responses
       const ordersData = Array.isArray(response.data) ? response.data : (response.data.orders || []);
       setOrders(ordersData);
@@ -157,7 +157,7 @@ const OrderManagement = () => {
 
   const fetchOrderDetails = async (orderId) => {
     try {
-      const response = await axios.get(`${API_URL}/orders/${orderId}`);
+      const response = await axiosInstance.get(`${API_URL}/orders/${orderId}`);
       // Handle both object formats
       const orderData = response.data.order || response.data;
       setSelectedOrder(orderData);
@@ -174,7 +174,7 @@ const OrderManagement = () => {
         updateData.payment_verified = paymentVerified;
       }
 
-      await axios.put(`${API_URL}/orders/${orderId}/status`, updateData);
+      await axiosInstance.put(`${API_URL}/orders/${orderId}/status`, updateData);
       toast.success(`Order ${newStatus}`);
       fetchOrders();
       

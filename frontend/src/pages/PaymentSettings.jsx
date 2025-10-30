@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, CreditCard, Smartphone, Edit, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import axiosInstance from '@/config/axios';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -30,7 +30,7 @@ const PaymentSettings = () => {
 
   const fetchPaymentMethods = async () => {
     try {
-      const response = await axios.get(`${API}/payment-methods`);
+      const response = await axiosInstance.get(`${API}/payment-methods`);
       setPaymentMethods(response.data);
     } catch (error) {
       console.error('Error fetching payment methods:', error);
@@ -44,10 +44,10 @@ const PaymentSettings = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`${API}/payment-methods/${editId}`, formData);
+        await axiosInstance.put(`${API}/payment-methods/${editId}`, formData);
         toast.success('Metode pembayaran berhasil diperbarui');
       } else {
-        await axios.post(`${API}/payment-methods`, formData);
+        await axiosInstance.post(`${API}/payment-methods`, formData);
         toast.success('Metode pembayaran berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -77,7 +77,7 @@ const PaymentSettings = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus metode pembayaran ini?')) {
       try {
-        await axios.delete(`${API}/payment-methods/${id}`);
+        await axiosInstance.delete(`${API}/payment-methods/${id}`);
         toast.success('Metode pembayaran berhasil dihapus');
         fetchPaymentMethods();
       } catch (error) {
