@@ -60,7 +60,7 @@
 - Impact: Theme color selection not user-friendly
 - Estimated fix: 30-45 minutes
 
-**3. Add Product - Bundle/Paket Stock Logic**
+**2. Add Product - Bundle/Paket Stock Logic**
 - Current: Bundle/paket doesn't have checkbox for "porsi"
 - Required: Add checkbox for portion-based products
 - Required: Stock should follow satuan (unit) quantity
