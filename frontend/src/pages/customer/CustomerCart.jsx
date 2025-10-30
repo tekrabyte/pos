@@ -50,6 +50,13 @@ const CustomerCart = () => {
       if (table) {
         setTableInfo(JSON.parse(table));
       }
+      // Load guest info if available
+      const guestData = localStorage.getItem('guestInfo');
+      if (guestData && !customerData) {
+        const guest = JSON.parse(guestData);
+        // Create temporary customer object for guest
+        setCustomer({ name: guest.name, phone: guest.phone, isGuest: true });
+      }
     } else {
       // For takeaway, check if customer is logged in
       if (!customerData) {
