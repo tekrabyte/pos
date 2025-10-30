@@ -2332,7 +2332,10 @@ func GetStoreSettings(c *fiber.Ctx) error {
                 "updated_at":        updatedAt,
         }
 
-        return c.JSON(settings)
+        return c.JSON(fiber.Map{
+                "success":  true,
+                "settings": settings,
+        })
 }
 
 func UpdateStoreSettings(c *fiber.Ctx) error {
