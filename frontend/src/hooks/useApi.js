@@ -60,8 +60,14 @@ export const useFetch = (url, options = {}) => {
           result = response.orders;
         } else if (response.coupons) {
           result = response.coupons;
+        } else if (response.roles) {
+          result = response.roles;
+        } else if (response.banners) {
+          result = response.banners;
         } else if (response.analytics) {
           result = response.analytics;
+        } else if (response.settings) {
+          result = response.settings;
         } else if (response.data) {
           result = response.data;
         }
