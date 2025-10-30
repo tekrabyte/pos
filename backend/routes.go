@@ -130,6 +130,7 @@ func SetupRoutes(app *fiber.App) {
 	// File Uploads
 	api.Post("/upload/payment-proof", UploadPaymentProof)
 	api.Post("/upload/qris", UploadQRIS)
+	api.Post("/upload/image", UploadImage)
 
 	// QRIS & Payment Settings
 	api.Get("/payment-settings/qris", GetQRISSettings)
