@@ -74,6 +74,9 @@ const AddProduct = () => {
         status: productData.status || 'active',
         is_bundle: productData.is_bundle || false,
         bundle_items: productData.bundle_items || [],
+        has_portions: productData.has_portions || false,
+        unit: productData.unit || 'pcs',
+        portion_size: productData.portion_size || 1.0,
       });
     } catch (error) {
       console.error('Error fetching product:', error);
