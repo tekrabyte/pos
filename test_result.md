@@ -344,7 +344,7 @@ The application was experiencing multiple React rendering errors and API endpoin
 - Server binary rebuilt with latest changes (Oct 29 22:28)
 
 ✅ **Frontend**: Running with proper configuration
-- Environment variable properly set: `REACT_APP_BACKEND_URL=https://test-analysis.preview.emergentagent.com/api`
+- Environment variable properly set: `REACT_APP_BACKEND_URL=https://test-results-viewer-1.preview.emergentagent.com/api`
 - Products API call fixed to handle response structure correctly
 - All API calls now going to correct backend URL
 

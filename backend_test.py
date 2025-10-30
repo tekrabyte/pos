@@ -733,7 +733,7 @@ class POSAPITester:
 def main():
     """Main test execution"""
     # Use the external URL as specified in the review request
-    base_url = "https://test-analysis.preview.emergentagent.com"
+    base_url = "https://test-results-viewer-1.preview.emergentagent.com"
     
     print(f"Testing POS API at: {base_url}")
     print("Testing endpoints as specified in review request:")
