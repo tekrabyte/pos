@@ -1311,7 +1311,10 @@ func GetCoupons(c *fiber.Ctx) error {
                 coupons = []map[string]interface{}{}
         }
 
-        return c.JSON(coupons)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "coupons": coupons,
+        })
 }
 
 func GetCoupon(c *fiber.Ctx) error {
