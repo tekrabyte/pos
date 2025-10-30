@@ -1365,7 +1365,10 @@ func GetCoupon(c *fiber.Ctx) error {
                 coupon["used_count"] = usedCount.Int64
         }
 
-        return c.JSON(coupon)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "coupon":  coupon,
+        })
 }
 
 func CreateCoupon(c *fiber.Ctx) error {
