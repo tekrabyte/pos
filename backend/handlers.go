@@ -418,33 +418,48 @@ func CreateProduct(c *fiber.Ctx) error {
 
 // Update Product
 func UpdateProduct(c *fiber.Ctx) error {
-        id := c.Params("id")
-        
-        var req struct {
-                Name        string  `json:"name"`
-                SKU         string  `json:"sku"`
-                Price       float64 `json:"price"`
-                Stock       int     `json:"stock"`
-                CategoryID  *int    `json:"category_id"`
-                BrandID     *int    `json:"brand_id"`
-                Description string  `json:"description"`
-                ImageURL    string  `json:"image_url"`
-                Status      string  `json:"status"`
-        }
+	id := c.Params("id")
+	
+	var req struct {
+		Name        string  `json:"name"`
+		SKU         string  `json:"sku"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
+		CategoryID  *int    `json:"category_id"`
+		BrandID     *int    `json:"brand_id"`
+		Description string  `json:"description"`
+		ImageURL    string  `json:"image_url"`
+		Status      string  `json:"status"`
+		IsBundle    bool    `json:"is_bundle"`
+		BundleItems string  `json:"bundle_items"` // JSON string
+		HasPortions bool    `json:"has_portions"`
+		Unit        string  `json:"unit"`
+		PortionSize float64 `json:"portion_size"`
+	}
 
-        if err := c.BodyParser(&req); err != nil {
-                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
-        }
+	if err := c.BodyParser(&req); err != nil {
+		return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+	}
 
-        _, err := DB.Exec(`
-                UPDATE products 
-                SET name = ?, sku = ?, price = ?, stock = ?, category_id = ?, brand_id = ?, 
-                    description = ?, image_url = ?, status = ?, updated_at = NOW()
-                WHERE id = ?
-        `, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, 
-           req.Description, req.ImageURL, req.Status, id)
+	// Set defaults
+	if req.Unit == "" {
+		req.Unit = "pcs"
+	}
+	if req.PortionSize == 0 {
+		req.PortionSize = 1.00
+	}
 
-        if err != nil {
+	_, err := DB.Exec(`
+		UPDATE products 
+		SET name = ?, sku = ?, price = ?, stock = ?, category_id = ?, brand_id = ?, 
+		    description = ?, image_url = ?, status = ?, is_bundle = ?, bundle_items = ?,
+		    has_portions = ?, unit = ?, portion_size = ?, updated_at = NOW()
+		WHERE id = ?
+	`, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, 
+	   req.Description, req.ImageURL, req.Status, req.IsBundle, req.BundleItems,
+	   req.HasPortions, req.Unit, req.PortionSize, id)
+
+	if err != nil {
                 return ErrorResponse(c, fmt.Sprintf("Failed to update product: %v", err), fiber.StatusInternalServerError)
         }
 
