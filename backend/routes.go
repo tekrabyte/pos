@@ -50,12 +50,14 @@ func SetupRoutes(app *fiber.App) {
 	api.Delete("/brands/:id", AuthMiddleware, DeleteBrand)
 
 	// Orders
+	api.Get("/orders/filter", GetOrdersByStatus)
 	api.Get("/orders", GetOrders)
 	api.Get("/orders/:id", GetOrder)
 	api.Post("/orders", AuthMiddleware, CreateOrder)
 	api.Put("/orders/:id", AuthMiddleware, UpdateOrder)
 	api.Delete("/orders/:id", AuthMiddleware, DeleteOrder)
 	api.Put("/orders/:id/status", AuthMiddleware, UpdateOrderStatus)
+	api.Put("/orders/:id/verify-payment", AuthMiddleware, VerifyPayment)
 
 	// Tables
 	api.Get("/tables", GetTables)
