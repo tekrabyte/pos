@@ -2733,24 +2733,34 @@ func UploadQRIS(c *fiber.Ctx) error {
 
 func GetQRISSettings(c *fiber.Ctx) error {
         var qrisURL sql.NullString
+        var merchantName, merchantID string
+        
+        // Try to get QRIS image URL
         err := DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_image_url'").Scan(&qrisURL)
-
-        if err == sql.ErrNoRows {
+        if err != nil && err != sql.ErrNoRows {
+                // Return default empty values instead of error
                 return c.JSON(fiber.Map{
-                        "qris_image_url": "",
+                        "merchant_name":   "QR Scan & Dine",
+                        "merchant_id":     "",
+                        "qris_image_url":  "",
                 })
         }
-        if err != nil {
-                return ErrorResponse(c, "Failed to fetch QRIS settings", fiber.StatusInternalServerError)
-        }
 
-        url := ""
-        if qrisURL.Valid {
-                url = qrisURL.String
+        // Try to get merchant name
+        DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_name'").Scan(&merchantName)
+        
+        // Try to get merchant ID
+        DB.QueryRow("SELECT value FROM store_settings WHERE `key` = 'qris_merchant_id'").Scan(&merchantID)
+
+        url := getNullString(qrisURL)
+        if merchantName == "" {
+                merchantName = "QR Scan & Dine"
         }
 
         return c.JSON(fiber.Map{
-                "qris_image_url": url,
+                "merchant_name":   merchantName,
+                "merchant_id":     merchantID,
+                "qris_image_url":  url,
         })
 }
 
