@@ -221,10 +221,7 @@ class POSAPITester:
                 "unit": "kg",
                 "portion_size": 1,
                 "is_bundle": False,
-                "bundle_items": "",
-                "description": "",
-                "image_url": "",
-                "status": "active"
+                "bundle_items": "[]"
             }
             
             response = self.make_request('POST', '/api/products', data=regular_product_data)
