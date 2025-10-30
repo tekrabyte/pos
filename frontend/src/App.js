@@ -138,6 +138,11 @@ function App() {
                   <AddProduct />
                 </ProtectedRoute>
               } />
+              <Route path="/products/edit/:id" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <AddProduct />
+                </ProtectedRoute>
+              } />
               <Route path="/brands" element={
                 <ProtectedRoute requiredAuth="staff">
                   <Brands />
