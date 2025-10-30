@@ -226,8 +226,15 @@ const CustomerCart = () => {
             )}
             {!customer && orderType === 'dine-in' && (
               <div className="text-right">
-                <p className="text-sm text-green-600">Guest Dine-in</p>
+                <p className="text-sm text-green-600 font-semibold">Guest Dine-in</p>
                 <p className="text-xs text-gray-500">Login tidak diperlukan</p>
+              </div>
+            )}
+            {customer && customer.isGuest && (
+              <div className="text-right">
+                <p className="text-sm text-green-600 font-semibold">Guest Dine-in</p>
+                <p className="text-sm">{customer.name || 'Tamu'}</p>
+                {customer.phone && <p className="text-sm text-gray-600">{customer.phone}</p>}
               </div>
             )}
           </div>
