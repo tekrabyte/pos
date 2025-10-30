@@ -51,113 +51,120 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Main Route - E-commerce Menu */}
-            <Route path="/" element={<CustomerMenu />} />
-            
-            {/* Auth Routes */}
-            <Route path="/staff/login" element={<StaffLogin />} />
-            <Route path="/customer/login" element={<CustomerLogin />} />
-            <Route path="/customer/register" element={<CustomerRegister />} />
-            <Route path="/customer/auth-cart" element={<CustomerAuthCart />} />
-            
-            {/* Customer Routes */}
-            <Route path="/customer/menu" element={<CustomerMenu />} />
-            <Route path="/customer/cart" element={<CustomerCart />} />
-            <Route path="/customer/orders" element={
-              <ProtectedRoute requiredAuth="customer">
-                <CustomerOrders />
-              </ProtectedRoute>
-            } />
-            <Route path="/customer/profile" element={
-              <ProtectedRoute requiredAuth="customer">
-                <CustomerProfileNew />
-              </ProtectedRoute>
-            } />
-            
-            {/* Staff/Admin Routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/analytics" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Analytics />
-              </ProtectedRoute>
-            } />
-            <Route path="/customers" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Customers />
-              </ProtectedRoute>
-            } />
-            <Route path="/coupons" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Coupons />
-              </ProtectedRoute>
-            } />
-            <Route path="/outlets" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Outlets />
-              </ProtectedRoute>
-            } />
-            <Route path="/roles" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Roles />
-              </ProtectedRoute>
-            } />
-            <Route path="/payment-settings" element={
-              <ProtectedRoute requiredAuth="staff">
-                <PaymentSettingsDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/products" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Products />
-              </ProtectedRoute>
-            } />
-            <Route path="/products/add" element={
-              <ProtectedRoute requiredAuth="staff">
-                <AddProduct />
-              </ProtectedRoute>
-            } />
-            <Route path="/brands" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Brands />
-              </ProtectedRoute>
-            } />
-            <Route path="/categories" element={
-              <ProtectedRoute requiredAuth="staff">
-                <Categories />
-              </ProtectedRoute>
-            } />
-            <Route path="/pos" element={
-              <ProtectedRoute requiredAuth="staff">
-                <POSCashier />
-              </ProtectedRoute>
-            } />
-            <Route path="/kiosk" element={<Kiosk />} />
-            <Route path="/tables" element={
-              <ProtectedRoute requiredAuth="staff">
-                <TableManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="/orders" element={
-              <ProtectedRoute requiredAuth="staff">
-                <OrderManagement />
-              </ProtectedRoute>
-            } />
-            
-            {/* 404 Not Found */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-      <Toaster position="top-right" />
-    </div>
+    <ThemeProvider>
+      <div className="App">
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Main Route - E-commerce Menu */}
+              <Route path="/" element={<CustomerMenu />} />
+              
+              {/* Auth Routes */}
+              <Route path="/staff/login" element={<StaffLogin />} />
+              <Route path="/customer/login" element={<CustomerLogin />} />
+              <Route path="/customer/register" element={<CustomerRegister />} />
+              <Route path="/customer/auth-cart" element={<CustomerAuthCart />} />
+              
+              {/* Customer Routes */}
+              <Route path="/customer/menu" element={<CustomerMenu />} />
+              <Route path="/customer/cart" element={<CustomerCart />} />
+              <Route path="/customer/orders" element={
+                <ProtectedRoute requiredAuth="customer">
+                  <CustomerOrders />
+                </ProtectedRoute>
+              } />
+              <Route path="/customer/profile" element={
+                <ProtectedRoute requiredAuth="customer">
+                  <CustomerProfileNew />
+                </ProtectedRoute>
+              } />
+              
+              {/* Staff/Admin Routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/analytics" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Analytics />
+                </ProtectedRoute>
+              } />
+              <Route path="/customers" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Customers />
+                </ProtectedRoute>
+              } />
+              <Route path="/coupons" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Coupons />
+                </ProtectedRoute>
+              } />
+              <Route path="/outlets" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Outlets />
+                </ProtectedRoute>
+              } />
+              <Route path="/roles" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Roles />
+                </ProtectedRoute>
+              } />
+              <Route path="/payment-settings" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <PaymentSettingsDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/store-settings" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <StoreSettings />
+                </ProtectedRoute>
+              } />
+              <Route path="/products" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Products />
+                </ProtectedRoute>
+              } />
+              <Route path="/products/add" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <AddProduct />
+                </ProtectedRoute>
+              } />
+              <Route path="/brands" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Brands />
+                </ProtectedRoute>
+              } />
+              <Route path="/categories" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <Categories />
+                </ProtectedRoute>
+              } />
+              <Route path="/pos" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <POSCashier />
+                </ProtectedRoute>
+              } />
+              <Route path="/kiosk" element={<Kiosk />} />
+              <Route path="/tables" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <TableManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/orders" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <OrderManagement />
+                </ProtectedRoute>
+              } />
+              
+              {/* 404 Not Found */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+        <Toaster position="top-right" />
+      </div>
+    </ThemeProvider>
   );
 }
 
