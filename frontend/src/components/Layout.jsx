@@ -134,6 +134,16 @@ const Layout = ({ children }) => {
             <span className="font-medium">Kasir / POS</span>
           </button>
 
+          {/* POS Active Orders Button */}
+          <button
+            onClick={() => navigate('/pos/orders')}
+            data-testid="menu-pos-orders"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 transition-all mt-2"
+          >
+            <ClipboardList className="h-5 w-5" />
+            <span className="font-medium">Pesanan Aktif</span>
+          </button>
+
           {/* Kiosk Button */}
           <button
             onClick={() => navigate('/kiosk')}
