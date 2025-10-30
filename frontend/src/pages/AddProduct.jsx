@@ -57,18 +57,20 @@ const AddProduct = () => {
   const fetchProduct = async () => {
     try {
       const response = await api.get(`/products/${id}`);
+      // Handle response structure - could be response directly or response.product
+      const productData = response.product || response;
       setFormData({
-        name: response.name,
-        sku: response.sku,
-        price: response.price,
-        stock: response.stock,
-        category_id: response.category_id || null,
-        brand_id: response.brand_id || null,
-        description: response.description || '',
-        image_url: response.image_url || '',
-        status: response.status,
-        is_bundle: response.is_bundle || false,
-        bundle_items: response.bundle_items || [],
+        name: productData.name || '',
+        sku: productData.sku || '',
+        price: productData.price || '',
+        stock: productData.stock || '',
+        category_id: productData.category_id || null,
+        brand_id: productData.brand_id || null,
+        description: productData.description || '',
+        image_url: productData.image_url || '',
+        status: productData.status || 'active',
+        is_bundle: productData.is_bundle || false,
+        bundle_items: productData.bundle_items || [],
       });
     } catch (error) {
       console.error('Error fetching product:', error);
