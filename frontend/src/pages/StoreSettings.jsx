@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { useTheme } from '@/contexts/ThemeContext';
+import { HexColorPicker } from 'react-colorful';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
