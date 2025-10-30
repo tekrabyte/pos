@@ -30,6 +30,7 @@ const Layout = ({ children }) => {
     { icon: Store, label: 'Outlet', path: '/outlets' },
     { icon: UserCog, label: 'Roles', path: '/roles' },
     { icon: CreditCard, label: 'Payment', path: '/payment-settings' },
+    { icon: Settings, label: 'Store Settings', path: '/store-settings' },
   ];
 
   const productMenu = [
