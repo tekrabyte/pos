@@ -123,8 +123,9 @@ class POSAPITester:
         
         # If no credentials worked, log the failure
         if not self.token:
+            attempted_creds = [f"{cred['username']}/{cred['password']}" for cred in login_attempts]
             self.log_test('/api/auth/staff/login', 'POST', 'FAIL', 
-                        f"All login attempts failed. Tried: {[f\"{cred['username']}/{cred['password']}\" for cred in login_attempts]}")
+                        f"All login attempts failed. Tried: {attempted_creds}")
         
         # Test get current user (requires token)
         if self.token:
