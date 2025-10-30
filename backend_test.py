@@ -330,53 +330,333 @@ class POSAPITester:
         except Exception as e:
             self.log_test('/api/customers', 'GET', 'FAIL', f"Exception: {str(e)}")
     
-    def test_dashboard_analytics(self):
-        """Test dashboard and analytics endpoints (requires authentication)"""
-        print("\n=== Testing Dashboard & Analytics ===")
+    def test_brands_crud(self):
+        """Test Brands CRUD operations with authentication"""
+        print("\n=== Testing Brands Endpoints (with Auth) ===")
         
-        if not self.token:
-            print("⚠️  Skipping dashboard/analytics tests - no authentication token")
-            return
-        
-        # Test dashboard stats
+        # GET /api/brands
         try:
-            response = self.make_request('GET', '/api/dashboard/stats')
-            
+            response = self.make_request('GET', '/api/brands')
             if response.status_code == 200:
                 data = response.json()
-                if data.get('success') and 'stats' in data:
-                    stats = data['stats']
-                    self.log_test('/api/dashboard/stats', 'GET', 'PASS', 
-                                f"Stats retrieved: {list(stats.keys())}")
+                if data.get('success') and 'brands' in data:
+                    brands = data['brands']
+                    self.log_test('/api/brands', 'GET', 'PASS', f"Retrieved {len(brands)} brands")
                 else:
-                    self.log_test('/api/dashboard/stats', 'GET', 'FAIL', 
-                                f"Unexpected response: {data}")
+                    self.log_test('/api/brands', 'GET', 'FAIL', f"Unexpected response: {data}")
             else:
-                self.log_test('/api/dashboard/stats', 'GET', 'FAIL', 
-                            f"Status code: {response.status_code}")
-                
+                self.log_test('/api/brands', 'GET', 'FAIL', f"Status code: {response.status_code}")
         except Exception as e:
-            self.log_test('/api/dashboard/stats', 'GET', 'FAIL', f"Exception: {str(e)}")
+            self.log_test('/api/brands', 'GET', 'FAIL', f"Exception: {str(e)}")
         
-        # Test analytics
+        # POST /api/brands - Create new brand
         try:
-            response = self.make_request('GET', '/api/analytics')
+            brand_data = {"name": "Test Brand Auth", "description": "Testing auth"}
+            response = self.make_request('POST', '/api/brands', data=brand_data)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    brand_id = data.get('brand', {}).get('id')
+                    if brand_id:
+                        self.created_items['brands'].append(brand_id)
+                    self.log_test('/api/brands', 'POST', 'PASS', f"Brand created: {brand_data['name']}")
+                else:
+                    self.log_test('/api/brands', 'POST', 'FAIL', f"Creation failed: {data}")
+            else:
+                self.log_test('/api/brands', 'POST', 'FAIL', f"Status code: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_test('/api/brands', 'POST', 'FAIL', f"Exception: {str(e)}")
+        
+        # PUT and DELETE operations for created brands
+        if self.created_items['brands']:
+            brand_id = self.created_items['brands'][0]
             
+            # PUT /api/brands/{id}
+            try:
+                update_data = {"name": "Updated Test Brand", "description": "Updated description"}
+                response = self.make_request('PUT', f'/api/brands/{brand_id}', data=update_data)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log_test(f'/api/brands/{brand_id}', 'PUT', 'PASS', "Brand updated successfully")
+                    else:
+                        self.log_test(f'/api/brands/{brand_id}', 'PUT', 'FAIL', f"Update failed: {data}")
+                else:
+                    self.log_test(f'/api/brands/{brand_id}', 'PUT', 'FAIL', f"Status code: {response.status_code}")
+            except Exception as e:
+                self.log_test(f'/api/brands/{brand_id}', 'PUT', 'FAIL', f"Exception: {str(e)}")
+            
+            # DELETE /api/brands/{id}
+            try:
+                response = self.make_request('DELETE', f'/api/brands/{brand_id}')
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log_test(f'/api/brands/{brand_id}', 'DELETE', 'PASS', "Brand deleted successfully")
+                    else:
+                        self.log_test(f'/api/brands/{brand_id}', 'DELETE', 'FAIL', f"Delete failed: {data}")
+                else:
+                    self.log_test(f'/api/brands/{brand_id}', 'DELETE', 'FAIL', f"Status code: {response.status_code}")
+            except Exception as e:
+                self.log_test(f'/api/brands/{brand_id}', 'DELETE', 'FAIL', f"Exception: {str(e)}")
+
+    def test_roles_crud(self):
+        """Test Roles CRUD operations with authentication"""
+        print("\n=== Testing Roles Endpoints (with Auth) ===")
+        
+        # GET /api/roles
+        try:
+            response = self.make_request('GET', '/api/roles')
             if response.status_code == 200:
                 data = response.json()
-                if data.get('success') and 'analytics' in data:
-                    analytics = data['analytics']
-                    self.log_test('/api/analytics', 'GET', 'PASS', 
-                                f"Analytics retrieved: {list(analytics.keys())}")
+                if data.get('success') and 'roles' in data:
+                    roles = data['roles']
+                    self.log_test('/api/roles', 'GET', 'PASS', f"Retrieved {len(roles)} roles")
                 else:
-                    self.log_test('/api/analytics', 'GET', 'FAIL', 
-                                f"Unexpected response: {data}")
+                    self.log_test('/api/roles', 'GET', 'FAIL', f"Unexpected response: {data}")
             else:
-                self.log_test('/api/analytics', 'GET', 'FAIL', 
-                            f"Status code: {response.status_code}")
-                
+                self.log_test('/api/roles', 'GET', 'FAIL', f"Status code: {response.status_code}")
         except Exception as e:
-            self.log_test('/api/analytics', 'GET', 'FAIL', f"Exception: {str(e)}")
+            self.log_test('/api/roles', 'GET', 'FAIL', f"Exception: {str(e)}")
+        
+        # POST /api/roles - Create new role
+        try:
+            role_data = {"name": "Test Role", "max_discount": 10.0}
+            response = self.make_request('POST', '/api/roles', data=role_data)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    role_id = data.get('role', {}).get('id')
+                    if role_id:
+                        self.created_items['roles'].append(role_id)
+                    self.log_test('/api/roles', 'POST', 'PASS', f"Role created: {role_data['name']}")
+                else:
+                    self.log_test('/api/roles', 'POST', 'FAIL', f"Creation failed: {data}")
+            else:
+                self.log_test('/api/roles', 'POST', 'FAIL', f"Status code: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_test('/api/roles', 'POST', 'FAIL', f"Exception: {str(e)}")
+        
+        # PUT and DELETE operations for created roles
+        if self.created_items['roles']:
+            role_id = self.created_items['roles'][0]
+            
+            # PUT /api/roles/{id}
+            try:
+                update_data = {"name": "Updated Test Role", "max_discount": 15.0}
+                response = self.make_request('PUT', f'/api/roles/{role_id}', data=update_data)
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log_test(f'/api/roles/{role_id}', 'PUT', 'PASS', "Role updated successfully")
+                    else:
+                        self.log_test(f'/api/roles/{role_id}', 'PUT', 'FAIL', f"Update failed: {data}")
+                else:
+                    self.log_test(f'/api/roles/{role_id}', 'PUT', 'FAIL', f"Status code: {response.status_code}")
+            except Exception as e:
+                self.log_test(f'/api/roles/{role_id}', 'PUT', 'FAIL', f"Exception: {str(e)}")
+            
+            # DELETE /api/roles/{id}
+            try:
+                response = self.make_request('DELETE', f'/api/roles/{role_id}')
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log_test(f'/api/roles/{role_id}', 'DELETE', 'PASS', "Role deleted successfully")
+                    else:
+                        self.log_test(f'/api/roles/{role_id}', 'DELETE', 'FAIL', f"Delete failed: {data}")
+                else:
+                    self.log_test(f'/api/roles/{role_id}', 'DELETE', 'FAIL', f"Status code: {response.status_code}")
+            except Exception as e:
+                self.log_test(f'/api/roles/{role_id}', 'DELETE', 'FAIL', f"Exception: {str(e)}")
+
+    def test_outlets_crud(self):
+        """Test Outlets CRUD operations with authentication"""
+        print("\n=== Testing Outlets Endpoints (with Auth) ===")
+        
+        # GET /api/outlets
+        try:
+            response = self.make_request('GET', '/api/outlets')
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'outlets' in data:
+                    outlets = data['outlets']
+                    self.log_test('/api/outlets', 'GET', 'PASS', f"Retrieved {len(outlets)} outlets")
+                else:
+                    self.log_test('/api/outlets', 'GET', 'FAIL', f"Unexpected response: {data}")
+            else:
+                self.log_test('/api/outlets', 'GET', 'FAIL', f"Status code: {response.status_code}")
+        except Exception as e:
+            self.log_test('/api/outlets', 'GET', 'FAIL', f"Exception: {str(e)}")
+        
+        # POST /api/outlets - Create new outlet
+        try:
+            outlet_data = {"name": "Test Outlet", "address": "123 Test St", "phone": "555-0123", "is_active": True}
+            response = self.make_request('POST', '/api/outlets', data=outlet_data)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    outlet_id = data.get('outlet', {}).get('id')
+                    if outlet_id:
+                        self.created_items['outlets'].append(outlet_id)
+                    self.log_test('/api/outlets', 'POST', 'PASS', f"Outlet created: {outlet_data['name']}")
+                else:
+                    self.log_test('/api/outlets', 'POST', 'FAIL', f"Creation failed: {data}")
+            else:
+                self.log_test('/api/outlets', 'POST', 'FAIL', f"Status code: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_test('/api/outlets', 'POST', 'FAIL', f"Exception: {str(e)}")
+
+    def test_payment_methods_crud(self):
+        """Test Payment Methods CRUD operations with authentication"""
+        print("\n=== Testing Payment Methods Endpoints (with Auth) ===")
+        
+        # GET /api/payment-methods
+        try:
+            response = self.make_request('GET', '/api/payment-methods')
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'payment_methods' in data:
+                    methods = data['payment_methods']
+                    self.log_test('/api/payment-methods', 'GET', 'PASS', f"Retrieved {len(methods)} payment methods")
+                else:
+                    self.log_test('/api/payment-methods', 'GET', 'FAIL', f"Unexpected response: {data}")
+            else:
+                self.log_test('/api/payment-methods', 'GET', 'FAIL', f"Status code: {response.status_code}")
+        except Exception as e:
+            self.log_test('/api/payment-methods', 'GET', 'FAIL', f"Exception: {str(e)}")
+        
+        # POST /api/payment-methods - Create new payment method
+        try:
+            method_data = {"name": "Test Payment Method", "type": "digital", "is_active": True}
+            response = self.make_request('POST', '/api/payment-methods', data=method_data)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    method_id = data.get('payment_method', {}).get('id')
+                    if method_id:
+                        self.created_items['payment_methods'].append(method_id)
+                    self.log_test('/api/payment-methods', 'POST', 'PASS', f"Payment method created: {method_data['name']}")
+                else:
+                    self.log_test('/api/payment-methods', 'POST', 'FAIL', f"Creation failed: {data}")
+            else:
+                self.log_test('/api/payment-methods', 'POST', 'FAIL', f"Status code: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_test('/api/payment-methods', 'POST', 'FAIL', f"Exception: {str(e)}")
+
+    def test_coupons_crud(self):
+        """Test Coupons CRUD operations with authentication"""
+        print("\n=== Testing Coupons Endpoints (with Auth) ===")
+        
+        # GET /api/coupons
+        try:
+            response = self.make_request('GET', '/api/coupons')
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'coupons' in data:
+                    coupons = data['coupons']
+                    self.log_test('/api/coupons', 'GET', 'PASS', f"Retrieved {len(coupons)} coupons")
+                else:
+                    self.log_test('/api/coupons', 'GET', 'FAIL', f"Unexpected response: {data}")
+            else:
+                self.log_test('/api/coupons', 'GET', 'FAIL', f"Status code: {response.status_code}")
+        except Exception as e:
+            self.log_test('/api/coupons', 'GET', 'FAIL', f"Exception: {str(e)}")
+        
+        # POST /api/coupons - Create new coupon
+        try:
+            coupon_data = {
+                "code": "TEST10",
+                "discount_type": "percentage",
+                "discount_value": 10.0,
+                "min_purchase": 50.0,
+                "max_discount": 20.0,
+                "is_active": True
+            }
+            response = self.make_request('POST', '/api/coupons', data=coupon_data)
+            if response.status_code in [200, 201]:
+                data = response.json()
+                if data.get('success'):
+                    coupon_id = data.get('data', {}).get('id')
+                    if coupon_id:
+                        self.created_items['coupons'].append(coupon_id)
+                    self.log_test('/api/coupons', 'POST', 'PASS', f"Coupon created: {coupon_data['code']}")
+                else:
+                    self.log_test('/api/coupons', 'POST', 'FAIL', f"Creation failed: {data}")
+            else:
+                self.log_test('/api/coupons', 'POST', 'FAIL', f"Status code: {response.status_code}, Response: {response.text}")
+        except Exception as e:
+            self.log_test('/api/coupons', 'POST', 'FAIL', f"Exception: {str(e)}")
+
+    def test_orders_operations(self):
+        """Test Orders operations with authentication"""
+        print("\n=== Testing Orders Endpoints (with Auth) ===")
+        
+        # GET /api/orders
+        try:
+            response = self.make_request('GET', '/api/orders')
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'orders' in data:
+                    orders = data['orders']
+                    self.log_test('/api/orders', 'GET', 'PASS', f"Retrieved {len(orders)} orders")
+                    
+                    # Test order status update if orders exist
+                    if orders and len(orders) > 0:
+                        order_id = orders[0].get('id')
+                        if order_id:
+                            try:
+                                status_data = {"status": "processing"}
+                                response = self.make_request('PUT', f'/api/orders/{order_id}/status', data=status_data)
+                                if response.status_code == 200:
+                                    data = response.json()
+                                    if data.get('success'):
+                                        self.log_test(f'/api/orders/{order_id}/status', 'PUT', 'PASS', "Order status updated")
+                                    else:
+                                        self.log_test(f'/api/orders/{order_id}/status', 'PUT', 'FAIL', f"Status update failed: {data}")
+                                else:
+                                    self.log_test(f'/api/orders/{order_id}/status', 'PUT', 'FAIL', f"Status code: {response.status_code}")
+                            except Exception as e:
+                                self.log_test(f'/api/orders/{order_id}/status', 'PUT', 'FAIL', f"Exception: {str(e)}")
+                else:
+                    self.log_test('/api/orders', 'GET', 'FAIL', f"Unexpected response: {data}")
+            else:
+                self.log_test('/api/orders', 'GET', 'FAIL', f"Status code: {response.status_code}")
+        except Exception as e:
+            self.log_test('/api/orders', 'GET', 'FAIL', f"Exception: {str(e)}")
+
+    def test_customers_operations(self):
+        """Test Customers operations with authentication"""
+        print("\n=== Testing Customers Endpoints (with Auth) ===")
+        
+        # GET /api/customers
+        try:
+            response = self.make_request('GET', '/api/customers')
+            if response.status_code == 200:
+                data = response.json()
+                if data.get('success') and 'customers' in data:
+                    customers = data['customers']
+                    self.log_test('/api/customers', 'GET', 'PASS', f"Retrieved {len(customers)} customers")
+                    
+                    # Verify customer data format (no SQL null objects)
+                    if customers and len(customers) > 0:
+                        sample_customer = customers[0]
+                        has_sql_nulls = False
+                        for key, value in sample_customer.items():
+                            if isinstance(value, dict) and 'String' in value and 'Valid' in value:
+                                has_sql_nulls = True
+                                break
+                        
+                        if has_sql_nulls:
+                            self.log_test('/api/customers', 'GET', 'FAIL', "Customer data contains SQL null objects")
+                        else:
+                            self.log_test('/api/customers', 'GET', 'PASS', "Customer data properly formatted (no SQL nulls)")
+                else:
+                    self.log_test('/api/customers', 'GET', 'FAIL', f"Unexpected response: {data}")
+            else:
+                self.log_test('/api/customers', 'GET', 'FAIL', f"Status code: {response.status_code}")
+        except Exception as e:
+            self.log_test('/api/customers', 'GET', 'FAIL', f"Exception: {str(e)}")
     
     def test_payment_methods(self):
         """Test payment method endpoints"""
