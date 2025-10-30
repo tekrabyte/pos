@@ -890,9 +890,12 @@ class POSAPITester:
         self.test_authentication()
         
         # Test Product API endpoints with new bundle and portion fields
-        # Note: Products endpoints appear to work without authentication
-        print("\n⚠️  Authentication failed, but proceeding with products testing as they may not require auth")
-        self.test_products_bundle_portion_support()
+        if self.token:
+            print("\n✅ Authentication successful, proceeding with products testing")
+            self.test_products_bundle_portion_support()
+        else:
+            print("\n❌ Authentication failed - cannot test protected endpoints")
+            return
         
         # Print summary
         self.print_summary()
