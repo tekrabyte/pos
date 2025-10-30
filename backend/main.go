@@ -24,6 +24,11 @@ func main() {
 	}
 	defer CloseDatabase()
 
+	// Run database migrations
+	if err := RunMigrations(); err != nil {
+		log.Printf("Warning: Migration failed: %v", err)
+	}
+
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
 		AppName: "Laravel POS API v1.0.0",
