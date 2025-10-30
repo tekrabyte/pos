@@ -1,6 +1,217 @@
 # Test Results and Issue Tracking
 
-## Original Problem Statement
+## Current Development Task - POS System Enhancement (30 Oct 2025)
+
+### User Requirements (Indonesian)
+User meminta perbaikan dan improvement untuk aplikasi POS:
+
+1. ✅ **Admin Panel CRUD** - Semua entity harus bisa full CRUD (tidak readonly)
+2. 🚧 **POS Cashier Payment** - Perbaiki QRIS tanpa barcode scanner, langsung tampilkan image
+3. 🚧 **Dine-in Customer Flow** - Tidak perlu login, scan meja → pesan → bayar QRIS/Transfer
+4. ✅ **Take Away** - Sudah OK
+5. 🚧 **Order Management Split** - Menu pesanan di POS Cashier untuk active orders, Admin Panel untuk data penjualan
+6. 🚧 **Store Settings** - Nama app, themes (dark/light), warna, banner management
+7. 🚧 **Payment Settings Kompleks** - Kelola semua metode pembayaran (QRIS, Bank Transfer, Xendit) dengan enable/disable per channel (POS/Dine-in/Takeaway)
+
+---
+
+## Progress Tracking
+
+### ✅ PHASE 1: Backend API Enhancement (COMPLETED - 30 Oct 2025)
+
+**1.1 Users/Staff Management CRUD**
+- ✅ Handler functions added: `GetUsers`, `GetUser`, `CreateUser`, `UpdateUser`, `DeleteUser`
+- ✅ Routes added: `/api/users` (GET, POST, PUT, DELETE)
+- ✅ Password hashing with bcrypt
+- ✅ Username uniqueness validation
+- File: `/app/backend/handlers.go` (lines 2811-3038)
+- File: `/app/backend/routes.go` (lines 137-142)
+
+**1.2 Orders Filtering by Status**
+- ✅ Handler function: `GetOrdersByStatus` - filter by status (active/completed) and order_type
+- ✅ Route: `/api/orders/filter` (moved before `/orders/:id` to avoid route conflict)
+- ✅ Active orders: pending, processing, preparing
+- ✅ Completed orders: completed, cancelled
+- File: `/app/backend/handlers.go` (lines 3040-3120)
+- File: `/app/backend/routes.go` (line 53)
+
+**1.3 Payment Verification**
+- ✅ Handler function: `VerifyPayment` - verify/reject payment proof
+- ✅ Route: `/api/orders/:id/verify-payment` (PUT)
+- File: `/app/backend/handlers.go` (lines 3023-3038)
+- File: `/app/backend/routes.go` (line 60)
+
+**Backend Status:**
+- ✅ Go version upgraded to 1.24rc1
+- ✅ Backend compiled and running on port 8001
+- ✅ All new endpoints tested and working
+
+---
+
+### ✅ PHASE 2: Frontend CRUD Fixes (COMPLETED - 30 Oct 2025)
+
+**2.1 Categories.jsx - Full CRUD**
+- ✅ Changed from readonly to full CRUD
+- ✅ Add, Edit, Delete functionality
+- ✅ Search and filter
+- ✅ Dialog form for create/update
+- File: `/app/frontend/src/pages/Categories.jsx` (completely rewritten)
+
+**2.2 Customers.jsx - Full CRUD**
+- ✅ Changed from readonly to full CRUD
+- ✅ Add, Edit, Delete functionality
+- ✅ Search by name, email, phone
+- ✅ Display customer points
+- ✅ Customer details with icons (Mail, Phone, MapPin)
+- File: `/app/frontend/src/pages/Customers.jsx` (completely rewritten)
+
+**2.3 TableManagement.jsx - Full CRUD**
+- ✅ Changed from readonly to full CRUD
+- ✅ Add, Edit, Delete functionality
+- ✅ QR Code generation and regeneration
+- ✅ QR Code download and print
+- ✅ Status badges (available, occupied, reserved)
+- File: `/app/frontend/src/pages/TableManagement.jsx` (completely rewritten)
+
+---
+
+### 🚧 PHASE 3: Store Settings (PENDING - High Priority)
+
+**Required Features:**
+- ❌ Store Settings page (`/admin/store-settings`)
+- ❌ App name configuration
+- ❌ Logo upload functionality
+- ❌ Theme selector (dark/light mode)
+- ❌ Primary color picker
+- ❌ Theme context/provider for global theme
+- ❌ Banner management section:
+  - Upload banner images
+  - Reorder banners (drag & drop or up/down buttons)
+  - Enable/disable banners
+  - Delete banners
+
+**Backend (Already Exists):**
+- ✅ Store Settings endpoints: `/api/store-settings` (GET, POST, PUT)
+- ✅ Store Banners endpoints: `/api/store-banners` (GET, POST, PUT, DELETE)
+
+**Status:** NOT STARTED - Waiting for user confirmation
+
+---
+
+### 🚧 PHASE 4: Payment Settings Overhaul (PENDING - High Priority)
+
+**Required Features:**
+
+**4.1 Payment Settings Page Redesign**
+- ❌ New comprehensive payment settings page
+- ❌ Tabbed interface for each payment method
+- ❌ Channel toggles (POS/Dine-in/Takeaway) for each method
+
+**4.2 QRIS Static Image**
+- ❌ Upload QRIS image in admin panel
+- ❌ Display QRIS image to customers
+- ❌ Customer upload payment proof
+- ✅ Backend endpoint exists: `/api/upload/qris`, `/api/payment-settings/qris`
+
+**4.3 Bank Transfer Settings**
+- ❌ Manage bank accounts (already has backend CRUD)
+- ❌ Enable/disable per channel
+- ❌ Display bank details to customers
+- ❌ Customer upload payment proof
+- ✅ Backend endpoints exist: `/api/bank-accounts`
+
+**4.4 Xendit Integration (PENDING USER INPUT)**
+- ❌ Xendit configuration form
+- ❌ API key storage
+- ❌ Merchant code configuration
+- ❌ Webhook URL setup
+- ❌ Dynamic QRIS generation (if needed)
+- ❌ Virtual Account generation (if needed)
+- ❌ E-wallet integration (if needed)
+- **⚠️ BLOCKED:** Waiting for user confirmation on:
+  - Does user have Xendit API key?
+  - Which Xendit features needed? (QRIS/VA/E-wallet)
+
+**4.5 Cash Payment**
+- ❌ Enable/disable per channel
+- ✅ Already working in POS
+
+**Status:** NOT STARTED - Waiting for user confirmation on requirements
+
+---
+
+### 🚧 PHASE 5: Order Management Split (PENDING - Medium Priority)
+
+**5.1 POS Cashier - Active Orders Tab**
+- ❌ New section showing active orders (pending, processing, preparing)
+- ❌ Display payment proof image
+- ❌ Verify/Reject payment buttons
+- ❌ Real-time order status update
+- ❌ Filter by order type (dine-in/takeaway)
+
+**5.2 Admin Panel - Sales Data**
+- ❌ Rename "Pesanan" menu to "Data Penjualan"
+- ❌ Show only completed/cancelled orders
+- ❌ Add date range filters
+- ❌ Add analytics/stats (total sales, order count)
+- ❌ Export functionality (CSV/Excel)
+
+**Backend:**
+- ✅ Orders filtering endpoint ready: `/api/orders/filter?status=active`
+- ✅ Payment verification endpoint ready: `/api/orders/:id/verify-payment`
+
+**Status:** Backend ready, frontend implementation pending
+
+---
+
+### 🚧 PHASE 6: Dine-in Customer Flow (PENDING - Medium Priority)
+
+**6.1 Table Scan Flow**
+- ❌ Detect table token from URL (e.g., `/menu?table=TOKEN`)
+- ❌ Auto-load table info without login
+- ❌ Optional customer name/phone input (can skip)
+- ❌ Show "Meja X" indicator in UI
+
+**6.2 Customer Cart Checkout Enhancement**
+- ❌ Display active payment methods from settings
+- ❌ Show QRIS image (if enabled)
+- ❌ Show bank transfer details (if enabled)
+- ❌ Upload payment proof functionality
+- ❌ Submit order with table_id
+
+**6.3 Order Confirmation**
+- ❌ Order number display
+- ❌ Estimated time
+- ❌ Order status tracking
+
+**Backend:**
+- ✅ Table token endpoint exists: `/api/tables/token/:token`
+- ✅ Upload payment proof: `/api/upload/payment-proof`
+
+**Status:** Backend ready, frontend implementation pending
+
+---
+
+### 🚧 PHASE 7: Users/Staff Management Page (PENDING - Low Priority)
+
+**Required Features:**
+- ❌ Users/Staff management page
+- ❌ List all users with roles
+- ❌ Add new user/staff
+- ❌ Edit user (name, role, outlet, active status)
+- ❌ Delete user
+- ❌ Password reset functionality
+
+**Backend:**
+- ✅ All CRUD endpoints ready: `/api/users`
+
+**Status:** Backend ready, frontend page not created
+
+---
+
+## Previous Issues (Already Fixed)
+
+### Original Problem Statement
 
 The application was experiencing multiple React rendering errors and API endpoint issues:
 
