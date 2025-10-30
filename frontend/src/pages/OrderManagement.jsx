@@ -172,7 +172,7 @@ const OrderManagement = () => {
         updateData.payment_verified = paymentVerified;
       }
 
-      await axiosInstance.put(`${API_URL}/orders/${orderId}/status`, updateData);
+      await axiosInstance.put(`/orders/${orderId}/status`, updateData);
       toast.success(`Order ${newStatus}`);
       fetchOrders();
       
