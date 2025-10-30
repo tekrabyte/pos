@@ -64,13 +64,7 @@
 
 ### 🚧 PENDING ISSUES (Requires Further Work):
 
-**1. Store Settings - Color Palette Issue** (NEXT PRIORITY)
-- Current: Using HSL color picker
-- Required: Change to hex/rgb color palette picker
-- Impact: Theme color selection not user-friendly
-- Estimated fix: 30-45 minutes
-
-**2. Add Product - Bundle/Paket Stock Logic**
+**1. Add Product - Bundle/Paket Stock Logic** (NEXT PRIORITY)
 - Current: Bundle/paket doesn't have checkbox for "porsi"
 - Required: Add checkbox for portion-based products
 - Required: Stock should follow satuan (unit) quantity
