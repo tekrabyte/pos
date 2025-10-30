@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 // Loading Component
 const PageLoader = () => (
