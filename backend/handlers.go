@@ -1061,7 +1061,7 @@ func GetTableByToken(c *fiber.Ctx) error {
         return c.JSON(fiber.Map{"success": true, "table": map[string]interface{}{
                 "id":           tid,
                 "table_number": tableNumber,
-                "13token":        ttoken,
+                "qr_token":        ttoken,
                 "qr_code":      qrCode,
                 "status":       status,
                 "outlet_id":    outletID,
