@@ -34,11 +34,13 @@ const UsersManagement = () => {
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${API_URL}/users`);
-      setUsers(response.data.users || []);
+      const response = await axiosInstance.get('/users');
+      const usersData = response.data.users || response.data || [];
+      setUsers(Array.isArray(usersData) ? usersData : []);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Gagal memuat data pengguna');
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }
