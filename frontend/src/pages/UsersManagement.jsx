@@ -103,11 +103,11 @@ const UsersManagement = () => {
           updateData.password = userForm.password;
         }
 
-        await axios.put(`${API_URL}/users/${editingUser.id}`, updateData);
+        await axiosInstance.put(`/users/${editingUser.id}`, updateData);
         toast.success('User berhasil diupdate');
       } else {
         // Create new user
-        await axios.post(`${API_URL}/users`, userForm);
+        await axiosInstance.post('/users', userForm);
         toast.success('User berhasil dibuat');
       }
 
@@ -124,7 +124,7 @@ const UsersManagement = () => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus user ini?')) return;
 
     try {
-      await axios.delete(`${API_URL}/users/${userId}`);
+      await axiosInstance.delete(`/users/${userId}`);
       toast.success('User berhasil dihapus');
       fetchUsers();
     } catch (error) {
