@@ -320,11 +320,11 @@ const TableManagement = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nama/Nomor Meja *</Label>
+                <Label htmlFor="table_number">Nama/Nomor Meja *</Label>
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  id="table_number"
+                  value={formData.table_number}
+                  onChange={(e) => setFormData({ ...formData, table_number: e.target.value })}
                   placeholder="Contoh: Meja 1, Table A"
                   required
                 />
