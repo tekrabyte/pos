@@ -95,7 +95,7 @@ class POSAPITester:
         try:
             login_data = {
                 "username": "admin",
-                "password": "admin123"
+                "password": "password"
             }
             
             response = self.make_request('POST', '/api/auth/staff/login', data=login_data)
