@@ -155,7 +155,7 @@ const OrderManagement = () => {
 
   const fetchOrderDetails = async (orderId) => {
     try {
-      const response = await axiosInstance.get(`${API_URL}/orders/${orderId}`);
+      const response = await axiosInstance.get(`/orders/${orderId}`);
       // Handle both object formats
       const orderData = response.data.order || response.data;
       setSelectedOrder(orderData);
