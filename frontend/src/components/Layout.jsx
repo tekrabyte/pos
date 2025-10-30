@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users, Tag, 
   BarChart3, Settings, Store, UserCog, CreditCard,
   Menu, X, LogOut, Boxes, Percent, ChevronDown, Monitor, 
-  QrCode, UtensilsCrossed, UsersIcon
+  QrCode, UtensilsCrossed, UsersIcon, ClipboardList
 } from 'lucide-react';
 import {
   DropdownMenu,
