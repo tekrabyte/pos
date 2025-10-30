@@ -2476,7 +2476,10 @@ func GetStoreBanners(c *fiber.Ctx) error {
                 banners = []map[string]interface{}{}
         }
 
-        return c.JSON(banners)
+        return c.JSON(fiber.Map{
+                "success": true,
+                "banners": banners,
+        })
 }
 
 func GetStoreBanner(c *fiber.Ctx) error {
