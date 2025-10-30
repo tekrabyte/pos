@@ -911,19 +911,16 @@ class POSAPITester:
 
 def main():
     """Main test execution"""
-    # Use the external URL as specified in the review request
-    base_url = "https://test-reader.preview.emergentagent.com"
+    # Use localhost for testing as the Go backend is running on port 8001
+    base_url = "http://localhost:8001"
     
     print(f"Testing POS API at: {base_url}")
-    print("Testing endpoints as specified in review request:")
-    print("- Authentication: POST /api/auth/staff/login")
-    print("- Brands CRUD: GET, POST, PUT, DELETE /api/brands")
-    print("- Roles CRUD: GET, POST, PUT, DELETE /api/roles")
-    print("- Outlets: GET, POST /api/outlets")
-    print("- Payment Methods: GET, POST /api/payment-methods")
-    print("- Coupons: GET, POST /api/coupons")
-    print("- Orders: GET /api/orders, PUT /api/orders/{id}/status")
-    print("- Customers: GET /api/customers")
+    print("Testing Product API endpoints with new bundle and portion fields:")
+    print("- GET /api/products - Verify new fields (is_bundle, bundle_items, has_portions, unit, portion_size)")
+    print("- POST /api/products - Create regular product with unit")
+    print("- POST /api/products - Create bundle product with portions")
+    print("- GET /api/products/:id - Get single product")
+    print("- PUT /api/products/:id - Update product with new fields")
     print()
     
     tester = POSAPITester(base_url)
