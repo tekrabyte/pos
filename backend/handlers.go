@@ -1633,8 +1633,8 @@ func CreatePaymentMethod(c *fiber.Ctx) error {
         }
 
         result, err := DB.Exec(`
-                INSERT INTO payment_methods (name, type, is_active, created_at, updated_at)
-                VALUES (?, ?, ?, NOW(), NOW())
+                INSERT INTO payment_methods (name, type, is_active, created_at)
+                VALUES (?, ?, ?, NOW())
         `, req.Name, req.Type, req.IsActive)
 
         if err != nil {
