@@ -106,16 +106,15 @@ const OrderManagement = () => {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        // Silently handle WebSocket errors (no console logging)
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket disconnected');
+        // Silently handle WebSocket disconnect
         wsRef.current = null;
         
         // Only reconnect if it wasn't a clean close and component is still mounted
         if (!event.wasClean && reconnectTimeoutRef.current === null) {
-          console.log('Attempting to reconnect in 3 seconds...');
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectTimeoutRef.current = null;
             connectWebSocket();
@@ -125,7 +124,7 @@ const OrderManagement = () => {
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('WebSocket connection error:', error);
+      // Silently handle WebSocket connection errors
       
       // Retry connection after 3 seconds
       if (reconnectTimeoutRef.current === null) {
