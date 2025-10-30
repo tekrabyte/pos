@@ -44,6 +44,7 @@ const Outlets = lazy(() => import('@/pages/Outlets'));
 const Kiosk = lazy(() => import('@/pages/Kiosk'));
 const Roles = lazy(() => import('@/pages/Roles'));
 const PaymentSettingsDetail = lazy(() => import('@/pages/PaymentSettingsDetail'));
+const StoreSettings = lazy(() => import('@/pages/StoreSettings'));
 
 // Error Pages
 const NotFound = lazy(() => import('@/pages/NotFound'));
