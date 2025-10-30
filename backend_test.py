@@ -292,7 +292,8 @@ class POSAPITester:
                 update_data = {
                     "has_portions": True,
                     "unit": "gram",
-                    "portion_size": 250
+                    "portion_size": 250,
+                    "bundle_items": "[]"
                 }
                 
                 response = self.make_request('PUT', f'/api/products/{regular_product_id}', data=update_data)
