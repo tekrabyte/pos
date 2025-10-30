@@ -51,19 +51,20 @@ const TableManagement = () => {
         toast.success('Meja berhasil ditambahkan');
       }
       setShowDialog(false);
-      setFormData({ name: '', status: 'available' });
+      setFormData({ table_number: '', status: 'available' });
       setEditId(null);
       fetchTables();
     } catch (error) {
       console.error('Error saving table:', error);
-      toast.error('Gagal menyimpan meja');
+      const errorMsg = error.response?.data?.message || 'Gagal menyimpan meja';
+      toast.error(errorMsg);
     }
   };
 
   const handleEdit = (table) => {
     setEditId(table.id);
     setFormData({
-      name: table.name || '',
+      table_number: table.table_number || '',
       status: table.status || 'available',
     });
     setShowDialog(true);
@@ -84,7 +85,7 @@ const TableManagement = () => {
 
   const handleAddNew = () => {
     setEditId(null);
-    setFormData({ name: '', status: 'available' });
+    setFormData({ table_number: '', status: 'available' });
     setShowDialog(true);
   };
 
