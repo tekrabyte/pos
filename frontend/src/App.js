@@ -161,7 +161,12 @@ function App() {
               } />
               <Route path="/orders" element={
                 <ProtectedRoute requiredAuth="staff">
-                  <OrderManagement />
+                  <SalesData />
+                </ProtectedRoute>
+              } />
+              <Route path="/pos/orders" element={
+                <ProtectedRoute requiredAuth="staff">
+                  <POSActiveOrders />
                 </ProtectedRoute>
               } />
               
