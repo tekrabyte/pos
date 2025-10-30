@@ -144,6 +144,5 @@ func SetupRoutes(app *fiber.App) {
 	api.Delete("/users/:id", AuthMiddleware, DeleteUser)
 
 	// Enhanced Orders with Status Filter
-	api.Get("/orders/filter", GetOrdersByStatus)
-	api.Put("/orders/:id/verify-payment", AuthMiddleware, VerifyPayment)
+	// (Moved above to line 53, before /orders/:id)
 }
