@@ -453,51 +453,57 @@ const StoreSettings = () => {
                 </div>
 
                 {/* Color Pickers */}
-                {Object.entries(tempColors).map(([colorKey, hsl]) => (
-                  <div key={colorKey} className="space-y-2">
-                    <Label className="capitalize">{colorKey.replace('_', ' ')}</Label>
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-16 h-16 rounded-lg border-2"
-                        style={{ backgroundColor: hslToHex(hsl.h, hsl.s, hsl.l) }}
-                      />
-                      <div className="flex-1 space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <div>
-                            <Label className="text-xs">Hue (H)</Label>
+                {Object.entries(tempColors).map(([colorKey, hsl]) => {
+                  const hexColor = hslToHex(hsl.h, hsl.s, hsl.l);
+                  return (
+                    <div key={colorKey} className="space-y-2">
+                      <Label className="capitalize font-medium text-gray-700 dark:text-gray-300">
+                        {colorKey.replace('_', ' ')}
+                      </Label>
+                      <div className="flex items-start gap-4">
+                        <div className="space-y-2">
+                          <HexColorPicker
+                            color={hexColor}
+                            onChange={(color) => handleColorChange(colorKey, color)}
+                            style={{ width: '200px', height: '200px' }}
+                          />
+                          <div className="flex items-center gap-2">
                             <Input
-                              type="number"
-                              min="0"
-                              max="360"
-                              value={hsl.h}
-                              onChange={(e) => handleColorChange(colorKey, 'h', e.target.value)}
+                              type="text"
+                              value={hexColor}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^#[0-9A-Fa-f]{0,6}$/.test(value)) {
+                                  if (value.length === 7) {
+                                    handleColorChange(colorKey, value);
+                                  }
+                                }
+                              }}
+                              className="font-mono text-sm"
+                              placeholder="#000000"
+                            />
+                            <div
+                              className="w-12 h-10 rounded border-2 flex-shrink-0"
+                              style={{ backgroundColor: hexColor }}
+                              title={hexColor}
                             />
                           </div>
-                          <div>
-                            <Label className="text-xs">Saturation (S%)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={hsl.s}
-                              onChange={(e) => handleColorChange(colorKey, 's', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Lightness (L%)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={hsl.l}
-                              onChange={(e) => handleColorChange(colorKey, 'l', e.target.value)}
-                            />
+                        </div>
+                        <div className="flex-1 space-y-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Preview:</p>
+                          <div
+                            className="w-full h-24 rounded-lg border-2"
+                            style={{ backgroundColor: hexColor }}
+                          />
+                          <div className="text-xs text-gray-500 space-y-1">
+                            <p>Hex: <span className="font-mono">{hexColor}</span></p>
+                            <p>HSL: <span className="font-mono">hsl({hsl.h}, {hsl.s}%, {hsl.l}%)</span></p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <Button onClick={handleSaveThemeSettings} className="w-full">
                   <Save className="w-4 h-4 mr-2" />
