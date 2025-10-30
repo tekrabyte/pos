@@ -183,9 +183,14 @@ const CustomerMenu = () => {
     }
     
     if (isDineIn && tableInfo) {
-      localStorage.setItem('orderType', 'dine-in');
-      localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
-      navigate('/customer/cart');
+      // For dine-in, show guest info dialog if not logged in
+      if (!customer) {
+        setShowGuestInfoDialog(true);
+      } else {
+        localStorage.setItem('orderType', 'dine-in');
+        localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
+        navigate('/customer/cart');
+      }
     } else {
       localStorage.setItem('orderType', 'takeaway');
       
@@ -198,6 +203,26 @@ const CustomerMenu = () => {
         navigate('/customer/cart');
       }
     }
+  };
+
+  const handleGuestCheckout = () => {
+    // Save guest info and proceed to cart
+    localStorage.setItem('orderType', 'dine-in');
+    localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
+    if (guestInfo.name || guestInfo.phone) {
+      localStorage.setItem('guestInfo', JSON.stringify(guestInfo));
+    }
+    setShowGuestInfoDialog(false);
+    navigate('/customer/cart');
+  };
+
+  const handleSkipGuestInfo = () => {
+    // Skip guest info and proceed directly
+    localStorage.setItem('orderType', 'dine-in');
+    localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
+    localStorage.removeItem('guestInfo');
+    setShowGuestInfoDialog(false);
+    navigate('/customer/cart');
   };
 
   const handleLogout = () => {
