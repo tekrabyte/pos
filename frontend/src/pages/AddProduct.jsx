@@ -311,62 +311,167 @@ const AddProduct = () => {
                 </div>
 
                 {formData.is_bundle && (
-                  <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Item dalam Bundle</Label>
-                      <Button type="button" size="sm" onClick={addBundleItem} data-testid="add-bundle-item">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Tambah Item
-                      </Button>
-                    </div>
+                  <div className="space-y-4">
+                    {/* Product Type Selection */}
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h3 className="font-medium text-sm mb-3 text-blue-900">Tipe Produk Paket</h3>
+                      
+                      {/* Has Portions Checkbox */}
+                      <div className="flex items-center space-x-2 mb-4">
+                        <Checkbox
+                          id="has_portions"
+                          checked={formData.has_portions}
+                          onCheckedChange={(checked) => {
+                            handleChange('has_portions', checked);
+                            // Reset unit to 'porsi' when enabling portions
+                            if (checked) {
+                              handleChange('unit', 'porsi');
+                            } else {
+                              handleChange('unit', 'pcs');
+                            }
+                          }}
+                          data-testid="has-portions-checkbox"
+                        />
+                        <Label htmlFor="has_portions" className="cursor-pointer">
+                          Produk dijual per porsi
+                        </Label>
+                      </div>
 
-                    {formData.bundle_items.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-end">
-                        <div className="flex-1">
-                          <Label className="text-xs">Produk</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Unit Selection */}
+                        <div className="space-y-2">
+                          <Label htmlFor="unit" className="text-xs">
+                            Satuan {formData.has_portions ? '(Unit Dasar)' : ''}
+                          </Label>
                           <Select
-                            value={item.product_id.toString()}
-                            onValueChange={(value) => updateBundleItem(index, 'product_id', parseInt(value))}
+                            value={formData.unit}
+                            onValueChange={(value) => handleChange('unit', value)}
                           >
-                            <SelectTrigger data-testid={`bundle-product-${index}`}>
-                              <SelectValue placeholder="Pilih produk" />
+                            <SelectTrigger data-testid="unit-select">
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {Array.isArray(allProducts) && allProducts
-                                .filter((p) => !p.is_bundle)
-                                .map((product) => (
-                                  <SelectItem key={product.id} value={product.id.toString()}>
-                                    {product.name}
-                                  </SelectItem>
-                                ))}
+                              {formData.has_portions ? (
+                                <>
+                                  <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                                  <SelectItem value="gram">Gram (g)</SelectItem>
+                                  <SelectItem value="liter">Liter (L)</SelectItem>
+                                  <SelectItem value="ml">Mililiter (ml)</SelectItem>
+                                  <SelectItem value="porsi">Porsi</SelectItem>
+                                </>
+                              ) : (
+                                <>
+                                  <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                                  <SelectItem value="box">Box</SelectItem>
+                                  <SelectItem value="pack">Pack</SelectItem>
+                                  <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                                  <SelectItem value="liter">Liter (L)</SelectItem>
+                                </>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="w-32">
-                          <Label className="text-xs">Jumlah</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={item.quantity}
-                            onChange={(e) => updateBundleItem(index, 'quantity', e.target.value)}
-                            data-testid={`bundle-quantity-${index}`}
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => removeBundleItem(index)}
-                          data-testid={`remove-bundle-${index}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
+
+                        {/* Portion Size - only show when has_portions is true */}
+                        {formData.has_portions && (
+                          <div className="space-y-2">
+                            <Label htmlFor="portion_size" className="text-xs">
+                              Ukuran per Porsi
+                            </Label>
+                            <Input
+                              id="portion_size"
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                              value={formData.portion_size}
+                              onChange={(e) => handleChange('portion_size', parseFloat(e.target.value) || 1.0)}
+                              placeholder="1.0"
+                              data-testid="portion-size-input"
+                            />
+                            <p className="text-xs text-gray-500">
+                              Contoh: 0.25 kg, 200 ml, 1 porsi
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info Text */}
+                      <div className="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
+                        {formData.has_portions ? (
+                          <>
+                            <strong>Mode Porsi:</strong> Stok akan dihitung berdasarkan satuan {formData.unit}. 
+                            Setiap porsi = {formData.portion_size} {formData.unit}.
+                            <br />
+                            Contoh: Stok 10 kg, ukuran porsi 0.25 kg = 40 porsi tersedia
+                          </>
+                        ) : (
+                          <>
+                            <strong>Mode Satuan:</strong> Stok akan dihitung per {formData.unit}.
+                            <br />
+                            Contoh: Stok 10 = 10 {formData.unit} tersedia
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bundle Items */}
+                    <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Item dalam Bundle</Label>
+                        <Button type="button" size="sm" onClick={addBundleItem} data-testid="add-bundle-item">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Tambah Item
                         </Button>
                       </div>
-                    ))}
 
-                    {formData.bundle_items.length === 0 && (
-                      <p className="text-sm text-gray-500 text-center py-4">Belum ada item. Klik "Tambah Item" untuk menambahkan produk ke bundle.</p>
-                    )}
+                      {formData.bundle_items.map((item, index) => (
+                        <div key={index} className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Label className="text-xs">Produk</Label>
+                            <Select
+                              value={item.product_id.toString()}
+                              onValueChange={(value) => updateBundleItem(index, 'product_id', parseInt(value))}
+                            >
+                              <SelectTrigger data-testid={`bundle-product-${index}`}>
+                                <SelectValue placeholder="Pilih produk" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.isArray(allProducts) && allProducts
+                                  .filter((p) => !p.is_bundle)
+                                  .map((product) => (
+                                    <SelectItem key={product.id} value={product.id.toString()}>
+                                      {product.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="w-32">
+                            <Label className="text-xs">Jumlah</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.quantity}
+                              onChange={(e) => updateBundleItem(index, 'quantity', e.target.value)}
+                              data-testid={`bundle-quantity-${index}`}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => removeBundleItem(index)}
+                            data-testid={`remove-bundle-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      {formData.bundle_items.length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-4">Belum ada item. Klik "Tambah Item" untuk menambahkan produk ke bundle.</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
