@@ -30,7 +30,7 @@ const Brands = () => {
 
   const fetchBrands = async () => {
     try {
-      const response = await axios.get(`${API}/brands`);
+      const response = await axiosInstance.get(`${API}/brands`);
       setBrands(response.data.brands || response.data || []);
     } catch (error) {
       console.error('Error fetching brands:', error);
@@ -44,10 +44,10 @@ const Brands = () => {
     e.preventDefault();
     try {
       if (editId) {
-        await axios.put(`${API}/brands/${editId}`, formData);
+        await axiosInstance.put(`${API}/brands/${editId}`, formData);
         toast.success('Brand berhasil diperbarui');
       } else {
-        await axios.post(`${API}/brands`, formData);
+        await axiosInstance.post(`${API}/brands`, formData);
         toast.success('Brand berhasil ditambahkan');
       }
       setShowDialog(false);
@@ -73,7 +73,7 @@ const Brands = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus brand ini?')) {
       try {
-        await axios.delete(`${API}/brands/${id}`);
+        await axiosInstance.delete(`${API}/brands/${id}`);
         toast.success('Brand berhasil dihapus');
         fetchBrands();
       } catch (error) {
