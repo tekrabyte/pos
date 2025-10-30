@@ -347,53 +347,73 @@ func GetProduct(c *fiber.Ctx) error {
 
 // Create Product
 func CreateProduct(c *fiber.Ctx) error {
-        var req struct {
-                Name        string  `json:"name"`
-                SKU         string  `json:"sku"`
-                Price       float64 `json:"price"`
-                Stock       int     `json:"stock"`
-                CategoryID  *int    `json:"category_id"`
-                BrandID     *int    `json:"brand_id"`
-                Description string  `json:"description"`
-                ImageURL    string  `json:"image_url"`
-                Status      string  `json:"status"`
-        }
+	var req struct {
+		Name        string  `json:"name"`
+		SKU         string  `json:"sku"`
+		Price       float64 `json:"price"`
+		Stock       int     `json:"stock"`
+		CategoryID  *int    `json:"category_id"`
+		BrandID     *int    `json:"brand_id"`
+		Description string  `json:"description"`
+		ImageURL    string  `json:"image_url"`
+		Status      string  `json:"status"`
+		IsBundle    bool    `json:"is_bundle"`
+		BundleItems string  `json:"bundle_items"` // JSON string
+		HasPortions bool    `json:"has_portions"`
+		Unit        string  `json:"unit"`
+		PortionSize float64 `json:"portion_size"`
+	}
 
-        if err := c.BodyParser(&req); err != nil {
-                return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
-        }
+	if err := c.BodyParser(&req); err != nil {
+		return ErrorResponse(c, "Invalid request body", fiber.StatusBadRequest)
+	}
 
-        if req.Name == "" {
-                return ErrorResponse(c, "Product name is required", fiber.StatusBadRequest)
-        }
+	if req.Name == "" {
+		return ErrorResponse(c, "Product name is required", fiber.StatusBadRequest)
+	}
 
-        result, err := DB.Exec(`
-                INSERT INTO products (name, sku, price, stock, category_id, brand_id, description, image_url, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-        `, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, req.Description, req.ImageURL, req.Status)
+	// Set defaults
+	if req.Unit == "" {
+		req.Unit = "pcs"
+	}
+	if req.PortionSize == 0 {
+		req.PortionSize = 1.00
+	}
 
-        if err != nil {
-                return ErrorResponse(c, fmt.Sprintf("Failed to create product: %v", err), fiber.StatusInternalServerError)
-        }
+	result, err := DB.Exec(`
+		INSERT INTO products (name, sku, price, stock, category_id, brand_id, description, image_url, status, 
+		                      is_bundle, bundle_items, has_portions, unit, portion_size, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+	`, req.Name, req.SKU, req.Price, req.Stock, req.CategoryID, req.BrandID, req.Description, req.ImageURL, req.Status,
+	   req.IsBundle, req.BundleItems, req.HasPortions, req.Unit, req.PortionSize)
 
-        id, _ := result.LastInsertId()
+	if err != nil {
+		return ErrorResponse(c, fmt.Sprintf("Failed to create product: %v", err), fiber.StatusInternalServerError)
+	}
 
-        return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-                "success": true,
-                "message": "Product created successfully",
-                "product": fiber.Map{
-                        "id":          id,
-                        "name":        req.Name,
-                        "sku":         req.SKU,
-                        "price":       req.Price,
-                        "stock":       req.Stock,
-                        "category_id": req.CategoryID,
-                        "brand_id":    req.BrandID,
-                        "description": req.Description,
-                        "image_url":   req.ImageURL,
-                        "status":      req.Status,
-                },
-        })
+	id, _ := result.LastInsertId()
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"success": true,
+		"message": "Product created successfully",
+		"product": fiber.Map{
+			"id":           id,
+			"name":         req.Name,
+			"sku":          req.SKU,
+			"price":        req.Price,
+			"stock":        req.Stock,
+			"category_id":  req.CategoryID,
+			"brand_id":     req.BrandID,
+			"description":  req.Description,
+			"image_url":    req.ImageURL,
+			"status":       req.Status,
+			"is_bundle":    req.IsBundle,
+			"bundle_items": req.BundleItems,
+			"has_portions": req.HasPortions,
+			"unit":         req.Unit,
+			"portion_size": req.PortionSize,
+		},
+	})
 }
 
 // Update Product
