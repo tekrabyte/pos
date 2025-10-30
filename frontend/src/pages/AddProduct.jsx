@@ -29,6 +29,9 @@ const AddProduct = () => {
     status: 'active',
     is_bundle: false,
     bundle_items: [],
+    has_portions: false,
+    unit: 'pcs',
+    portion_size: 1.0,
   });
 
   // Fetch categories, brands, and products using custom hook
