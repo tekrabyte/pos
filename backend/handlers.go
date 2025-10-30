@@ -1127,10 +1127,10 @@ func GetCustomers(c *fiber.Ctx) error {
                 customers = append(customers, map[string]interface{}{
                         "id":         id,
                         "name":       name,
-                        "email":      email,
-                        "phone":      phone,
-                        "address":    address,
-                        "created_at": createdAt,
+                        "email":      getNullString(email),
+                        "phone":      getNullString(phone),
+                        "address":    getNullString(address),
+                        "created_at": getNullTime(createdAt),
                 })
         }
         
