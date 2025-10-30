@@ -231,7 +231,7 @@ const TableManagement = () => {
               <Card key={table.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-gray-800">{table.name}</h3>
+                    <h3 className="text-xl font-bold text-gray-800">{table.table_number}</h3>
                     <Badge className={getStatusColor(table.status)}>
                       {table.status}
                     </Badge>
@@ -242,7 +242,7 @@ const TableManagement = () => {
                     <div className="bg-white p-2 rounded border border-gray-200">
                       <img
                         src={table.qr_code}
-                        alt={`QR Code ${table.name}`}
+                        alt={`QR Code ${table.table_number}`}
                         className="w-full h-auto"
                       />
                     </div>
@@ -255,7 +255,7 @@ const TableManagement = () => {
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => downloadQR(table.qr_code, table.name)}
+                          onClick={() => downloadQR(table.qr_code, table.table_number)}
                         >
                           <Download className="h-4 w-4 mr-1" />
                           Download
@@ -264,7 +264,7 @@ const TableManagement = () => {
                           variant="outline"
                           size="sm"
                           className="flex-1"
-                          onClick={() => printQR(table.qr_code, table.name)}
+                          onClick={() => printQR(table.qr_code, table.table_number)}
                         >
                           <Printer className="h-4 w-4 mr-1" />
                           Print
