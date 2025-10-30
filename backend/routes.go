@@ -133,4 +133,15 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/payment-settings/qris", GetQRISSettings)
 	api.Post("/payment-settings/qris", AuthMiddleware, UpdateQRISSettings)
 	api.Post("/qris/generate", GenerateQRIS)
+
+	// Users/Staff Management
+	api.Get("/users", AuthMiddleware, GetUsers)
+	api.Get("/users/:id", AuthMiddleware, GetUser)
+	api.Post("/users", AuthMiddleware, CreateUser)
+	api.Put("/users/:id", AuthMiddleware, UpdateUser)
+	api.Delete("/users/:id", AuthMiddleware, DeleteUser)
+
+	// Enhanced Orders with Status Filter
+	api.Get("/orders/filter", GetOrdersByStatus)
+	api.Put("/orders/:id/verify-payment", AuthMiddleware, VerifyPayment)
 }
