@@ -19,7 +19,7 @@ const TableManagement = () => {
   const [editId, setEditId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
-    name: '',
+    table_number: '',
     status: 'available',
   });
 
