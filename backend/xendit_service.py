@@ -6,19 +6,20 @@ Handles QRIS, Virtual Account, and E-wallet payments
 
 import os
 import xendit
-from xendit import Xendit
 from typing import Dict, Any, Optional
 import json
 import hmac
 import hashlib
 from datetime import datetime
+import requests
 
-# Initialize Xendit client
+# Initialize Xendit configuration
 XENDIT_API_KEY = os.getenv("XENDIT_API_KEY", "")
 XENDIT_WEBHOOK_TOKEN = os.getenv("XENDIT_WEBHOOK_TOKEN", "")
+XENDIT_BASE_URL = "https://api.xendit.co"
 
-# Initialize Xendit client
-xendit_instance = Xendit(api_key=XENDIT_API_KEY)
+# Set Xendit API key
+xendit.set_api_key(XENDIT_API_KEY)
 
 
 class XenditService:
