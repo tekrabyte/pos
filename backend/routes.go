@@ -137,6 +137,14 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/payment-settings/qris", AuthMiddleware, UpdateQRISSettings)
 	api.Post("/qris/generate", GenerateQRIS)
 
+	// Xendit Payment Integration
+	xendit := api.Group("/xendit")
+	xendit.Post("/payments/qris", CreateQRISPayment)
+	xendit.Post("/payments/virtual-account", CreateVirtualAccountPayment)
+	xendit.Post("/payments/ewallet", CreateEWalletPayment)
+	xendit.Get("/payments/:id/status", GetPaymentStatus)
+	xendit.Post("/webhook", XenditWebhook)
+
 	// Users/Staff Management
 	api.Get("/users", AuthMiddleware, GetUsers)
 	api.Get("/users/:id", AuthMiddleware, GetUser)
