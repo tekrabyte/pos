@@ -36,6 +36,7 @@ type EWalletRequest struct {
 	WalletType   string  `json:"wallet_type"`
 	OrderID      *int    `json:"order_id"`
 	ChannelID    string  `json:"channel_id"`
+	CustomerName string  `json:"customer_name"`
 	SuccessURL   string  `json:"success_url"`
 	FailureURL   string  `json:"failure_url"`
 }
